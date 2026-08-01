@@ -1,0 +1,1 @@
+execute if score #rc4tick tick10 matches 6..8 run function skills:leggings/healing_2

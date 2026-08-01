@@ -1,0 +1,1 @@
+damage @s 2 magic by @p[tag=wicked_shield_attack]

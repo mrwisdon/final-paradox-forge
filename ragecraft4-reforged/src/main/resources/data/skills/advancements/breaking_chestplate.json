@@ -1,0 +1,16 @@
+{
+    "criteria": {
+        "requirement": {
+            "trigger": "minecraft:item_durability_changed",
+            "conditions": {
+                "durability": 0,
+                "item": {
+                    "tag": "minecraft:all_chestplates"
+                  }
+            }
+        }
+    },
+    "rewards": {
+        "function": "skills:misc/breaking_chestplate"
+    }
+}

@@ -1,0 +1,14 @@
+execute if score $temp potion_selected matches 1 run item modify entity @s hotbar.1 skills:model_2
+execute if score $temp potion_selected matches 2 run item modify entity @s hotbar.1 skills:model_4
+execute if score $temp potion_selected matches 3 run item modify entity @s hotbar.1 skills:model_6
+execute if score $temp potion_selected matches 4 run item modify entity @s hotbar.1 skills:model_8
+execute if score $temp potion_selected matches 5 run item modify entity @s hotbar.1 skills:model_10
+execute if score $temp potion_selected matches 6 run item modify entity @s hotbar.1 skills:model_12
+execute if score $temp potion_selected matches 7 run item modify entity @s hotbar.1 skills:model_14
+execute if score $temp potion_selected matches 8 run item modify entity @s hotbar.1 skills:model_16
+execute if score $temp potion_selected matches 9 run item modify entity @s hotbar.1 skills:model_18
+execute if score $temp potion_selected matches 10 run item modify entity @s hotbar.1 skills:model_20
+execute if score $temp potion_selected matches 11 run item modify entity @s hotbar.1 skills:model_22
+execute if score $temp potion_selected matches 12 run item modify entity @s hotbar.1 skills:model_24
+execute if score $temp potion_selected matches 13 run item modify entity @s hotbar.1 skills:model_26
+execute if score $temp potion_selected matches 14 run item modify entity @s hotbar.1 skills:model_28

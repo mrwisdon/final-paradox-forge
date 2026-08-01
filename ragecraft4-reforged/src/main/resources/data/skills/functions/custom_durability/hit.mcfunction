@@ -1,0 +1,2 @@
+execute as @s[nbt={SelectedItem:{tag:{Damage:25}}}] run function skills:custom_durability/0_destroy_item
+execute as @s[nbt=!{SelectedItem:{tag:{Damage:25}}}] run function skills:custom_durability/0_damage

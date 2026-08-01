@@ -1,0 +1,23 @@
+{
+  "criteria": {
+    "hit_enemy": {
+      "trigger": "minecraft:player_hurt_entity",
+      "conditions": {
+        "damage": {
+          "type": {
+            "tags": [
+              {
+                "id": "minecraft:non_melee",
+                "expected": false
+              }
+            ]
+          }
+        }
+      
+      }
+    }
+  },
+  "rewards": {
+    "function": "skills:misc/meleehit"
+  }
+}

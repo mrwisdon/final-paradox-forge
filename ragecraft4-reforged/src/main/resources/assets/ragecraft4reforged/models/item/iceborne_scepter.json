@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/iceborne_scepter_uncharged",
+  "overrides": [
+    { "predicate": { "ragecraft4reforged:charged": 1.0 }, "model": "minecraft:item/iceborne_scepter_charged" }
+  ]
+}

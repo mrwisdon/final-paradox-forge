@@ -1,0 +1,1 @@
+execute if score #rc4tick tick10 matches 2..4 run function skills:leggings/thunder_2

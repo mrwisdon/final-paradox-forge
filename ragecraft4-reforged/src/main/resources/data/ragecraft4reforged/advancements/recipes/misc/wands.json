@@ -1,0 +1,41 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_unenchanted_wand": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ragecraft4reforged:unenchanted_wand"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_unenchanted_wand"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ragecraft4reforged:searing_wand",
+      "ragecraft4reforged:teleport_wand",
+      "ragecraft4reforged:arctic_wand",
+      "ragecraft4reforged:reaping_wand",
+      "ragecraft4reforged:blighted_branch",
+      "ragecraft4reforged:thunderfist",
+      "ragecraft4reforged:void_scepter",
+      "ragecraft4reforged:corrosive_wand",
+      "ragecraft4reforged:infernal_scepter",
+      "ragecraft4reforged:iceborne_scepter",
+      "ragecraft4reforged:exalted_wand",
+      "ragecraft4reforged:doomfist",
+      "ragecraft4reforged:empowered_teleport_wand",
+      "ragecraft4reforged:supreme_teleport_wand"
+    ]
+  },
+  "sends_telemetry_event": false
+}

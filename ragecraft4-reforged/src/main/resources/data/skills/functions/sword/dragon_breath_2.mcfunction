@@ -1,0 +1,1 @@
+execute at @s run data modify entity @s Rotation set from entity @p[tag=dragon_breath_att] Rotation

@@ -1,0 +1,17 @@
+{
+    "criteria": {
+      "requirement": {
+        "trigger": "minecraft:inventory_changed",
+        "conditions": {
+          "items": [
+            {
+              "nbt": "{rot_blast:1b}"
+            }
+          ]
+        }
+      }
+    },
+    "rewards": {
+      "function": "skills:sword/rot_blast_explain"
+    }
+  }

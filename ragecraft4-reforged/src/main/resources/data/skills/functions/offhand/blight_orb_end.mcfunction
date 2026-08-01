@@ -1,0 +1,1 @@
+execute at @s run execute as @e[type=armor_stand,tag=blight_orb_proj,distance=..8] run function skills:offhand/blight_orb_end_2

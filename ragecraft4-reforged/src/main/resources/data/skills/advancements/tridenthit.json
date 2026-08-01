@@ -1,0 +1,23 @@
+{
+  "criteria": {
+    "hit_enemy": {
+      "trigger": "minecraft:player_hurt_entity",
+      "conditions": {
+        "damage": {
+          "type": {
+            "tags": [
+              {
+                "id": "minecraft:trident",
+                "expected": true
+              }
+            ]
+          }
+        }
+      
+      }
+    }
+  },
+  "rewards": {
+    "function": "skills:misc/tridenthit"
+  }
+}

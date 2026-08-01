@@ -1,0 +1,12 @@
+{
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+      }
+    }
+  },
+  "rewards": {
+    "function": "skills:misc/anykill"
+  }
+}

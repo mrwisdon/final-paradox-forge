@@ -1,0 +1,1 @@
+execute at @s[scores={ice_meteor_cd=0}] positioned ^ ^1 ^4 if block ~ ~5 ~ #minecraft:nonsolid run function skills:sword/ice_meteor_2

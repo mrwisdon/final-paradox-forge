@@ -1,0 +1,1 @@
+execute at @s run execute as @e[tag=r4r_ability_target,distance=..3] at @s run function skills:bow/noxious_arrow_hit2

@@ -1,0 +1,1 @@
+execute at @s[tag=!dark_orb_damaged] run function skills:offhand/dark_orb_hit_2

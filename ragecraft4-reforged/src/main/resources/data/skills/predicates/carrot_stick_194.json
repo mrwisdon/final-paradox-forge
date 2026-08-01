@@ -1,0 +1,35 @@
+{
+  "condition": "minecraft:any_of",
+  "terms": [
+    {
+      "condition": "minecraft:entity_properties",
+      "entity": "this",
+      "predicate": {
+        "equipment": {
+          "mainhand": {
+            "items": [
+              "minecraft:carrot_on_a_stick"
+            ],
+            "count": 1,
+            "nbt": "{CustomModelData:194}"
+          }
+        }
+      }
+    },
+    {
+      "condition": "minecraft:entity_properties",
+      "entity": "this",
+      "predicate": {
+        "equipment": {
+          "mainhand": {
+            "items": [
+              "minecraft:carrot_on_a_stick"
+            ],
+            "count": 1,
+            "nbt": "{CustomModelData:194s}"
+          }
+        }
+      }
+    }
+  ]
+}

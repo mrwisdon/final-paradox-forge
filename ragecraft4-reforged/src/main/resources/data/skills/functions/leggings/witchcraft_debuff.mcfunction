@@ -1,0 +1,1 @@
+execute at @s run execute as @e[tag=r4r_ability_target,distance=..4] run function skills:leggings/witchcraft_debuff_2

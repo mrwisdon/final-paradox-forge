@@ -1,0 +1,40 @@
+{
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "#ragecraft4reforged:ability_targets",
+              "distance": {
+                "absolute": {
+                  "min": 0,
+                  "max": 6
+                }
+              },
+              "effects": {
+                "minecraft:blindness": {
+                  "amplifier": 2
+                }
+              }
+            }
+          }
+        ],
+        "killing_blow": {
+          "tags": [
+            {
+              "id": "minecraft:non_melee_for_kill",
+              "expected": false
+            }
+          ]
+        }
+      }
+    }
+  },
+  "rewards": {
+    "function": "skills:sword/rot_blast_3"
+  }
+}

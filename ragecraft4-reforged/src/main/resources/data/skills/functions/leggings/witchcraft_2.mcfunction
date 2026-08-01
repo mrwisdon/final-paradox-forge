@@ -1,0 +1,2 @@
+execute at @s positioned ^ ^1 ^3.5 run summon marker ~ ~2 ~ {Silent:1b,Invulnerable:1b,Tags:["witchcraft_marker"]}
+execute as @e[type=marker,tag=witchcraft_marker] at @s run function skills:leggings/witchcraft_marker_d

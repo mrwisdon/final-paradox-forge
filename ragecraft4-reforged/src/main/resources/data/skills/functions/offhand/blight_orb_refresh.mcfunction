@@ -1,0 +1,1 @@
+scoreboard players set @s blight_orb_duration 240

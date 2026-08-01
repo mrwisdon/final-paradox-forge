@@ -1,0 +1,17 @@
+{
+  "criteria": {
+    "requirement": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "killing_blow": {
+          "tags": [
+            {
+              "id": "minecraft:non_melee_for_kill",
+              "expected": false
+            }
+          ]
+        }
+      }
+    }
+  }
+}

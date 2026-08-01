@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["MBM", "BUB", "MBM"],
+  "key": {
+    "M": {"item": "minecraft:magma_cream"},
+    "B": {"item": "minecraft:blaze_rod"},
+    "U": {"item": "ragecraft4reforged:unenchanted_wand"}
+  },
+  "result": {"item": "ragecraft4reforged:infernal_scepter", "count": 1},
+  "show_notification": true
+}

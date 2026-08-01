@@ -1,0 +1,17 @@
+{
+    "criteria": {
+      "requirement": {
+        "trigger": "minecraft:inventory_changed",
+        "conditions": {
+          "items": [
+            {
+              "nbt": "{soul_reaper:1b}"
+            }
+          ]
+        }
+      }
+    },
+    "rewards": {
+      "function": "skills:helmet/soul_reaper_explain"
+    }
+  }

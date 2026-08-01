@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/reaping_wand_uncharged",
+  "overrides": [
+    { "predicate": { "ragecraft4reforged:charged": 1.0 }, "model": "minecraft:item/reaping_wand_charged" }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ragecraft4reforged:item/suffix_sigil_ice"
+  }
+}

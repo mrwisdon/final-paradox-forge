@@ -1,0 +1,1 @@
+execute at @s run execute as @e[type=minecraft:arrow,tag=!arrow_done,nbt={pickup:1b,inGround:0b},distance=..3] run function skills:bow/vt_healing_crystal_2

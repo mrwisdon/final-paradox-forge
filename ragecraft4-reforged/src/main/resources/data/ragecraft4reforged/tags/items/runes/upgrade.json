@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    "ragecraft4reforged:upgrade_001",
+    "ragecraft4reforged:upgrade_002",
+    "ragecraft4reforged:upgrade_003",
+    "ragecraft4reforged:upgrade_004",
+    "ragecraft4reforged:upgrade_005",
+    "ragecraft4reforged:upgrade_006",
+    "ragecraft4reforged:upgrade_007",
+    "ragecraft4reforged:upgrade_008",
+    "ragecraft4reforged:upgrade_009",
+    "ragecraft4reforged:upgrade_010",
+    "ragecraft4reforged:upgrade_011",
+    "ragecraft4reforged:upgrade_012",
+    "ragecraft4reforged:upgrade_013",
+    "ragecraft4reforged:upgrade_014",
+    "ragecraft4reforged:rune_of_impatience",
+    "ragecraft4reforged:rune_of_cowardice",
+    "ragecraft4reforged:rune_of_temerity",
+    "ragecraft4reforged:rune_of_acceleration",
+    "ragecraft4reforged:rune_of_impact",
+    "ragecraft4reforged:rune_of_toughness",
+    "ragecraft4reforged:rune_of_versatility",
+    "ragecraft4reforged:rune_of_inertia",
+    "ragecraft4reforged:rune_of_incongruity",
+    "ragecraft4reforged:rune_of_malice"
+  ]
+}

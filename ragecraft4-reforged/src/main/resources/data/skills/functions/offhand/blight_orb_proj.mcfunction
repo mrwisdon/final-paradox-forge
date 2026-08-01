@@ -1,0 +1,1 @@
+tp @e[type=armor_stand,tag=blight_orb_proj,limit=1,sort=nearest] ~ ~ ~

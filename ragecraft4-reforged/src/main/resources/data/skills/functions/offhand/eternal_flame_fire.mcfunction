@@ -1,0 +1,1 @@
+execute at @s run execute as @e[tag=r4r_ability_target,distance=..7,nbt={HurtTime:10s}] run function skills:misc/setonfire_5s

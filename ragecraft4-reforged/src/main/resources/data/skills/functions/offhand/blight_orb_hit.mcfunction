@@ -1,0 +1,1 @@
+execute at @s[tag=!blight_orb_damaged] run function skills:offhand/blight_orb_hit_2

@@ -1,0 +1,1 @@
+execute as @s[type=#minecraft:can_be_on_fire] run function skills:misc/setonfire_9s

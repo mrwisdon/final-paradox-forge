@@ -1,0 +1,1 @@
+scoreboard players add @s shadow_spikes_cd 1

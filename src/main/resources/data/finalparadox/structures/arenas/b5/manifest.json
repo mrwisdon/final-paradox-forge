@@ -1,0 +1,780 @@
+{
+  "name": "b5_arena_interior",
+  "source_world": "Final_Paradox_v1.1.15",
+  "source_level_dat_sha256": "717F3D6E30DD618C4F8AA9960668D7A7C36357D1CABC339325E8BCAFA2F863A6",
+  "source_bounds": {
+    "min": [
+      -1171,
+      42,
+      1398
+    ],
+    "max": [
+      -1087,
+      103,
+      1454
+    ]
+  },
+  "size": [
+    85,
+    62,
+    57
+  ],
+  "tile_size": 48,
+  "tile_counts": [
+    2,
+    2,
+    2
+  ],
+  "data_version": 3465,
+  "policy": {
+    "includes_air": true,
+    "includes_entities": false,
+    "includes_block_entities": false,
+    "unsafe_blocks_replaced_with_air": [
+      "minecraft:chain_command_block",
+      "minecraft:command_block",
+      "minecraft:jigsaw",
+      "minecraft:repeating_command_block",
+      "minecraft:spawner",
+      "minecraft:structure_block"
+    ],
+    "adaptations": [
+      "Arena interior only: the fully enclosed combat well (platform, moat, perimeter walls, open shaft, and ceiling) was exported; the northern entrance hall/garden and the surrounding dark-prismarine palace floor outside X -1171..-1087 / Z 1398..1454 are deliberately excluded.",
+      "Ceiling at Y 94..103 (polished andesite with glowstone lighting) is included so the deployed arena reads as the original enclosed palace chamber."
+    ]
+  },
+  "tiles": [
+    {
+      "file": "tile_0_0_0.nbt",
+      "source_min": [
+        -1171,
+        42,
+        1398
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 120,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          83181
+        ],
+        [
+          "minecraft:dark_prismarine",
+          14353
+        ],
+        [
+          "minecraft:polished_andesite",
+          4747
+        ],
+        [
+          "minecraft:bedrock",
+          1898
+        ],
+        [
+          "minecraft:end_stone",
+          1746
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          1025
+        ],
+        [
+          "minecraft:cobblestone",
+          562
+        ],
+        [
+          "minecraft:water",
+          532
+        ],
+        [
+          "minecraft:smooth_stone",
+          405
+        ],
+        [
+          "minecraft:mossy_cobblestone_wall",
+          342
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          317
+        ],
+        [
+          "minecraft:lime_terracotta",
+          261
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          188
+        ],
+        [
+          "minecraft:terracotta",
+          152
+        ],
+        [
+          "minecraft:smooth_stone_slab",
+          144
+        ],
+        [
+          "minecraft:sandstone_stairs",
+          125
+        ],
+        [
+          "minecraft:redstone_wall_torch",
+          99
+        ],
+        [
+          "minecraft:cyan_stained_glass",
+          96
+        ],
+        [
+          "minecraft:gray_stained_glass",
+          82
+        ],
+        [
+          "minecraft:mossy_stone_bricks",
+          63
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "D6E641EEC46BB4F5F1A9E500C328673BDFCD073D7A143CA8B9B614D164C62CE9",
+      "index": [
+        0,
+        0,
+        0
+      ],
+      "offset": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "tile_1_0_0.nbt",
+      "source_min": [
+        -1123,
+        42,
+        1398
+      ],
+      "size": [
+        37,
+        48,
+        48
+      ],
+      "palette_size": 105,
+      "blocks": 85248,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          63236
+        ],
+        [
+          "minecraft:dark_prismarine",
+          10659
+        ],
+        [
+          "minecraft:polished_andesite",
+          4180
+        ],
+        [
+          "minecraft:bedrock",
+          1898
+        ],
+        [
+          "minecraft:end_stone",
+          1610
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          886
+        ],
+        [
+          "minecraft:water",
+          463
+        ],
+        [
+          "minecraft:cobblestone",
+          390
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          294
+        ],
+        [
+          "minecraft:smooth_stone",
+          262
+        ],
+        [
+          "minecraft:mossy_cobblestone_wall",
+          255
+        ],
+        [
+          "minecraft:lime_terracotta",
+          213
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          161
+        ],
+        [
+          "minecraft:terracotta",
+          152
+        ],
+        [
+          "minecraft:sandstone_stairs",
+          127
+        ],
+        [
+          "minecraft:smooth_stone_slab",
+          100
+        ],
+        [
+          "minecraft:redstone_wall_torch",
+          81
+        ],
+        [
+          "minecraft:gray_stained_glass",
+          64
+        ],
+        [
+          "minecraft:mossy_stone_bricks",
+          63
+        ],
+        [
+          "minecraft:brown_concrete",
+          43
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "96DAD9D9F0139A82E4FAAEE35CC195549536A605C701DE6369DD4478BCE52D63",
+      "index": [
+        1,
+        0,
+        0
+      ],
+      "offset": [
+        48,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "tile_0_0_1.nbt",
+      "source_min": [
+        -1171,
+        42,
+        1446
+      ],
+      "size": [
+        48,
+        48,
+        9
+      ],
+      "palette_size": 58,
+      "blocks": 20736,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          10550
+        ],
+        [
+          "minecraft:dark_prismarine",
+          4527
+        ],
+        [
+          "minecraft:polished_andesite",
+          2037
+        ],
+        [
+          "minecraft:end_stone",
+          976
+        ],
+        [
+          "minecraft:bedrock",
+          785
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          535
+        ],
+        [
+          "minecraft:cobblestone",
+          353
+        ],
+        [
+          "minecraft:water",
+          259
+        ],
+        [
+          "minecraft:mossy_cobblestone_wall",
+          198
+        ],
+        [
+          "minecraft:terracotta",
+          124
+        ],
+        [
+          "minecraft:sandstone_stairs",
+          89
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          87
+        ],
+        [
+          "minecraft:mossy_stone_bricks",
+          59
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          36
+        ],
+        [
+          "minecraft:brown_concrete",
+          35
+        ],
+        [
+          "minecraft:redstone_wall_torch",
+          25
+        ],
+        [
+          "minecraft:lime_stained_glass_pane",
+          25
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          20
+        ],
+        [
+          "minecraft:glowstone",
+          6
+        ],
+        [
+          "minecraft:netherrack",
+          5
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "B8CCCBBB1E0C9E8EF9256E441700A9BB8B7F8243B0428F707D0D6B0B77E14BB8",
+      "index": [
+        0,
+        0,
+        1
+      ],
+      "offset": [
+        0,
+        0,
+        48
+      ]
+    },
+    {
+      "file": "tile_1_0_1.nbt",
+      "source_min": [
+        -1123,
+        42,
+        1446
+      ],
+      "size": [
+        37,
+        48,
+        9
+      ],
+      "palette_size": 55,
+      "blocks": 15984,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          7847
+        ],
+        [
+          "minecraft:dark_prismarine",
+          3334
+        ],
+        [
+          "minecraft:polished_andesite",
+          1806
+        ],
+        [
+          "minecraft:end_stone",
+          821
+        ],
+        [
+          "minecraft:bedrock",
+          785
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          450
+        ],
+        [
+          "minecraft:water",
+          192
+        ],
+        [
+          "minecraft:cobblestone",
+          171
+        ],
+        [
+          "minecraft:mossy_cobblestone_wall",
+          141
+        ],
+        [
+          "minecraft:terracotta",
+          124
+        ],
+        [
+          "minecraft:sandstone_stairs",
+          81
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          67
+        ],
+        [
+          "minecraft:mossy_stone_bricks",
+          59
+        ],
+        [
+          "minecraft:brown_concrete",
+          35
+        ],
+        [
+          "minecraft:redstone_wall_torch",
+          23
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          20
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          16
+        ],
+        [
+          "minecraft:netherrack",
+          5
+        ],
+        [
+          "minecraft:fire",
+          5
+        ],
+        [
+          "minecraft:glowstone",
+          2
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "1BC335B2E4E5C4A1BDAEC3F975380ED897F24AAB3BABF77950402AA56C3EB5B9",
+      "index": [
+        1,
+        0,
+        1
+      ],
+      "offset": [
+        48,
+        0,
+        48
+      ]
+    },
+    {
+      "file": "tile_0_1_0.nbt",
+      "source_min": [
+        -1171,
+        90,
+        1398
+      ],
+      "size": [
+        48,
+        14,
+        48
+      ],
+      "palette_size": 23,
+      "blocks": 32256,
+      "top_block_names": [
+        [
+          "minecraft:bedrock",
+          13582
+        ],
+        [
+          "minecraft:polished_andesite",
+          7409
+        ],
+        [
+          "minecraft:air",
+          4168
+        ],
+        [
+          "minecraft:dark_prismarine",
+          4103
+        ],
+        [
+          "minecraft:terracotta",
+          1978
+        ],
+        [
+          "minecraft:brown_concrete",
+          495
+        ],
+        [
+          "minecraft:lime_terracotta",
+          207
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          164
+        ],
+        [
+          "minecraft:mossy_cobblestone_wall",
+          79
+        ],
+        [
+          "minecraft:end_stone",
+          30
+        ],
+        [
+          "minecraft:mossy_stone_bricks",
+          13
+        ],
+        [
+          "minecraft:glowstone",
+          12
+        ],
+        [
+          "minecraft:netherrack",
+          9
+        ],
+        [
+          "minecraft:fire",
+          7
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "BCF2918640BA26D57A2D5F890EB13797BA30B4D04FD0961F1D3590E9882E29BD",
+      "index": [
+        0,
+        1,
+        0
+      ],
+      "offset": [
+        0,
+        48,
+        0
+      ]
+    },
+    {
+      "file": "tile_1_1_0.nbt",
+      "source_min": [
+        -1123,
+        90,
+        1398
+      ],
+      "size": [
+        37,
+        14,
+        48
+      ],
+      "palette_size": 18,
+      "blocks": 24864,
+      "top_block_names": [
+        [
+          "minecraft:bedrock",
+          13582
+        ],
+        [
+          "minecraft:polished_andesite",
+          5462
+        ],
+        [
+          "minecraft:air",
+          2115
+        ],
+        [
+          "minecraft:terracotta",
+          1978
+        ],
+        [
+          "minecraft:dark_prismarine",
+          935
+        ],
+        [
+          "minecraft:brown_concrete",
+          495
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          115
+        ],
+        [
+          "minecraft:lime_terracotta",
+          115
+        ],
+        [
+          "minecraft:end_stone",
+          30
+        ],
+        [
+          "minecraft:mossy_stone_bricks",
+          13
+        ],
+        [
+          "minecraft:netherrack",
+          9
+        ],
+        [
+          "minecraft:fire",
+          7
+        ],
+        [
+          "minecraft:glowstone",
+          5
+        ],
+        [
+          "minecraft:mossy_cobblestone_wall",
+          3
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "A145AF1E7B5F0A52C86620040345A14E0E8EB5EAA1B764B5C584CE19737388E1",
+      "index": [
+        1,
+        1,
+        0
+      ],
+      "offset": [
+        48,
+        48,
+        0
+      ]
+    },
+    {
+      "file": "tile_0_1_1.nbt",
+      "source_min": [
+        -1171,
+        90,
+        1446
+      ],
+      "size": [
+        48,
+        14,
+        9
+      ],
+      "palette_size": 11,
+      "blocks": 6048,
+      "top_block_names": [
+        [
+          "minecraft:bedrock",
+          3474
+        ],
+        [
+          "minecraft:dark_prismarine",
+          1595
+        ],
+        [
+          "minecraft:terracotta",
+          696
+        ],
+        [
+          "minecraft:brown_concrete",
+          183
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          71
+        ],
+        [
+          "minecraft:mossy_cobblestone_wall",
+          24
+        ],
+        [
+          "minecraft:mossy_stone_bricks",
+          3
+        ],
+        [
+          "minecraft:netherrack",
+          1
+        ],
+        [
+          "minecraft:fire",
+          1
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "C27F4D5AEC860DA68B9FBB88414B461101ABE3576CBB5141F5018A38E44E35F2",
+      "index": [
+        0,
+        1,
+        1
+      ],
+      "offset": [
+        0,
+        48,
+        48
+      ]
+    },
+    {
+      "file": "tile_1_1_1.nbt",
+      "source_min": [
+        -1123,
+        90,
+        1446
+      ],
+      "size": [
+        37,
+        14,
+        9
+      ],
+      "palette_size": 9,
+      "blocks": 4662,
+      "top_block_names": [
+        [
+          "minecraft:bedrock",
+          3474
+        ],
+        [
+          "minecraft:terracotta",
+          696
+        ],
+        [
+          "minecraft:dark_prismarine",
+          233
+        ],
+        [
+          "minecraft:brown_concrete",
+          183
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          71
+        ],
+        [
+          "minecraft:mossy_stone_bricks",
+          3
+        ],
+        [
+          "minecraft:netherrack",
+          1
+        ],
+        [
+          "minecraft:fire",
+          1
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "1754FF34FB18659B40D9CB77E9C73F582EA9D1B14E262D5E2FF346DE1E6302A3",
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "offset": [
+        48,
+        48,
+        48
+      ]
+    }
+  ]
+}

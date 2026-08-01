@@ -1,0 +1,101 @@
+{
+  "parent": "minecraft:block/block",
+  "gui_light": "front",
+  "textures": {
+    "rod": "minecraft:block/end_rod",
+    "core": "minecraft:block/conduit",
+    "particle": "minecraft:block/end_rod"
+  },
+  "display": {
+    "gui": {
+      "rotation": [0, 0, 0],
+      "translation": [0, -1.4, 0],
+      "scale": [0.35, 0.35, 0.35]
+    },
+    "fixed": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    }
+  },
+  "elements": [
+    {
+      "name": "blade",
+      "from": [7, 10, 7],
+      "to": [9, 32, 9],
+      "faces": {
+        "north": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "east": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "south": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "west": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "up": {"uv": [2, 0, 4, 2], "texture": "#rod"},
+        "down": {"uv": [2, 0, 4, 2], "texture": "#rod"}
+      }
+    },
+    {
+      "name": "blade_collar",
+      "from": [6, 9, 6],
+      "to": [10, 13, 10],
+      "faces": {
+        "north": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "east": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "south": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "west": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "up": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "down": {"uv": [2, 2, 6, 6], "texture": "#rod"}
+      }
+    },
+    {
+      "name": "crossguard",
+      "from": [-5, 7, 6.5],
+      "to": [21, 10, 9.5],
+      "faces": {
+        "north": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "east": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "south": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "west": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "up": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "down": {"uv": [0, 0, 2, 15], "texture": "#rod"}
+      }
+    },
+    {
+      "name": "handle",
+      "from": [6.75, -4, 6.75],
+      "to": [9.25, 7, 9.25],
+      "faces": {
+        "north": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "east": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "south": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "west": {"uv": [0, 0, 2, 15], "texture": "#rod"},
+        "up": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "down": {"uv": [2, 2, 6, 6], "texture": "#rod"}
+      }
+    },
+    {
+      "name": "pommel",
+      "from": [5.5, -8, 5.5],
+      "to": [10.5, -4, 10.5],
+      "faces": {
+        "north": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "east": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "south": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "west": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "up": {"uv": [2, 2, 6, 6], "texture": "#rod"},
+        "down": {"uv": [2, 2, 6, 6], "texture": "#rod"}
+      }
+    },
+    {
+      "name": "conduit_core",
+      "from": [4.5, 5, 4.5],
+      "to": [11.5, 12, 11.5],
+      "faces": {
+        "north": {"uv": [2, 2, 14, 14], "texture": "#core"},
+        "east": {"uv": [2, 2, 14, 14], "texture": "#core"},
+        "south": {"uv": [2, 2, 14, 14], "texture": "#core"},
+        "west": {"uv": [2, 2, 14, 14], "texture": "#core"},
+        "up": {"uv": [2, 2, 14, 14], "texture": "#core"},
+        "down": {"uv": [2, 2, 14, 14], "texture": "#core"}
+      }
+    }
+  ]
+}

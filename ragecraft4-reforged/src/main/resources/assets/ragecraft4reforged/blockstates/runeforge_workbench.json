@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "ragecraft4reforged:block/runeforge_workbench" },
+    "facing=east":  { "model": "ragecraft4reforged:block/runeforge_workbench", "y": 90 },
+    "facing=south": { "model": "ragecraft4reforged:block/runeforge_workbench", "y": 180 },
+    "facing=west":  { "model": "ragecraft4reforged:block/runeforge_workbench", "y": 270 }
+  }
+}

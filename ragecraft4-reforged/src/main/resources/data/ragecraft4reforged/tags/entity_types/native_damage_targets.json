@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "#ragecraft4reforged:training_dummies",
+    {
+      "id": "finalparadox:apiglo",
+      "required": false
+    }
+  ]
+}

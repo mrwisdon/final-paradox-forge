@@ -1,0 +1,4 @@
+execute at @s[predicate=!skills:volley_1,predicate=!skills:volley_2] run execute as @e[type=minecraft:arrow,tag=!arrow_done,nbt={pickup:1b,inGround:0b,crit:0b},distance=..3] at @s run data modify entity @s Fire set value 300
+execute at @s[predicate=!skills:volley_1,predicate=!skills:volley_2] run execute as @e[type=minecraft:arrow,tag=!arrow_done,nbt={pickup:1b,inGround:0b,crit:1b},distance=..3] at @s run function skills:bow/dreadfire_2
+execute at @s[predicate=skills:volley_1] run execute as @e[type=minecraft:arrow,tag=!arrow_done,nbt={pickup:1b,inGround:0b,crit:1b},distance=..3] at @s run function skills:bow/dreadfire_2v1
+execute at @s[predicate=skills:volley_2] run execute as @e[type=minecraft:arrow,tag=!arrow_done,nbt={pickup:1b,inGround:0b,crit:1b},distance=..3] at @s run function skills:bow/dreadfire_2v2

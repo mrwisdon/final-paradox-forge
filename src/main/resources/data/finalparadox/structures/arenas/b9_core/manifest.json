@@ -1,0 +1,1535 @@
+{
+  "name": "b9_core",
+  "source_world": "Final_Paradox_v1.1.15",
+  "source_level_dat_sha256": "717F3D6E30DD618C4F8AA9960668D7A7C36357D1CABC339325E8BCAFA2F863A6",
+  "source_bounds": {
+    "min": [
+      -6447,
+      45,
+      1684
+    ],
+    "max": [
+      -6319,
+      100,
+      1812
+    ]
+  },
+  "size": [
+    129,
+    56,
+    129
+  ],
+  "tile_size": 48,
+  "tile_counts": [
+    3,
+    2,
+    3
+  ],
+  "data_version": 3465,
+  "policy": {
+    "includes_air": true,
+    "includes_entities": false,
+    "includes_block_entities": false,
+    "adaptations": [
+      "The horizontal export stops at the natural +/-64 block inner-ring gap before the outer dome footprint.",
+      "The vertical export stops at source Y=100: surrounding towers and arches remain visible while the dome's upper shell is omitted.",
+      "Restored the two victory-cinematic light blocks at global positions [-6370,49,1748] and [-6370,50,1748] to the base arena's gray concrete."
+    ],
+    "unsafe_blocks_replaced_with_air": [
+      "minecraft:chain_command_block",
+      "minecraft:command_block",
+      "minecraft:jigsaw",
+      "minecraft:repeating_command_block",
+      "minecraft:spawner",
+      "minecraft:structure_block"
+    ]
+  },
+  "tiles": [
+    {
+      "file": "tile_0_0_0.nbt",
+      "source_min": [
+        -6447,
+        45,
+        1684
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 80,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          100271
+        ],
+        [
+          "minecraft:gray_concrete",
+          1552
+        ],
+        [
+          "minecraft:black_concrete",
+          1393
+        ],
+        [
+          "minecraft:nether_wart_block",
+          1181
+        ],
+        [
+          "minecraft:polished_basalt",
+          1160
+        ],
+        [
+          "minecraft:red_concrete",
+          966
+        ],
+        [
+          "minecraft:polished_blackstone_bricks",
+          923
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          568
+        ],
+        [
+          "minecraft:netherite_block",
+          471
+        ],
+        [
+          "minecraft:polished_andesite",
+          462
+        ],
+        [
+          "minecraft:blackstone",
+          383
+        ],
+        [
+          "minecraft:black_stained_glass",
+          309
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          210
+        ],
+        [
+          "minecraft:red_stained_glass",
+          175
+        ],
+        [
+          "minecraft:smooth_stone",
+          138
+        ],
+        [
+          "minecraft:lodestone",
+          114
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          60
+        ],
+        [
+          "minecraft:light_gray_stained_glass",
+          42
+        ],
+        [
+          "minecraft:orange_stained_glass",
+          35
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          34
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "9961E323E9B6646022B82CF50BC6364B19C0239F61133CFCD7CD056A1A2851CF",
+      "index": [
+        0,
+        0,
+        0
+      ],
+      "offset": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "tile_1_0_0.nbt",
+      "source_min": [
+        -6399,
+        45,
+        1684
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 127,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          91152
+        ],
+        [
+          "minecraft:black_concrete",
+          6426
+        ],
+        [
+          "minecraft:gray_concrete",
+          3182
+        ],
+        [
+          "minecraft:red_concrete",
+          1431
+        ],
+        [
+          "minecraft:polished_andesite",
+          1197
+        ],
+        [
+          "minecraft:polished_basalt",
+          1194
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          1026
+        ],
+        [
+          "minecraft:polished_blackstone_bricks",
+          863
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          663
+        ],
+        [
+          "minecraft:black_stained_glass",
+          652
+        ],
+        [
+          "minecraft:blackstone",
+          526
+        ],
+        [
+          "minecraft:red_stained_glass",
+          404
+        ],
+        [
+          "minecraft:nether_wart_block",
+          357
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          247
+        ],
+        [
+          "minecraft:smooth_stone_slab",
+          241
+        ],
+        [
+          "minecraft:smooth_stone",
+          154
+        ],
+        [
+          "minecraft:polished_blackstone_slab",
+          139
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          128
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          101
+        ],
+        [
+          "minecraft:netherite_block",
+          88
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "FCC6DF9DA7EDC0DD5F312FC332A850D1F0DC18E9308321119DF29C25ABDE5299",
+      "index": [
+        1,
+        0,
+        0
+      ],
+      "offset": [
+        48,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "tile_2_0_0.nbt",
+      "source_min": [
+        -6351,
+        45,
+        1684
+      ],
+      "size": [
+        33,
+        48,
+        48
+      ],
+      "palette_size": 40,
+      "blocks": 76032,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          68669
+        ],
+        [
+          "minecraft:black_concrete",
+          2056
+        ],
+        [
+          "minecraft:gray_concrete",
+          1467
+        ],
+        [
+          "minecraft:nether_wart_block",
+          892
+        ],
+        [
+          "minecraft:red_concrete",
+          600
+        ],
+        [
+          "minecraft:polished_andesite",
+          542
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          434
+        ],
+        [
+          "minecraft:polished_blackstone_bricks",
+          370
+        ],
+        [
+          "minecraft:black_stained_glass",
+          266
+        ],
+        [
+          "minecraft:blackstone",
+          230
+        ],
+        [
+          "minecraft:white_concrete",
+          138
+        ],
+        [
+          "minecraft:red_stained_glass",
+          121
+        ],
+        [
+          "minecraft:redstone_block",
+          75
+        ],
+        [
+          "minecraft:netherite_block",
+          74
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          25
+        ],
+        [
+          "minecraft:polished_andesite_stairs",
+          14
+        ],
+        [
+          "minecraft:lodestone",
+          12
+        ],
+        [
+          "minecraft:orange_stained_glass",
+          12
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          9
+        ],
+        [
+          "minecraft:sea_lantern",
+          8
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "499DFD1E2D0AB3F6C5E86F36B8325F227D9AC7752614DE5DAC709C8BD392F9C5",
+      "index": [
+        2,
+        0,
+        0
+      ],
+      "offset": [
+        96,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "tile_0_0_1.nbt",
+      "source_min": [
+        -6447,
+        45,
+        1732
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 97,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          100274
+        ],
+        [
+          "minecraft:gray_concrete",
+          3490
+        ],
+        [
+          "minecraft:red_concrete",
+          1227
+        ],
+        [
+          "minecraft:polished_blackstone_bricks",
+          1200
+        ],
+        [
+          "minecraft:polished_andesite",
+          681
+        ],
+        [
+          "minecraft:netherite_block",
+          656
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          635
+        ],
+        [
+          "minecraft:blackstone",
+          503
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          303
+        ],
+        [
+          "minecraft:black_concrete",
+          293
+        ],
+        [
+          "minecraft:lodestone",
+          238
+        ],
+        [
+          "minecraft:nether_wart_block",
+          192
+        ],
+        [
+          "minecraft:polished_blackstone_slab",
+          147
+        ],
+        [
+          "minecraft:smooth_stone_slab",
+          144
+        ],
+        [
+          "minecraft:black_stained_glass",
+          101
+        ],
+        [
+          "minecraft:red_stained_glass",
+          95
+        ],
+        [
+          "minecraft:polished_blackstone_brick_wall",
+          76
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          64
+        ],
+        [
+          "minecraft:netherrack",
+          48
+        ],
+        [
+          "minecraft:fire",
+          40
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "AFB46D8965C577B9E514BBBB015C257D8799CE2BD31578E817D910335D86B817",
+      "index": [
+        0,
+        0,
+        1
+      ],
+      "offset": [
+        0,
+        0,
+        48
+      ]
+    },
+    {
+      "file": "tile_1_0_1.nbt",
+      "source_min": [
+        -6399,
+        45,
+        1732
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 146,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          98232
+        ],
+        [
+          "minecraft:gray_concrete",
+          4828
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          1515
+        ],
+        [
+          "minecraft:polished_blackstone_bricks",
+          1288
+        ],
+        [
+          "minecraft:red_concrete",
+          1065
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          643
+        ],
+        [
+          "minecraft:polished_andesite",
+          439
+        ],
+        [
+          "minecraft:black_concrete",
+          406
+        ],
+        [
+          "minecraft:smooth_stone_slab",
+          390
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          343
+        ],
+        [
+          "minecraft:polished_blackstone_slab",
+          210
+        ],
+        [
+          "minecraft:blackstone",
+          174
+        ],
+        [
+          "minecraft:red_stained_glass",
+          165
+        ],
+        [
+          "minecraft:netherrack",
+          111
+        ],
+        [
+          "minecraft:lodestone",
+          100
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          74
+        ],
+        [
+          "minecraft:polished_blackstone_brick_slab",
+          68
+        ],
+        [
+          "minecraft:fire",
+          68
+        ],
+        [
+          "minecraft:soul_sand",
+          64
+        ],
+        [
+          "minecraft:stone_brick_wall",
+          55
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "7D9F96CB686B7518827B075DC8602721CB864D07D845D06EE4F4259C14806AF5",
+      "index": [
+        1,
+        0,
+        1
+      ],
+      "offset": [
+        48,
+        0,
+        48
+      ]
+    },
+    {
+      "file": "tile_2_0_1.nbt",
+      "source_min": [
+        -6351,
+        45,
+        1732
+      ],
+      "size": [
+        33,
+        48,
+        48
+      ],
+      "palette_size": 78,
+      "blocks": 76032,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          60104
+        ],
+        [
+          "minecraft:black_concrete",
+          4858
+        ],
+        [
+          "minecraft:gray_concrete",
+          4397
+        ],
+        [
+          "minecraft:polished_andesite",
+          1382
+        ],
+        [
+          "minecraft:red_concrete",
+          1135
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          981
+        ],
+        [
+          "minecraft:polished_blackstone_bricks",
+          673
+        ],
+        [
+          "minecraft:black_stained_glass",
+          648
+        ],
+        [
+          "minecraft:blackstone",
+          454
+        ],
+        [
+          "minecraft:nether_wart_block",
+          308
+        ],
+        [
+          "minecraft:red_stained_glass",
+          221
+        ],
+        [
+          "minecraft:white_concrete",
+          209
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          152
+        ],
+        [
+          "minecraft:netherite_block",
+          142
+        ],
+        [
+          "minecraft:stone_bricks",
+          104
+        ],
+        [
+          "minecraft:redstone_block",
+          57
+        ],
+        [
+          "minecraft:smooth_stone_slab",
+          42
+        ],
+        [
+          "minecraft:polished_andesite_stairs",
+          38
+        ],
+        [
+          "minecraft:stone_brick_wall",
+          32
+        ],
+        [
+          "minecraft:sea_lantern",
+          24
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "91E7BB67C6FAED2F5425BEF5557E29A9A5C52C840F71E77D94696776DE7AE133",
+      "index": [
+        2,
+        0,
+        1
+      ],
+      "offset": [
+        96,
+        0,
+        48
+      ]
+    },
+    {
+      "file": "tile_0_0_2.nbt",
+      "source_min": [
+        -6447,
+        45,
+        1780
+      ],
+      "size": [
+        48,
+        48,
+        33
+      ],
+      "palette_size": 47,
+      "blocks": 76032,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          69514
+        ],
+        [
+          "minecraft:black_concrete",
+          1297
+        ],
+        [
+          "minecraft:polished_basalt",
+          1154
+        ],
+        [
+          "minecraft:nether_wart_block",
+          878
+        ],
+        [
+          "minecraft:gray_concrete",
+          483
+        ],
+        [
+          "minecraft:red_concrete",
+          462
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          461
+        ],
+        [
+          "minecraft:polished_andesite",
+          316
+        ],
+        [
+          "minecraft:polished_blackstone_bricks",
+          312
+        ],
+        [
+          "minecraft:blackstone",
+          187
+        ],
+        [
+          "minecraft:black_stained_glass",
+          172
+        ],
+        [
+          "minecraft:red_stained_glass",
+          171
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          141
+        ],
+        [
+          "minecraft:smooth_stone",
+          138
+        ],
+        [
+          "minecraft:netherite_block",
+          109
+        ],
+        [
+          "minecraft:lodestone",
+          74
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          60
+        ],
+        [
+          "minecraft:light_gray_stained_glass",
+          42
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          30
+        ],
+        [
+          "minecraft:netherrack",
+          10
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "5ACBB317FCBC06BC2FF21D274082A0A113FC646C54144E24D0742F435491D665",
+      "index": [
+        0,
+        0,
+        2
+      ],
+      "offset": [
+        0,
+        0,
+        96
+      ]
+    },
+    {
+      "file": "tile_1_0_2.nbt",
+      "source_min": [
+        -6399,
+        45,
+        1780
+      ],
+      "size": [
+        48,
+        48,
+        33
+      ],
+      "palette_size": 78,
+      "blocks": 76032,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          59856
+        ],
+        [
+          "minecraft:black_concrete",
+          6347
+        ],
+        [
+          "minecraft:gray_concrete",
+          2128
+        ],
+        [
+          "minecraft:polished_andesite",
+          1138
+        ],
+        [
+          "minecraft:polished_basalt",
+          1110
+        ],
+        [
+          "minecraft:red_concrete",
+          1109
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          942
+        ],
+        [
+          "minecraft:polished_blackstone_bricks",
+          617
+        ],
+        [
+          "minecraft:nether_wart_block",
+          439
+        ],
+        [
+          "minecraft:blackstone",
+          387
+        ],
+        [
+          "minecraft:red_stained_glass",
+          372
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          231
+        ],
+        [
+          "minecraft:black_stained_glass",
+          220
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          177
+        ],
+        [
+          "minecraft:smooth_stone",
+          154
+        ],
+        [
+          "minecraft:netherite_block",
+          148
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          120
+        ],
+        [
+          "minecraft:smooth_stone_slab",
+          117
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          94
+        ],
+        [
+          "minecraft:obsidian",
+          76
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "C9696E018E2402646E27B07DB3C5FF069A574A0501937ECD853B9B883F711066",
+      "index": [
+        1,
+        0,
+        2
+      ],
+      "offset": [
+        48,
+        0,
+        96
+      ]
+    },
+    {
+      "file": "tile_2_0_2.nbt",
+      "source_min": [
+        -6351,
+        45,
+        1780
+      ],
+      "size": [
+        33,
+        48,
+        33
+      ],
+      "palette_size": 37,
+      "blocks": 52272,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          49389
+        ],
+        [
+          "minecraft:black_concrete",
+          727
+        ],
+        [
+          "minecraft:nether_wart_block",
+          650
+        ],
+        [
+          "minecraft:gray_concrete",
+          302
+        ],
+        [
+          "minecraft:red_concrete",
+          234
+        ],
+        [
+          "minecraft:polished_andesite",
+          221
+        ],
+        [
+          "minecraft:polished_blackstone_bricks",
+          148
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          126
+        ],
+        [
+          "minecraft:black_stained_glass",
+          99
+        ],
+        [
+          "minecraft:blackstone",
+          86
+        ],
+        [
+          "minecraft:orange_stained_glass",
+          60
+        ],
+        [
+          "minecraft:white_concrete",
+          55
+        ],
+        [
+          "minecraft:red_stained_glass",
+          44
+        ],
+        [
+          "minecraft:yellow_stained_glass_pane",
+          43
+        ],
+        [
+          "minecraft:redstone_block",
+          30
+        ],
+        [
+          "minecraft:yellow_stained_glass",
+          23
+        ],
+        [
+          "minecraft:netherite_block",
+          14
+        ],
+        [
+          "minecraft:sea_lantern",
+          10
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          6
+        ],
+        [
+          "minecraft:stone_brick_wall",
+          3
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "8C1F7CD199810DB489677FE86FD9C2B8DDDD616303F93D0BCAF6EC949898E33A",
+      "index": [
+        2,
+        0,
+        2
+      ],
+      "offset": [
+        96,
+        0,
+        96
+      ]
+    },
+    {
+      "file": "tile_0_1_0.nbt",
+      "source_min": [
+        -6447,
+        93,
+        1684
+      ],
+      "size": [
+        48,
+        8,
+        48
+      ],
+      "palette_size": 5,
+      "blocks": 18432,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          18210
+        ],
+        [
+          "minecraft:black_concrete",
+          143
+        ],
+        [
+          "minecraft:black_stained_glass",
+          76
+        ],
+        [
+          "minecraft:end_rod",
+          2
+        ],
+        [
+          "minecraft:red_stained_glass",
+          1
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "D798AE189A7CDE4E4C83458E4241CEF21FE6B46F4CE4FDFB6247170164BD528D",
+      "index": [
+        0,
+        1,
+        0
+      ],
+      "offset": [
+        0,
+        48,
+        0
+      ]
+    },
+    {
+      "file": "tile_1_1_0.nbt",
+      "source_min": [
+        -6399,
+        93,
+        1684
+      ],
+      "size": [
+        48,
+        8,
+        48
+      ],
+      "palette_size": 9,
+      "blocks": 18432,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          17696
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          646
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          36
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          35
+        ],
+        [
+          "minecraft:sea_lantern",
+          8
+        ],
+        [
+          "minecraft:stone_brick_wall",
+          6
+        ],
+        [
+          "minecraft:black_concrete",
+          5
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "B8DD63860148C3B24686D8904B0498B0C361BAD4E4481EA895836C4E985A34CE",
+      "index": [
+        1,
+        1,
+        0
+      ],
+      "offset": [
+        48,
+        48,
+        0
+      ]
+    },
+    {
+      "file": "tile_2_1_0.nbt",
+      "source_min": [
+        -6351,
+        93,
+        1684
+      ],
+      "size": [
+        33,
+        8,
+        48
+      ],
+      "palette_size": 30,
+      "blocks": 12672,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          12277
+        ],
+        [
+          "minecraft:black_concrete",
+          172
+        ],
+        [
+          "minecraft:polished_andesite",
+          43
+        ],
+        [
+          "minecraft:orange_stained_glass",
+          35
+        ],
+        [
+          "minecraft:red_concrete",
+          35
+        ],
+        [
+          "minecraft:yellow_stained_glass_pane",
+          29
+        ],
+        [
+          "minecraft:black_stained_glass",
+          26
+        ],
+        [
+          "minecraft:yellow_stained_glass",
+          17
+        ],
+        [
+          "minecraft:red_stained_glass",
+          14
+        ],
+        [
+          "minecraft:sea_lantern",
+          9
+        ],
+        [
+          "minecraft:purple_stained_glass",
+          3
+        ],
+        [
+          "minecraft:magenta_stained_glass",
+          3
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          2
+        ],
+        [
+          "minecraft:light_blue_stained_glass",
+          2
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          2
+        ],
+        [
+          "minecraft:end_rod",
+          1
+        ],
+        [
+          "minecraft:polished_blackstone_stairs",
+          1
+        ],
+        [
+          "minecraft:redstone_block",
+          1
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "7EE4AE286C273071CF720A3ED5C14A1B3E686A5554E0A24D1DAD7E741D186753",
+      "index": [
+        2,
+        1,
+        0
+      ],
+      "offset": [
+        96,
+        48,
+        0
+      ]
+    },
+    {
+      "file": "tile_0_1_1.nbt",
+      "source_min": [
+        -6447,
+        93,
+        1732
+      ],
+      "size": [
+        48,
+        8,
+        48
+      ],
+      "palette_size": 1,
+      "blocks": 18432,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          18432
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "A4B3377EF62BC53CE410F594A2BA93C9E3497C1FE05A6CF206E84AD9615894E7",
+      "index": [
+        0,
+        1,
+        1
+      ],
+      "offset": [
+        0,
+        48,
+        48
+      ]
+    },
+    {
+      "file": "tile_1_1_1.nbt",
+      "source_min": [
+        -6399,
+        93,
+        1732
+      ],
+      "size": [
+        48,
+        8,
+        48
+      ],
+      "palette_size": 1,
+      "blocks": 18432,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          18432
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "3DAAA7785553401FE359231290AC59C93A54F15E5FE0A34CC2D8962966DFA239",
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "offset": [
+        48,
+        48,
+        48
+      ]
+    },
+    {
+      "file": "tile_2_1_1.nbt",
+      "source_min": [
+        -6351,
+        93,
+        1732
+      ],
+      "size": [
+        33,
+        8,
+        48
+      ],
+      "palette_size": 14,
+      "blocks": 12672,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          11370
+        ],
+        [
+          "minecraft:black_concrete",
+          847
+        ],
+        [
+          "minecraft:polished_andesite",
+          217
+        ],
+        [
+          "minecraft:black_stained_glass",
+          68
+        ],
+        [
+          "minecraft:red_concrete",
+          65
+        ],
+        [
+          "minecraft:red_stained_glass",
+          57
+        ],
+        [
+          "minecraft:white_concrete",
+          16
+        ],
+        [
+          "minecraft:redstone_block",
+          12
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          9
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          6
+        ],
+        [
+          "minecraft:polished_blackstone_stairs",
+          3
+        ],
+        [
+          "minecraft:sea_lantern",
+          2
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "098E06E321187DD8DDEF75FCC49FF2469318CB54A92E339FBACD82F8E52486F7",
+      "index": [
+        2,
+        1,
+        1
+      ],
+      "offset": [
+        96,
+        48,
+        48
+      ]
+    },
+    {
+      "file": "tile_0_1_2.nbt",
+      "source_min": [
+        -6447,
+        93,
+        1780
+      ],
+      "size": [
+        48,
+        8,
+        33
+      ],
+      "palette_size": 6,
+      "blocks": 12672,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          12554
+        ],
+        [
+          "minecraft:black_stained_glass",
+          62
+        ],
+        [
+          "minecraft:black_concrete",
+          27
+        ],
+        [
+          "minecraft:end_rod",
+          19
+        ],
+        [
+          "minecraft:light_blue_stained_glass",
+          7
+        ],
+        [
+          "minecraft:red_stained_glass",
+          3
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "0F50571FCA0FA1DE9698C0CAA0A5337ACFAF74255FC70B1557F3E7DC419808AB",
+      "index": [
+        0,
+        1,
+        2
+      ],
+      "offset": [
+        0,
+        48,
+        96
+      ]
+    },
+    {
+      "file": "tile_1_1_2.nbt",
+      "source_min": [
+        -6399,
+        93,
+        1780
+      ],
+      "size": [
+        48,
+        8,
+        33
+      ],
+      "palette_size": 11,
+      "blocks": 12672,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          11936
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          646
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          36
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          33
+        ],
+        [
+          "minecraft:stone_brick_wall",
+          8
+        ],
+        [
+          "minecraft:sea_lantern",
+          8
+        ],
+        [
+          "minecraft:black_concrete",
+          5
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "6B23A6F8BF075CAC98F4F9FCA404AD4F9881413E652204DC4343F6865598DE6D",
+      "index": [
+        1,
+        1,
+        2
+      ],
+      "offset": [
+        48,
+        48,
+        96
+      ]
+    },
+    {
+      "file": "tile_2_1_2.nbt",
+      "source_min": [
+        -6351,
+        93,
+        1780
+      ],
+      "size": [
+        33,
+        8,
+        33
+      ],
+      "palette_size": 8,
+      "blocks": 8712,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          8699
+        ],
+        [
+          "minecraft:yellow_stained_glass_pane",
+          5
+        ],
+        [
+          "minecraft:end_rod",
+          5
+        ],
+        [
+          "minecraft:orange_stained_glass",
+          3
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "1B468F297DC2D18CF298107E3280B9B617A5997F1F0A28BF75B7385F033D5477",
+      "index": [
+        2,
+        1,
+        2
+      ],
+      "offset": [
+        96,
+        48,
+        96
+      ]
+    }
+  ]
+}

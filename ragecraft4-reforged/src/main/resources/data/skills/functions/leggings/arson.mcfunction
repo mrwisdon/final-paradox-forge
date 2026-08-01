@@ -1,0 +1,1 @@
+execute if score #rc4tick tick10 matches 4..6 run function skills:leggings/arson_2

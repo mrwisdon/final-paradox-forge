@@ -1,0 +1,1 @@
+execute at @s run execute as @e[type=armor_stand,tag=dark_orb_proj,distance=..8] run function skills:offhand/dark_orb_end_2

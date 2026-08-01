@@ -1,0 +1,1 @@
+execute at @s positioned ~ ~1 ~ unless entity @e[tag=r4r_ability_target,scores={cold_snap_target=1..},distance=..0] run function skills:axe/cold_snap_end

@@ -1,0 +1,1955 @@
+{
+  "name": "b1_amulet_candidate",
+  "source_world": "b1-amulet-20260719-231254",
+  "source_level_dat_sha256": "59332AD2314F382681B3BC7989B5EC6DF200A36C4CC041B0267696D92652654C",
+  "source_bounds": {
+    "min": [
+      -200,
+      -63,
+      -93
+    ],
+    "max": [
+      -30,
+      0,
+      27
+    ]
+  },
+  "size": [
+    171,
+    64,
+    121
+  ],
+  "tile_size": 48,
+  "tile_counts": [
+    4,
+    2,
+    3
+  ],
+  "data_version": 3465,
+  "policy": {
+    "includes_air": true,
+    "includes_entities": false,
+    "includes_block_entities": false,
+    "unsafe_blocks_replaced_with_air": [
+      "minecraft:chain_command_block",
+      "minecraft:command_block",
+      "minecraft:jigsaw",
+      "minecraft:repeating_command_block",
+      "minecraft:spawner",
+      "minecraft:structure_block"
+    ],
+    "adaptations": [
+      "Removed the source map's surrounding bedrock terrain mass by replacing every minecraft:bedrock block with air (355697 blocks total)."
+    ]
+  },
+  "tiles": [
+    {
+      "file": "tile_0_0_0.nbt",
+      "source_min": [
+        -200,
+        -63,
+        -93
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 146,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          62587
+        ],
+        [
+          "minecraft:white_terracotta",
+          21318
+        ],
+        [
+          "minecraft:polished_andesite",
+          10917
+        ],
+        [
+          "minecraft:dirt",
+          5142
+        ],
+        [
+          "minecraft:bone_block",
+          2553
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          1420
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          1216
+        ],
+        [
+          "minecraft:quartz_block",
+          1213
+        ],
+        [
+          "minecraft:grass_block",
+          975
+        ],
+        [
+          "minecraft:nether_bricks",
+          298
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          289
+        ],
+        [
+          "minecraft:grass",
+          254
+        ],
+        [
+          "minecraft:barrier",
+          230
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          225
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          218
+        ],
+        [
+          "minecraft:light_gray_terracotta",
+          203
+        ],
+        [
+          "minecraft:birch_leaves",
+          189
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          172
+        ],
+        [
+          "minecraft:mushroom_stem",
+          152
+        ],
+        [
+          "minecraft:gray_concrete",
+          130
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "2F5C304A5670A77455182A2609A71688AC73702FC5E550E2B9C69F6985744E07",
+      "index": [
+        0,
+        0,
+        0
+      ],
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_1_0_0.nbt",
+      "source_min": [
+        -152,
+        -63,
+        -93
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 104,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:white_terracotta",
+          48757
+        ],
+        [
+          "minecraft:air",
+          27520
+        ],
+        [
+          "minecraft:polished_andesite",
+          15360
+        ],
+        [
+          "minecraft:andesite",
+          8952
+        ],
+        [
+          "minecraft:dirt",
+          2789
+        ],
+        [
+          "minecraft:quartz_block",
+          1756
+        ],
+        [
+          "minecraft:bone_block",
+          1746
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          1552
+        ],
+        [
+          "minecraft:grass_block",
+          427
+        ],
+        [
+          "minecraft:nether_bricks",
+          265
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          189
+        ],
+        [
+          "minecraft:barrier",
+          162
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          124
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          122
+        ],
+        [
+          "minecraft:gray_concrete",
+          114
+        ],
+        [
+          "minecraft:quartz_slab",
+          82
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          78
+        ],
+        [
+          "minecraft:stone_brick_wall",
+          77
+        ],
+        [
+          "minecraft:grass",
+          68
+        ],
+        [
+          "minecraft:cobblestone",
+          61
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "321CA65F7EF79574F9E34BB0C228294AB4EC1326A06038382F3973670F480DDC",
+      "index": [
+        1,
+        0,
+        0
+      ],
+      "offset": [
+        48,
+        0,
+        0
+      ],
+      "bedrock_replaced_with_air": 82
+    },
+    {
+      "file": "tile_2_0_0.nbt",
+      "source_min": [
+        -104,
+        -63,
+        -93
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 47,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          63375
+        ],
+        [
+          "minecraft:white_terracotta",
+          30141
+        ],
+        [
+          "minecraft:polished_andesite",
+          9450
+        ],
+        [
+          "minecraft:andesite",
+          3323
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          1256
+        ],
+        [
+          "minecraft:quartz_block",
+          1169
+        ],
+        [
+          "minecraft:bone_block",
+          872
+        ],
+        [
+          "minecraft:dirt",
+          435
+        ],
+        [
+          "minecraft:cobblestone",
+          137
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          114
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          74
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          58
+        ],
+        [
+          "minecraft:grass_block",
+          49
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          44
+        ],
+        [
+          "minecraft:quartz_slab",
+          26
+        ],
+        [
+          "minecraft:glowstone",
+          18
+        ],
+        [
+          "minecraft:polished_andesite_stairs",
+          13
+        ],
+        [
+          "minecraft:netherrack",
+          10
+        ],
+        [
+          "minecraft:fire",
+          10
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          9
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "1250A6878A3170A686CB5D590160B7F4C3A82B43758F2FA9507ED533414E1FC6",
+      "index": [
+        2,
+        0,
+        0
+      ],
+      "offset": [
+        96,
+        0,
+        0
+      ],
+      "bedrock_replaced_with_air": 55505
+    },
+    {
+      "file": "tile_3_0_0.nbt",
+      "source_min": [
+        -56,
+        -63,
+        -93
+      ],
+      "size": [
+        27,
+        48,
+        48
+      ],
+      "palette_size": 29,
+      "blocks": 62208,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          59870
+        ],
+        [
+          "minecraft:white_terracotta",
+          797
+        ],
+        [
+          "minecraft:polished_andesite",
+          793
+        ],
+        [
+          "minecraft:pink_concrete",
+          230
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          156
+        ],
+        [
+          "minecraft:bone_block",
+          116
+        ],
+        [
+          "minecraft:dirt",
+          67
+        ],
+        [
+          "minecraft:cobblestone",
+          49
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          49
+        ],
+        [
+          "minecraft:grass_block",
+          27
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          20
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          14
+        ],
+        [
+          "minecraft:quartz_block",
+          9
+        ],
+        [
+          "minecraft:glowstone",
+          5
+        ],
+        [
+          "minecraft:netherrack",
+          3
+        ],
+        [
+          "minecraft:fire",
+          3
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "96AC27558CAE462C77903760D3FD643354C66037F68F7600B6FD27CF6189A8AA",
+      "index": [
+        3,
+        0,
+        0
+      ],
+      "offset": [
+        144,
+        0,
+        0
+      ],
+      "bedrock_replaced_with_air": 57139
+    },
+    {
+      "file": "tile_0_0_1.nbt",
+      "source_min": [
+        -200,
+        -63,
+        -45
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 149,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          59578
+        ],
+        [
+          "minecraft:white_terracotta",
+          22040
+        ],
+        [
+          "minecraft:polished_andesite",
+          14921
+        ],
+        [
+          "minecraft:dirt",
+          4805
+        ],
+        [
+          "minecraft:bone_block",
+          2509
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          1229
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          867
+        ],
+        [
+          "minecraft:grass_block",
+          605
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          490
+        ],
+        [
+          "minecraft:nether_bricks",
+          430
+        ],
+        [
+          "minecraft:barrier",
+          313
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          289
+        ],
+        [
+          "minecraft:light_gray_terracotta",
+          269
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          263
+        ],
+        [
+          "minecraft:cobblestone",
+          211
+        ],
+        [
+          "minecraft:grass",
+          184
+        ],
+        [
+          "minecraft:gray_concrete",
+          174
+        ],
+        [
+          "minecraft:quartz_block",
+          166
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          145
+        ],
+        [
+          "minecraft:smooth_stone",
+          137
+        ]
+      ],
+      "sanitized": {
+        "minecraft:spawner": 2
+      },
+      "sha256": "7FAE6000FB7AD94BF54B3EBAF467369DBC4CE6CEF874FD180DC16BBF624F0BF1",
+      "index": [
+        0,
+        0,
+        1
+      ],
+      "offset": [
+        0,
+        0,
+        48
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_1_0_1.nbt",
+      "source_min": [
+        -152,
+        -63,
+        -45
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 145,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:white_terracotta",
+          52474
+        ],
+        [
+          "minecraft:air",
+          27668
+        ],
+        [
+          "minecraft:polished_andesite",
+          20473
+        ],
+        [
+          "minecraft:dirt",
+          4215
+        ],
+        [
+          "minecraft:bone_block",
+          1476
+        ],
+        [
+          "minecraft:andesite",
+          1054
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          684
+        ],
+        [
+          "minecraft:nether_bricks",
+          352
+        ],
+        [
+          "minecraft:cobblestone",
+          344
+        ],
+        [
+          "minecraft:barrier",
+          230
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          196
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          158
+        ],
+        [
+          "minecraft:gray_concrete",
+          142
+        ],
+        [
+          "minecraft:smooth_stone",
+          131
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          122
+        ],
+        [
+          "minecraft:red_nether_brick_wall",
+          106
+        ],
+        [
+          "minecraft:quartz_block",
+          105
+        ],
+        [
+          "minecraft:stone_brick_wall",
+          101
+        ],
+        [
+          "minecraft:stone_bricks",
+          87
+        ],
+        [
+          "minecraft:quartz_slab",
+          81
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "A7FD39E22783767B53447BEB0BEFB1220CBBAD57AF0D88EEFA69C7F345F1C7A1",
+      "index": [
+        1,
+        0,
+        1
+      ],
+      "offset": [
+        48,
+        0,
+        48
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_2_0_1.nbt",
+      "source_min": [
+        -104,
+        -63,
+        -45
+      ],
+      "size": [
+        48,
+        48,
+        48
+      ],
+      "palette_size": 95,
+      "blocks": 110592,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          62912
+        ],
+        [
+          "minecraft:white_terracotta",
+          30095
+        ],
+        [
+          "minecraft:polished_andesite",
+          12407
+        ],
+        [
+          "minecraft:andesite",
+          1786
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          1176
+        ],
+        [
+          "minecraft:dirt",
+          538
+        ],
+        [
+          "minecraft:bone_block",
+          466
+        ],
+        [
+          "minecraft:cobblestone",
+          463
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          234
+        ],
+        [
+          "minecraft:polished_andesite_stairs",
+          98
+        ],
+        [
+          "minecraft:quartz_block",
+          91
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          88
+        ],
+        [
+          "minecraft:quartz_stairs",
+          61
+        ],
+        [
+          "minecraft:stone_brick_wall",
+          59
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          30
+        ],
+        [
+          "minecraft:glowstone",
+          24
+        ],
+        [
+          "minecraft:redstone_torch",
+          20
+        ],
+        [
+          "minecraft:netherrack",
+          10
+        ],
+        [
+          "minecraft:fire",
+          10
+        ],
+        [
+          "minecraft:grass_block",
+          9
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "354DBECB5044BADB0E6E0B95F5057B99F9B2B8D765AABECCB1813317ED56A14C",
+      "index": [
+        2,
+        0,
+        1
+      ],
+      "offset": [
+        96,
+        0,
+        48
+      ],
+      "bedrock_replaced_with_air": 29402
+    },
+    {
+      "file": "tile_3_0_1.nbt",
+      "source_min": [
+        -56,
+        -63,
+        -45
+      ],
+      "size": [
+        27,
+        48,
+        48
+      ],
+      "palette_size": 106,
+      "blocks": 62208,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          56748
+        ],
+        [
+          "minecraft:polished_andesite",
+          1591
+        ],
+        [
+          "minecraft:white_terracotta",
+          1405
+        ],
+        [
+          "minecraft:pink_concrete",
+          751
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          296
+        ],
+        [
+          "minecraft:pink_stained_glass",
+          196
+        ],
+        [
+          "minecraft:quartz_block",
+          181
+        ],
+        [
+          "minecraft:bone_block",
+          178
+        ],
+        [
+          "minecraft:cobblestone",
+          154
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          118
+        ],
+        [
+          "minecraft:stone_brick_wall",
+          99
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          70
+        ],
+        [
+          "minecraft:nether_brick_wall",
+          69
+        ],
+        [
+          "minecraft:pink_terracotta",
+          63
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          57
+        ],
+        [
+          "minecraft:polished_andesite_stairs",
+          57
+        ],
+        [
+          "minecraft:quartz_stairs",
+          43
+        ],
+        [
+          "minecraft:pink_stained_glass_pane",
+          34
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          25
+        ],
+        [
+          "minecraft:smooth_quartz_slab",
+          20
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "EE02ADD2A31E05E02BF8E0414AACC640ECF2013EBB9F99A3E8CA1A86A2E18106",
+      "index": [
+        3,
+        0,
+        1
+      ],
+      "offset": [
+        144,
+        0,
+        48
+      ],
+      "bedrock_replaced_with_air": 48461
+    },
+    {
+      "file": "tile_0_0_2.nbt",
+      "source_min": [
+        -200,
+        -63,
+        3
+      ],
+      "size": [
+        48,
+        48,
+        25
+      ],
+      "palette_size": 68,
+      "blocks": 57600,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          46011
+        ],
+        [
+          "minecraft:dirt",
+          3787
+        ],
+        [
+          "minecraft:white_terracotta",
+          1312
+        ],
+        [
+          "minecraft:quartz_block",
+          1164
+        ],
+        [
+          "minecraft:grass_block",
+          1070
+        ],
+        [
+          "minecraft:polished_andesite",
+          938
+        ],
+        [
+          "minecraft:oak_leaves",
+          854
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          709
+        ],
+        [
+          "minecraft:birch_leaves",
+          361
+        ],
+        [
+          "minecraft:bone_block",
+          345
+        ],
+        [
+          "minecraft:grass",
+          315
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          272
+        ],
+        [
+          "minecraft:tall_grass",
+          98
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          67
+        ],
+        [
+          "minecraft:oak_wood",
+          61
+        ],
+        [
+          "minecraft:birch_log",
+          54
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          48
+        ],
+        [
+          "minecraft:quartz_slab",
+          40
+        ],
+        [
+          "minecraft:poppy",
+          30
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          17
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "D7F622B1FE2C5E42EEF1BA5FDBB0E8F13BEEA6BE255E66B61282D86FB7103DAA",
+      "index": [
+        0,
+        0,
+        2
+      ],
+      "offset": [
+        0,
+        0,
+        96
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_1_0_2.nbt",
+      "source_min": [
+        -152,
+        -63,
+        3
+      ],
+      "size": [
+        48,
+        48,
+        25
+      ],
+      "palette_size": 56,
+      "blocks": 57600,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          36800
+        ],
+        [
+          "minecraft:andesite",
+          7093
+        ],
+        [
+          "minecraft:white_terracotta",
+          3803
+        ],
+        [
+          "minecraft:dirt",
+          2989
+        ],
+        [
+          "minecraft:quartz_block",
+          1728
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          1356
+        ],
+        [
+          "minecraft:polished_andesite",
+          1348
+        ],
+        [
+          "minecraft:grass_block",
+          859
+        ],
+        [
+          "minecraft:bone_block",
+          657
+        ],
+        [
+          "minecraft:oak_leaves",
+          237
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          150
+        ],
+        [
+          "minecraft:grass",
+          147
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          75
+        ],
+        [
+          "minecraft:tall_grass",
+          64
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          60
+        ],
+        [
+          "minecraft:birch_leaves",
+          54
+        ],
+        [
+          "minecraft:quartz_slab",
+          48
+        ],
+        [
+          "minecraft:gold_ore",
+          31
+        ],
+        [
+          "minecraft:andesite_slab",
+          31
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          24
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "CB75163566015B95210FB7DF82526D135C8333E0386C000ED0D9C2D3359E5FAA",
+      "index": [
+        1,
+        0,
+        2
+      ],
+      "offset": [
+        48,
+        0,
+        96
+      ],
+      "bedrock_replaced_with_air": 64
+    },
+    {
+      "file": "tile_2_0_2.nbt",
+      "source_min": [
+        -104,
+        -63,
+        3
+      ],
+      "size": [
+        48,
+        48,
+        25
+      ],
+      "palette_size": 28,
+      "blocks": 57600,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          36079
+        ],
+        [
+          "minecraft:andesite",
+          13346
+        ],
+        [
+          "minecraft:white_terracotta",
+          3314
+        ],
+        [
+          "minecraft:dirt",
+          1514
+        ],
+        [
+          "minecraft:quartz_block",
+          1152
+        ],
+        [
+          "minecraft:polished_andesite",
+          777
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          772
+        ],
+        [
+          "minecraft:bone_block",
+          407
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          83
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          46
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          40
+        ],
+        [
+          "minecraft:quartz_slab",
+          28
+        ],
+        [
+          "minecraft:grass_block",
+          25
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          12
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          5
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "706DF5BF0956AC1BEBD0B33AF94A07227F2133CF30FBE28D966F453476B2961A",
+      "index": [
+        2,
+        0,
+        2
+      ],
+      "offset": [
+        96,
+        0,
+        96
+      ],
+      "bedrock_replaced_with_air": 35718
+    },
+    {
+      "file": "tile_3_0_2.nbt",
+      "source_min": [
+        -56,
+        -63,
+        3
+      ],
+      "size": [
+        27,
+        48,
+        25
+      ],
+      "palette_size": 1,
+      "blocks": 32400,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          32400
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "9C1DA3E6CF45D7F0A8819195BD062B1397B1DE570C62A8C042C707C65FAC4AE2",
+      "index": [
+        3,
+        0,
+        2
+      ],
+      "offset": [
+        144,
+        0,
+        96
+      ],
+      "bedrock_replaced_with_air": 32400
+    },
+    {
+      "file": "tile_0_1_0.nbt",
+      "source_min": [
+        -200,
+        -15,
+        -93
+      ],
+      "size": [
+        48,
+        16,
+        48
+      ],
+      "palette_size": 11,
+      "blocks": 36864,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          34932
+        ],
+        [
+          "minecraft:polished_andesite",
+          1882
+        ],
+        [
+          "minecraft:quartz_block",
+          17
+        ],
+        [
+          "minecraft:quartz_slab",
+          11
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          9
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          7
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          2
+        ],
+        [
+          "minecraft:bone_block",
+          2
+        ],
+        [
+          "minecraft:light_gray_terracotta",
+          2
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "27DC6547094770F4B89573D65616B4113BE3D98D87AFC4303A171CE8281EACAA",
+      "index": [
+        0,
+        1,
+        0
+      ],
+      "offset": [
+        0,
+        48,
+        0
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_1_1_0.nbt",
+      "source_min": [
+        -152,
+        -15,
+        -93
+      ],
+      "size": [
+        48,
+        16,
+        48
+      ],
+      "palette_size": 7,
+      "blocks": 36864,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          31547
+        ],
+        [
+          "minecraft:polished_andesite",
+          2736
+        ],
+        [
+          "minecraft:andesite",
+          2146
+        ],
+        [
+          "minecraft:white_terracotta",
+          238
+        ],
+        [
+          "minecraft:oak_leaves",
+          133
+        ],
+        [
+          "minecraft:light_gray_terracotta",
+          34
+        ],
+        [
+          "minecraft:grass_block",
+          30
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "B5C79E4C72576BC8714B1E61FFC164A2AFD392300FBAF2F65378DDEB68C9ED9E",
+      "index": [
+        1,
+        1,
+        0
+      ],
+      "offset": [
+        48,
+        48,
+        0
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_2_1_0.nbt",
+      "source_min": [
+        -104,
+        -15,
+        -93
+      ],
+      "size": [
+        48,
+        16,
+        48
+      ],
+      "palette_size": 30,
+      "blocks": 36864,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          22454
+        ],
+        [
+          "minecraft:andesite",
+          10450
+        ],
+        [
+          "minecraft:polished_andesite",
+          1486
+        ],
+        [
+          "minecraft:white_terracotta",
+          1170
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          738
+        ],
+        [
+          "minecraft:dirt",
+          146
+        ],
+        [
+          "minecraft:quartz_block",
+          107
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          69
+        ],
+        [
+          "minecraft:grass_block",
+          65
+        ],
+        [
+          "minecraft:oak_leaves",
+          62
+        ],
+        [
+          "minecraft:quartz_stairs",
+          36
+        ],
+        [
+          "minecraft:gray_concrete",
+          32
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          29
+        ],
+        [
+          "minecraft:redstone_wall_torch",
+          7
+        ],
+        [
+          "minecraft:iron_bars",
+          7
+        ],
+        [
+          "minecraft:gravel",
+          6
+        ]
+      ],
+      "sanitized": {
+        "minecraft:spawner": 1
+      },
+      "sha256": "BCDA87AB7C942113328F67BA2A9C53B93ACBC1A77807298D4CB06C012F1F73CA",
+      "index": [
+        2,
+        1,
+        0
+      ],
+      "offset": [
+        96,
+        48,
+        0
+      ],
+      "bedrock_replaced_with_air": 19182
+    },
+    {
+      "file": "tile_3_1_0.nbt",
+      "source_min": [
+        -56,
+        -15,
+        -93
+      ],
+      "size": [
+        27,
+        16,
+        48
+      ],
+      "palette_size": 29,
+      "blocks": 20736,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          19166
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          997
+        ],
+        [
+          "minecraft:quartz_block",
+          157
+        ],
+        [
+          "minecraft:quartz_stairs",
+          125
+        ],
+        [
+          "minecraft:cyan_terracotta",
+          92
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          79
+        ],
+        [
+          "minecraft:gray_concrete",
+          76
+        ],
+        [
+          "minecraft:polished_andesite",
+          22
+        ],
+        [
+          "minecraft:redstone_wall_torch",
+          9
+        ],
+        [
+          "minecraft:iron_bars",
+          9
+        ],
+        [
+          "minecraft:quartz_slab",
+          2
+        ],
+        [
+          "minecraft:chest",
+          1
+        ],
+        [
+          "minecraft:stone_brick_slab",
+          1
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "258260AB6CA9F2D5062F86866AC4E627D7ED8796C644776575FF71D26F6737F9",
+      "index": [
+        3,
+        1,
+        0
+      ],
+      "offset": [
+        144,
+        48,
+        0
+      ],
+      "bedrock_replaced_with_air": 17880
+    },
+    {
+      "file": "tile_0_1_1.nbt",
+      "source_min": [
+        -200,
+        -15,
+        -45
+      ],
+      "size": [
+        48,
+        16,
+        48
+      ],
+      "palette_size": 17,
+      "blocks": 36864,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          31294
+        ],
+        [
+          "minecraft:polished_andesite",
+          5416
+        ],
+        [
+          "minecraft:quartz_block",
+          32
+        ],
+        [
+          "minecraft:light_gray_terracotta",
+          22
+        ],
+        [
+          "minecraft:quartz_slab",
+          22
+        ],
+        [
+          "minecraft:cobblestone_wall",
+          20
+        ],
+        [
+          "minecraft:cobblestone_stairs",
+          19
+        ],
+        [
+          "minecraft:cobblestone_slab",
+          19
+        ],
+        [
+          "minecraft:bone_block",
+          16
+        ],
+        [
+          "minecraft:stone_brick_stairs",
+          4
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "D0196832E3378DBC1B99BBC2357F299576C28454BADE37378E66CD437922279E",
+      "index": [
+        0,
+        1,
+        1
+      ],
+      "offset": [
+        0,
+        48,
+        48
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_1_1_1.nbt",
+      "source_min": [
+        -152,
+        -15,
+        -45
+      ],
+      "size": [
+        48,
+        16,
+        48
+      ],
+      "palette_size": 2,
+      "blocks": 36864,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          28800
+        ],
+        [
+          "minecraft:polished_andesite",
+          8064
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "B15E939D4D021B82872A539F7A9577AEFFE8A6EC270FE4104AA211AE3B998CFA",
+      "index": [
+        1,
+        1,
+        1
+      ],
+      "offset": [
+        48,
+        48,
+        48
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_2_1_1.nbt",
+      "source_min": [
+        -104,
+        -15,
+        -45
+      ],
+      "size": [
+        48,
+        16,
+        48
+      ],
+      "palette_size": 8,
+      "blocks": 36864,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          24108
+        ],
+        [
+          "minecraft:andesite",
+          7152
+        ],
+        [
+          "minecraft:polished_andesite",
+          4368
+        ],
+        [
+          "minecraft:white_terracotta",
+          889
+        ],
+        [
+          "minecraft:oak_leaves",
+          113
+        ],
+        [
+          "minecraft:dirt",
+          90
+        ],
+        [
+          "minecraft:grass_block",
+          89
+        ],
+        [
+          "minecraft:light_gray_terracotta",
+          55
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "9D2819F3F4DFED909B30706DB9B3EB79909418B297E3A5FEABC350A41C07D495",
+      "index": [
+        2,
+        1,
+        1
+      ],
+      "offset": [
+        96,
+        48,
+        48
+      ],
+      "bedrock_replaced_with_air": 18687
+    },
+    {
+      "file": "tile_3_1_1.nbt",
+      "source_min": [
+        -56,
+        -15,
+        -45
+      ],
+      "size": [
+        27,
+        16,
+        48
+      ],
+      "palette_size": 1,
+      "blocks": 20736,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          20736
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "FD6455A48FA8E8030064FC500D27B93EB86A233C457D915C1360B33F8358A4F1",
+      "index": [
+        3,
+        1,
+        1
+      ],
+      "offset": [
+        144,
+        48,
+        48
+      ],
+      "bedrock_replaced_with_air": 20736
+    },
+    {
+      "file": "tile_0_1_2.nbt",
+      "source_min": [
+        -200,
+        -15,
+        3
+      ],
+      "size": [
+        48,
+        16,
+        25
+      ],
+      "palette_size": 1,
+      "blocks": 19200,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          19200
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "54432510348AC161CBF7DEC7A9B7333A82ED184995A26A8CDAFB79A722DD4914",
+      "index": [
+        0,
+        1,
+        2
+      ],
+      "offset": [
+        0,
+        48,
+        96
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_1_1_2.nbt",
+      "source_min": [
+        -152,
+        -15,
+        3
+      ],
+      "size": [
+        48,
+        16,
+        25
+      ],
+      "palette_size": 8,
+      "blocks": 19200,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          18322
+        ],
+        [
+          "minecraft:andesite",
+          592
+        ],
+        [
+          "minecraft:oak_leaves",
+          150
+        ],
+        [
+          "minecraft:light_gray_terracotta",
+          51
+        ],
+        [
+          "minecraft:white_terracotta",
+          39
+        ],
+        [
+          "minecraft:grass_block",
+          25
+        ],
+        [
+          "minecraft:cobblestone",
+          20
+        ],
+        [
+          "minecraft:dirt",
+          1
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "6BA9D64F57D90BD2E04243E2EFDD6D245F0945ABEF5603929E12A53712739EFF",
+      "index": [
+        1,
+        1,
+        2
+      ],
+      "offset": [
+        48,
+        48,
+        96
+      ],
+      "bedrock_replaced_with_air": 0
+    },
+    {
+      "file": "tile_2_1_2.nbt",
+      "source_min": [
+        -104,
+        -15,
+        3
+      ],
+      "size": [
+        48,
+        16,
+        25
+      ],
+      "palette_size": 8,
+      "blocks": 19200,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          10543
+        ],
+        [
+          "minecraft:andesite",
+          7696
+        ],
+        [
+          "minecraft:white_terracotta",
+          876
+        ],
+        [
+          "minecraft:dirt",
+          34
+        ],
+        [
+          "minecraft:grass_block",
+          27
+        ],
+        [
+          "minecraft:light_gray_terracotta",
+          16
+        ],
+        [
+          "minecraft:cobblestone",
+          5
+        ],
+        [
+          "minecraft:oak_leaves",
+          3
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "CE8B553C315BBE6ECD2C39E9C8B6634332AA6BAC60CFCFAC2F95F043C5F86C7F",
+      "index": [
+        2,
+        1,
+        2
+      ],
+      "offset": [
+        96,
+        48,
+        96
+      ],
+      "bedrock_replaced_with_air": 9641
+    },
+    {
+      "file": "tile_3_1_2.nbt",
+      "source_min": [
+        -56,
+        -15,
+        3
+      ],
+      "size": [
+        27,
+        16,
+        25
+      ],
+      "palette_size": 1,
+      "blocks": 10800,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          10800
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "AA9145DB46003543DF082596619C8C4E3C794D8CBDCB668693DC1778C0D7A906",
+      "index": [
+        3,
+        1,
+        2
+      ],
+      "offset": [
+        144,
+        48,
+        96
+      ],
+      "bedrock_replaced_with_air": 10800
+    }
+  ]
+}

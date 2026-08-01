@@ -1,0 +1,1 @@
+scoreboard players set @s slice_5 8

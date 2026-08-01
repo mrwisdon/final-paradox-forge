@@ -1,0 +1,1 @@
+execute at @s unless entity @e[type=marker,tag=noxious_trail,distance=..2] run execute unless block ~ ~-0.2 ~ #minecraft:nonsolid run summon marker ~ ~ ~ {Tags:["marker_tick","noxious_trail"]}

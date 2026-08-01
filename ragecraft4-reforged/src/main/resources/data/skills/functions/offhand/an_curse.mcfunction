@@ -1,0 +1,1 @@
+execute at @s run execute as @e[tag=r4r_ability_target,tag=!no_target,distance=..6,nbt={HurtTime:10s}] at @s run function skills:offhand/an_curse_hit

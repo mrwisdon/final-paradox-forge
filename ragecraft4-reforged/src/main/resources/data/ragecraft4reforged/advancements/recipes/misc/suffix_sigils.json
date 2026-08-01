@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_amethyst_shard": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "minecraft:amethyst_shard"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_amethyst_shard"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ragecraft4reforged:suffix_sigil_arcane",
+      "ragecraft4reforged:suffix_sigil_blood",
+      "ragecraft4reforged:suffix_sigil_chaos",
+      "ragecraft4reforged:suffix_sigil_fire",
+      "ragecraft4reforged:suffix_sigil_holy",
+      "ragecraft4reforged:suffix_sigil_ice",
+      "ragecraft4reforged:suffix_sigil_lightning",
+      "ragecraft4reforged:suffix_sigil_poison"
+    ]
+  },
+  "sends_telemetry_event": false
+}

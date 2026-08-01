@@ -1,0 +1,12 @@
+execute as @s[scores={cold_snap_target=1..}] run function skills:axe/cold_snap_tick
+execute as @s[scores={arctic_target=1..}] run function skills:bow/arctic_frozen_tick
+execute as @s[scores={blight_orb_duration=1..}] run function skills:offhand/blight_orb_mob
+execute as @s[scores={dark_orb_duration=1..}] run function skills:offhand/dark_orb_mob
+execute at @s[scores={frostburn_debuff=1..}] run function skills:potions/potion_5_debuff
+execute as @s[scores={unholy_blood_time=1..}] run function skills:potions/potion_9_tick
+execute as @s[scores={cyclone_time=1..}] run function skills:potions/potion_11_tick
+execute as @s[scores={bottled_lightning=1..}] run function skills:potions/potion_13_debuff
+execute as @s[nbt={ActiveEffects:[{Id:27}]}] run function skills:misc/mob_bad_luck
+execute as @s[nbt={ActiveEffects:[{Id:4}]}] run function skills:misc/mob_mining_fatigue
+execute at @s[scores={an_curse=1..}] run function skills:offhand/an_curse_tick
+execute at @s[scores={nullification=1..}] run function skills:misc/nullification_tick

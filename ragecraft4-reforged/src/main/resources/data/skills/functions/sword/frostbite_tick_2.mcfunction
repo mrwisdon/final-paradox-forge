@@ -1,0 +1,2 @@
+execute unless block ~ ~-0.3 ~ #minecraft:snow_air unless block ~ ~-0.3 ~ #minecraft:nonsolid unless block ~ ~-0.3 ~ #minecraft:stairs unless block ~ ~-0.3 ~ #minecraft:slabs run fill ~ ~ ~ ~ ~ ~ snow[layers=1] replace #minecraft:nonsolid_nosnow
+execute if block ~ ~-0.3 ~ soul_sand run fill ~ ~0.3 ~ ~ ~0.3 ~ snow[layers=1] replace #minecraft:nonsolid_nosnow

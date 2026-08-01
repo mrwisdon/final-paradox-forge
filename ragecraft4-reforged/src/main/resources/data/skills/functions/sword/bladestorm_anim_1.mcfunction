@@ -1,0 +1,1 @@
+tp @e[type=armor_stand,tag=bladestorm_1,limit=1,sort=nearest] ~ ~ ~

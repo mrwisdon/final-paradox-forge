@@ -1,0 +1,1 @@
+execute at @s run execute as @e[tag=r4r_ability_target,tag=!no_target,distance=..4] at @s run function skills:sword/infestation_hit

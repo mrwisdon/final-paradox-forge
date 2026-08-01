@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["AEA", "EUE", "AEA"],
+  "key": {
+    "A": {"item": "minecraft:amethyst_shard"},
+    "E": {"item": "minecraft:ender_pearl"},
+    "U": {"item": "ragecraft4reforged:unenchanted_wand"}
+  },
+  "result": {"item": "ragecraft4reforged:teleport_wand", "count": 1},
+  "show_notification": true
+}

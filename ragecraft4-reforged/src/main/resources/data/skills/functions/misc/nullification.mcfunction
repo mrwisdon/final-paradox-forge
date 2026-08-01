@@ -1,0 +1,1 @@
+execute at @s run execute as @e[tag=r4r_ability_target,tag=!no_target,distance=..40,nbt={HurtTime:10s}] at @s run function skills:misc/nullification_hit

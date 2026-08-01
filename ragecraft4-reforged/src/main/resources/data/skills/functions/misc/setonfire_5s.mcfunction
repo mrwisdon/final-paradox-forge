@@ -1,0 +1,1 @@
+data modify entity @s[type=#minecraft:can_be_on_fire,tag=!invulnerable,predicate=!mobs:is_on_fire,nbt=!{ActiveEffects:[{Id:12}]}] Fire set value 100

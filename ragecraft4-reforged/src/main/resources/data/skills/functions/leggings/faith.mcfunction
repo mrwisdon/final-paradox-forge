@@ -1,0 +1,1 @@
+execute if score #rc4tick tick10 matches 5..6 run function skills:leggings/faith_2

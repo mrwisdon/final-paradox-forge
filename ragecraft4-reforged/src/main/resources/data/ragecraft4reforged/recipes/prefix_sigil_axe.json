@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LAL",
+    "AXA",
+    "LAL"
+  ],
+  "key": {
+    "L": {
+      "item": "minecraft:lapis_lazuli"
+    },
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "X": {
+      "item": "minecraft:iron_axe"
+    }
+  },
+  "result": {
+    "item": "ragecraft4reforged:prefix_sigil_axe",
+    "count": 1
+  },
+  "show_notification": true
+}

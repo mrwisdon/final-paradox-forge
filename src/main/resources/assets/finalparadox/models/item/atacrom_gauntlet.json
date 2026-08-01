@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "finalparadox:item/atacrom_gauntlet"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "scale": [0, 0, 0]
+    },
+    "thirdperson_lefthand": {
+      "scale": [0, 0, 0]
+    },
+    "firstperson_righthand": {
+      "scale": [0, 0, 0]
+    },
+    "firstperson_lefthand": {
+      "scale": [0, 0, 0]
+    }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "finalparadox:cooldown": 1
+      },
+      "model": "finalparadox:item/atacrom_gauntlet_cooldown"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+execute at @s positioned ^ ^1 ^2 run execute as @e[tag=r4r_ability_target,nbt={HurtTime:10s},tag=!no_target,distance=..5] run function skills:sword/slice_4_hit

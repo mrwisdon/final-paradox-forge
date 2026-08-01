@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/doomfist_uncharged",
+  "overrides": [
+    { "predicate": { "ragecraft4reforged:charged": 1.0 }, "model": "minecraft:item/doomfist_charged" }
+  ]
+}

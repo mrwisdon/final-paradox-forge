@@ -1,0 +1,4 @@
+{
+  "parent": "item/generated",
+  "textures": { "layer0": "finalparadox:item/bouncing_boots", "layer1": "finalparadox:item/bouncing_boots" }
+}

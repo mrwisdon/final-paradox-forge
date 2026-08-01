@@ -1,0 +1,1 @@
+execute at @s positioned ^ ^1 ^2 run execute as @e[tag=r4r_ability_target,nbt={HurtTime:10s},distance=..4] run function skills:axe/slam_2_hit

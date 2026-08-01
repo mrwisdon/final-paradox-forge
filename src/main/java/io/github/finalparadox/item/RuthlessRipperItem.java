@@ -1,0 +1,7 @@
+package io.github.finalparadox.item;
+import net.minecraft.network.chat.Component;import net.minecraft.world.entity.Entity;import net.minecraft.world.item.*;import net.minecraft.world.item.enchantment.Enchantments;import net.minecraft.world.level.Level;import java.util.List;
+public final class RuthlessRipperItem extends AxeItem{
+ public static final String KILLS_KEY="finalparadox.ripper_kills";public RuthlessRipperItem(){super(Tiers.NETHERITE,5,-3F,new Properties().stacksTo(1).fireResistant());}
+ @Override public ItemStack getDefaultInstance(){ItemStack s=super.getDefaultInstance();prepare(s);return s;}@Override public void inventoryTick(ItemStack s,Level l,Entity e,int slot,boolean selected){prepare(s);super.inventoryTick(s,l,e,slot,selected);}private static void prepare(ItemStack s){s.getOrCreateTag().putBoolean("Unbreakable",true);s.getOrCreateTag().putInt("HideFlags",4);if(s.getEnchantmentLevel(Enchantments.SHARPNESS)<10)s.enchant(Enchantments.SHARPNESS,10);if(s.getEnchantmentLevel(Enchantments.KNOCKBACK)<1)s.enchant(Enchantments.KNOCKBACK,1);if(s.getEnchantmentLevel(Enchantments.BLOCK_EFFICIENCY)<5)s.enchant(Enchantments.BLOCK_EFFICIENCY,5);}
+ @Override public void appendHoverText(ItemStack s,Level l,List<Component>t,TooltipFlag f){t.add(Component.empty());for(int i=1;i<=4;i++)t.add(Component.translatable("item.finalparadox.ruthless_ripper.lore."+i));t.add(Component.empty());t.add(Component.translatable("item.finalparadox.legendary"));}
+}

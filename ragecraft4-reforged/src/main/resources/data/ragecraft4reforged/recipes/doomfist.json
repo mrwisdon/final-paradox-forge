@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["CEC", "EUE", "CWC"],
+  "key": {
+    "C": {"item": "minecraft:crying_obsidian"},
+    "E": {"item": "minecraft:echo_shard"},
+    "W": {"item": "minecraft:wither_skeleton_skull"},
+    "U": {"item": "ragecraft4reforged:unenchanted_wand"}
+  },
+  "result": {"item": "ragecraft4reforged:doomfist", "count": 1},
+  "show_notification": true
+}

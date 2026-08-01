@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/infernal_scepter_uncharged",
+  "overrides": [
+    { "predicate": { "ragecraft4reforged:charged": 1.0 }, "model": "minecraft:item/infernal_scepter_charged" }
+  ]
+}

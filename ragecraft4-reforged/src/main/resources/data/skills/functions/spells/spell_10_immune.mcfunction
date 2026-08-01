@@ -1,0 +1,2 @@
+tag @s add spell_10_immune
+execute at @s if entity @e[tag=r4r_ability_target,tag=spell_immune,distance=..5] run tellraw @a[scores={last_spell=10}] [{"translate":"skills.functions.potions.potion_10_trigger.1","color":"red","bold":true,"italic":false},{"translate":"skills.functions.potions.potion_10_trigger.2","color":"#FF662E","bold":false,"italic":false}]

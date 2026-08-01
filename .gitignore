@@ -1,0 +1,43 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# vscode
+.vscode/
+
+# gradle
+build
+.gradle
+run-data
+
+# other
+eclipse
+run
+
+# Python tooling caches
+__pycache__
+*.py[cod]
+
+# local diagnostics and import scratch space
+*.log
+*.tmp
+.b6-audio-import/
+
+# operating-system noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Files from Forge MDK
+forge*changelog.txt

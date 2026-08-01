@@ -1,0 +1,2 @@
+title @s[scores={l_warp_cd=1..}] actionbar {"translate":"skills.functions.axe.l_warp_check.1","color":"red","bold":true,"italic":false}
+execute as @s[scores={l_warp_cd=0}] run function skills:axe/l_warp

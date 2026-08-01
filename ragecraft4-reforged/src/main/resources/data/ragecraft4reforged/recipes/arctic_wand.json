@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["SPS", "PUP", "SPS"],
+  "key": {
+    "S": {"item": "minecraft:snowball"},
+    "P": {"item": "minecraft:packed_ice"},
+    "U": {"item": "ragecraft4reforged:unenchanted_wand"}
+  },
+  "result": {"item": "ragecraft4reforged:arctic_wand", "count": 1},
+  "show_notification": true
+}

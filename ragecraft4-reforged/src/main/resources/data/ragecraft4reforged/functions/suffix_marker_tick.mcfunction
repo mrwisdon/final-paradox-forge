@@ -1,0 +1,13 @@
+execute at @s[type=arrow,tag=noxious_arrow,nbt={inGround:1b}] run function skills:bow/noxious_arrow_gr
+execute as @s[tag=axe_throw] run function skills:axe/axe_throw_tick
+execute as @s[tag=vt_axe_throw] run function skills:axe/vt_axe_throw_tick
+execute as @s[tag=spell_marker] run function skills:spells/spell_marker_tick
+execute as @s[tag=dragonb_2] run function skills:sword/dragon_b_tick
+execute as @s[tag=trinity_wind_m2] run function skills:sword/trinity_wind_tick
+execute as @s[tag=astral] run function skills:sword/astral_tick
+execute as @s[tag=cold_snap_ice] run function skills:axe/cold_snap_ice
+execute as @s[tag=snowstorm] run function skills:axe/snowstorm_tick
+execute as @s[tag=infestation] run function skills:sword/infestation_tick
+execute as @s[tag=earth_spikes] run function skills:axe/earth_spikes_tick
+execute as @s[tag=arctic_frozen] run function skills:bow/arctic_frozen_ice
+execute as @s[tag=blood] run function skills:potions/potion_9_blood

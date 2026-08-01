@@ -1,0 +1,15 @@
+{
+  "condition": "minecraft:entity_properties",
+  "entity": "this",
+  "predicate": {
+    "equipment": {
+      "mainhand": {
+        "items": [
+          "minecraft:stone_sword"
+        ],
+        "count": 1,
+        "nbt": "{CustomModelData:4}"
+      }
+    }
+  }
+}

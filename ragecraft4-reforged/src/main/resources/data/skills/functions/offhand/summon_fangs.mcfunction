@@ -1,0 +1,1 @@
+execute at @s positioned ^ ^1 ^4 if entity @e[tag=r4r_ability_target,distance=..5,nbt=!{HurtTime:10s}] run function skills:offhand/summon_fangs_2

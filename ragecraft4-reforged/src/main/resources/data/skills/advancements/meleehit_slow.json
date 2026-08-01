@@ -1,0 +1,34 @@
+{
+    "criteria": {
+      "requirement": {
+        "trigger": "minecraft:player_hurt_entity",
+        "conditions": {        
+          "damage": {
+          "type": {
+            "tags": [
+              {
+                "id": "minecraft:non_melee",
+                "expected": false
+              }
+            ]
+          }
+        },
+          "entity": [
+            {
+              "condition": "minecraft:entity_properties",
+              "entity": "this",
+              "predicate": {
+                "effects": {
+                  "minecraft:slowness": {
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "rewards": {
+      "function": "skills:sword/frostbite"
+    }
+  }

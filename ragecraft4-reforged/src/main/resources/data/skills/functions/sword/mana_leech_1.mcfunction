@@ -1,0 +1,1 @@
+scoreboard players add @s[scores={mana=..19}] mana 1

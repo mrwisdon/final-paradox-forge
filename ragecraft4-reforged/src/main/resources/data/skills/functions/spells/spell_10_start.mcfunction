@@ -1,0 +1,2 @@
+kill @e[type=armor_stand,tag=frost_ray_anim]
+execute at @s run summon armor_stand ^0.4 ^ ^1.2 {NoGravity:1b,Silent:1b,Invulnerable:1b,Invisible:1b,Tags:["marker_tick","frost_ray_anim"],Pose:{RightArm:[0f,0f,0f]}}

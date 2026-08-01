@@ -1,0 +1,11 @@
+scoreboard players add @s[tag=!no_mana_regen,predicate=skills:divine_rej,scores={mana=..11,no_mana_regen=..0}] mana 1
+scoreboard players add @s[tag=!no_mana_regen,scores={mana=..19,no_mana_regen=..0}] mana 1
+scoreboard players add @s[scores={arcane_suprem=1..}] arcane_suprem 1
+scoreboard players add @s[scores={spell_cd=..19}] spell_cd 1
+scoreboard players add @s[predicate=skills:spellslinger,scores={spell_cd=..19}] spell_cd 1
+scoreboard players add @s[predicate=skills:spell_power,scores={spell_cd=..19}] spell_cd 1
+scoreboard players remove @s[scores={evocation_cd=1..}] evocation_cd 1
+execute as @s[scores={spell_cd=20..}] run function skills:spells/spell_refill
+execute as @s[scores={spell_cd=..19}] run function skills:spells/spell_empty
+scoreboard players remove @s[scores={no_mana_regen=1..}] no_mana_regen 1
+scoreboard players remove @s[scores={overcharge_time=1..}] overcharge_time 1

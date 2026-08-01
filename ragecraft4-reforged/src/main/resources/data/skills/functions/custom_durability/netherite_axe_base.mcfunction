@@ -1,0 +1,2 @@
+execute as @s[nbt={SelectedItem:{tag:{Enchantments:[{id:"minecraft:channeling",lvl:80s}]}}}] run function skills:custom_durability/add_damage
+execute as @s[nbt=!{SelectedItem:{tag:{Enchantments:[{id:"minecraft:channeling",lvl:80s}]}}}] run item modify entity @s weapon.mainhand skills:damage_counter

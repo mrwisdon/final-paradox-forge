@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/teleport_wand_uncharged",
+  "overrides": [
+    { "predicate": { "ragecraft4reforged:charged": 1.0 }, "model": "minecraft:item/teleport_wand_charged" }
+  ]
+}

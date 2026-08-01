@@ -1,0 +1,8 @@
+{
+  "parent":"minecraft:item/generated",
+  "textures":{"layer0":"finalparadox:item/echoing_amethyst_shield"},
+  "display":{
+    "firstperson_righthand":{"scale":[0,0,0]},
+    "thirdperson_righthand":{"scale":[0,0,0]}
+  }
+}

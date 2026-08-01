@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["PRP", "RUR", "PRP"],
+  "key": {
+    "P": {"item": "minecraft:poisonous_potato"},
+    "R": {"item": "minecraft:mangrove_roots"},
+    "U": {"item": "ragecraft4reforged:unenchanted_wand"}
+  },
+  "result": {"item": "ragecraft4reforged:blighted_branch", "count": 1},
+  "show_notification": true
+}

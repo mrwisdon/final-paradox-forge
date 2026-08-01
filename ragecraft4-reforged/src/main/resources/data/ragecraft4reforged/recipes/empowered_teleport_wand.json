@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["EGE", "GUG", "EGE"],
+  "key": {
+    "E": {"item": "minecraft:ender_eye"},
+    "G": {"item": "minecraft:glowstone_dust"},
+    "U": {"item": "ragecraft4reforged:unenchanted_wand"}
+  },
+  "result": {"item": "ragecraft4reforged:empowered_teleport_wand", "count": 1},
+  "show_notification": true
+}

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["CBC", "BUB", "CBC"],
+  "key": {
+    "C": {"item": "minecraft:coal"},
+    "B": {"item": "minecraft:torch"},
+    "U": {"item": "ragecraft4reforged:unenchanted_wand"}
+  },
+  "result": {"item": "ragecraft4reforged:searing_wand", "count": 1},
+  "show_notification": true
+}

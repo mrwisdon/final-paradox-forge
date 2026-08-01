@@ -1,0 +1,1 @@
+execute at @s[tag=!elite] run function skills:bow/zombiemorph_hit_2

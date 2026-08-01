@@ -1,0 +1,3 @@
+execute at @s run tellraw @a[scores={last_spell=4}] [{"translate":"skills.functions.potions.potion_10_trigger.1","color":"red","bold":true,"italic":false},{"translate":"skills.functions.potions.potion_10_trigger.2","color":"#FF662E","bold":false,"italic":false}]
+execute at @s run tag @e[tag=r4r_ability_target,tag=spell_immune,distance=..17] remove spell_4_target
+execute at @s run tag @e[tag=r4r_ability_target,tag=spell_immune,distance=..17] remove spell_4_target2

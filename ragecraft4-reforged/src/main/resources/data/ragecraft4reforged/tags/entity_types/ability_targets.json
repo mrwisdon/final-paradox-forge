@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:hostile",
+    "#ragecraft4reforged:training_dummies",
+    {
+      "id": "finalparadox:apiglo",
+      "required": false
+    }
+  ]
+}

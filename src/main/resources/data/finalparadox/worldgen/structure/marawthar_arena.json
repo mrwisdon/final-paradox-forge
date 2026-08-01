@@ -1,0 +1,7 @@
+{
+  "type": "finalparadox:marawthar_arena",
+  "biomes": "#finalparadox:has_structure/marawthar_arena",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "none"
+}

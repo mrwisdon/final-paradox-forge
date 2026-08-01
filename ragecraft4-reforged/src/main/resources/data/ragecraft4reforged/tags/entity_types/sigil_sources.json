@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "#ragecraft4reforged:sigil_sources/arcane",
+    "#ragecraft4reforged:sigil_sources/blood",
+    "#ragecraft4reforged:sigil_sources/chaos",
+    "#ragecraft4reforged:sigil_sources/fire",
+    "#ragecraft4reforged:sigil_sources/holy",
+    "#ragecraft4reforged:sigil_sources/ice",
+    "#ragecraft4reforged:sigil_sources/lightning",
+    "#ragecraft4reforged:sigil_sources/poison"
+  ]
+}

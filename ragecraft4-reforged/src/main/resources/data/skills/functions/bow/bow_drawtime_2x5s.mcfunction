@@ -1,0 +1,16 @@
+execute at @s[predicate=skills:sharpshot_1] run particle crit ^ ^1.4 ^1 0.5 0.5 0.5 0.01 15 normal
+execute at @s[predicate=skills:sharpshot_1] run playsound item.spyglass.use master @s ~ ~ ~ 1 0.7 1
+execute at @s[predicate=skills:sharpshot_1] run playsound item.spyglass.use master @s ~ ~ ~ 1 0.7 1
+execute at @s[predicate=skills:sharpshot_2] run particle crit ^ ^1.4 ^1 0.5 0.5 0.5 0.01 15 normal
+execute at @s[predicate=skills:sharpshot_2] run playsound item.spyglass.use master @s ~ ~ ~ 1 0.7 1
+execute at @s[predicate=skills:sharpshot_2] run playsound item.spyglass.use master @s ~ ~ ~ 1 0.7 1
+execute at @s[predicate=skills:sharpshot_3] run particle crit ^ ^1.4 ^1 0.5 0.5 0.5 0.01 15 normal
+execute at @s[predicate=skills:sharpshot_3] run playsound item.spyglass.use master @s ~ ~ ~ 1 0.7 1
+execute at @s[predicate=skills:sharpshot_3] run playsound item.spyglass.use master @s ~ ~ ~ 1 0.7 1
+execute at @s[predicate=skills:sharpshot_4] run particle crit ^ ^1.4 ^1 0.5 0.5 0.5 0.01 15 normal
+execute at @s[predicate=skills:sharpshot_4] run playsound item.spyglass.use master @s ~ ~ ~ 1 0.7 1
+execute at @s[predicate=skills:sharpshot_4] run playsound item.spyglass.use master @s ~ ~ ~ 1 0.7 1
+tag @s[predicate=skills:sharpshot_1] add sharpshot_1
+tag @s[predicate=skills:sharpshot_2] add sharpshot_2
+tag @s[predicate=skills:sharpshot_3] add sharpshot_3
+tag @s[predicate=skills:sharpshot_4] add sharpshot_4

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": ["CLC", "LUL", "CLC"],
+  "key": {
+    "C": {"item": "minecraft:copper_ingot"},
+    "L": {"item": "minecraft:lightning_rod"},
+    "U": {"item": "ragecraft4reforged:unenchanted_wand"}
+  },
+  "result": {"item": "ragecraft4reforged:thunderfist", "count": 1},
+  "show_notification": true
+}

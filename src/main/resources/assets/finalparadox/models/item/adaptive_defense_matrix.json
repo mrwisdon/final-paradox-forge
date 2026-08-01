@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {"layer0": "finalparadox:item/adaptive_defense_matrix"},
+  "overrides": [
+    {"predicate": {"custom_model_data": 1}, "model": "finalparadox:item/adaptive_defense_matrix_cooldown"}
+  ]
+}

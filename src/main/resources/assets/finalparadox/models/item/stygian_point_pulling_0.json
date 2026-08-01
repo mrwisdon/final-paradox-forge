@@ -1,0 +1,4 @@
+{
+  "parent": "finalparadox:item/stygian_point",
+  "textures": { "layer0": "finalparadox:item/stygian_point_pulling_0" }
+}

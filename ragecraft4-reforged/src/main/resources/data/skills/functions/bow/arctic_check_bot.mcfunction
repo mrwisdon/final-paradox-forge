@@ -1,0 +1,1 @@
+execute at @s positioned ~ ~1 ~ unless entity @e[tag=r4r_ability_target,scores={arctic_target=1..},distance=..0] run function skills:bow/arctic_frozen_end

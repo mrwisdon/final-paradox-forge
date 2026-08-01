@@ -1,0 +1,14 @@
+package io.github.finalparadox.item;
+
+import com.google.common.collect.ImmutableMultimap;import com.google.common.collect.Multimap;import io.github.finalparadox.entity.PumpkinHammerSwingEntity;import net.minecraft.network.chat.Component;import net.minecraft.server.level.ServerPlayer;import net.minecraft.world.*;import net.minecraft.world.entity.*;import net.minecraft.world.entity.ai.attributes.*;import net.minecraft.world.item.*;import net.minecraft.world.level.Level;import java.util.*;
+public final class PumpkinMaulItem extends Item{
+ public static final String CHARGE_KEY="finalparadox.pumpkin_maul_charge";private final Multimap<Attribute,AttributeModifier>mods=ImmutableMultimap.of(Attributes.ATTACK_DAMAGE,new AttributeModifier(UUID.fromString("7b4ab708-f6c4-4cd8-a7f5-ec39c53528f0"),"Pumpkin maul damage",10,AttributeModifier.Operation.ADDITION));
+ public PumpkinMaulItem(){super(new Properties().stacksTo(1));}
+ @Override public InteractionResultHolder<ItemStack>use(Level level,net.minecraft.world.entity.player.Player player,InteractionHand hand){ItemStack stack=player.getItemInHand(hand);player.startUsingItem(hand);if(player instanceof ServerPlayer server&&!PumpkinHammerSwingEntity.hasActive(server))PumpkinHammerSwingEntity.spawn(server);return InteractionResultHolder.consume(stack);}
+ @Override public void onUseTick(Level level,LivingEntity user,ItemStack stack,int remaining){if(user instanceof ServerPlayer player&&!PumpkinHammerSwingEntity.hasActive(player))PumpkinHammerSwingEntity.spawn(player);}
+ @Override public int getUseDuration(ItemStack stack){return 72000;}@Override public UseAnim getUseAnimation(ItemStack stack){return UseAnim.NONE;}
+ public static boolean recordHit(ServerPlayer player){int charge=Math.min(20,player.getPersistentData().getInt(CHARGE_KEY)+1);player.getPersistentData().putInt(CHARGE_KEY,charge);player.displayClientMessage(Component.translatable("message.finalparadox.pumpkin_maul.charge",charge),true);return charge==20;}
+ @Override public ItemStack getDefaultInstance(){ItemStack s=super.getDefaultInstance();prepare(s);return s;}@Override public void inventoryTick(ItemStack s,Level l,Entity e,int slot,boolean selected){prepare(s);}private static void prepare(ItemStack s){s.getOrCreateTag().putBoolean("Unbreakable",true);s.getOrCreateTag().putInt("HideFlags",4);}
+ @Override public Multimap<Attribute,AttributeModifier>getDefaultAttributeModifiers(EquipmentSlot slot){return slot==EquipmentSlot.MAINHAND?mods:super.getDefaultAttributeModifiers(slot);}
+ @Override public void appendHoverText(ItemStack s,Level l,List<Component>t,TooltipFlag f){t.add(Component.empty());for(int i=1;i<=15;i++)t.add(Component.translatable("item.finalparadox.pumpkin_maul.lore."+i));t.add(Component.empty());t.add(Component.translatable("item.finalparadox.pumpkin_maul.damage"));t.add(Component.empty());t.add(Component.translatable("item.finalparadox.legendary"));}
+}

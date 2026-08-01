@@ -1,0 +1,2 @@
+execute at @s[nbt={inGround:1b}] if entity @p[predicate=skills:vt_healing_crystal, distance=..6] run function skills:bow/vt_healing_crystal_place
+execute at @s[nbt={inGround:1b}] unless entity @p[predicate=skills:vt_healing_crystal, distance=..6] run tag @s remove vt_healing_crystal
