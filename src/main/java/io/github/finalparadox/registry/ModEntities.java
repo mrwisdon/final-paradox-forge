@@ -17,6 +17,8 @@ import io.github.finalparadox.entity.TerrastalkerRoverEntity;
 import io.github.finalparadox.entity.ZombieSupermatrixEntity;
 import io.github.finalparadox.entity.B8H2ModuleEntity;
 import io.github.finalparadox.entity.B8SniperBulletEntity;
+import io.github.finalparadox.entity.B8DetonatorBombEntity;
+import io.github.finalparadox.entity.B8CrushingWaveEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
 import io.github.finalparadox.entity.GariBossEntity;
 import io.github.finalparadox.entity.HarvesterEntity;
@@ -202,6 +204,20 @@ public final class ModEntities {
                     .clientTrackingRange(64)
                     .updateInterval(1)
                     .build("b8_sniper_bullet"));
+    public static final RegistryObject<EntityType<B8DetonatorBombEntity>> B8_DETONATOR_BOMB = REGISTER.register(
+            "b8_detonator_bomb", () -> EntityType.Builder
+                    .<B8DetonatorBombEntity>of(B8DetonatorBombEntity::new, MobCategory.MONSTER)
+                    .sized(0.7F, 0.7F)
+                    .clientTrackingRange(96)
+                    .updateInterval(1)
+                    .build("b8_detonator_bomb"));
+    public static final RegistryObject<EntityType<B8CrushingWaveEntity>> B8_CRUSHING_WAVE = REGISTER.register(
+            "b8_crushing_wave", () -> EntityType.Builder
+                    .<B8CrushingWaveEntity>of(B8CrushingWaveEntity::new, MobCategory.MISC)
+                    .sized(0.2F, 0.2F)
+                    .clientTrackingRange(96)
+                    .updateInterval(1)
+                    .build("b8_crushing_wave"));
     public static final RegistryObject<EntityType<ApigloBossEntity>> APIGLO = REGISTER.register("apiglo", () ->
             EntityType.Builder.<ApigloBossEntity>of(ApigloBossEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.95F).clientTrackingRange(96).updateInterval(1).build("apiglo"));

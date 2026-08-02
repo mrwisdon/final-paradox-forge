@@ -92,6 +92,9 @@ public final class ApigloCommandEvents {
                                         .executes(context -> b8H1(
                                                 context.getSource().getPlayerOrException(),
                                                 IntegerArgumentType.getInteger(context, "mode")))))
+                        .then(Commands.literal("h2")
+                                .executes(context -> b8H2(
+                                        context.getSource().getPlayerOrException())))
                         .then(Commands.literal("h4")
                                 .then(Commands.argument("variant", IntegerArgumentType.integer(1, 3))
                                         .executes(context -> b8H4(
@@ -263,6 +266,18 @@ public final class ApigloCommandEvents {
         controller.startH1(player.serverLevel(),
                 B8EncounterManager.encounterData(player.serverLevel()), mode);
         player.sendSystemMessage(Component.literal("B8 H1 triggered with " + mode + " beam(s)."));
+        return 1;
+    }
+
+    private static int b8H2(ServerPlayer player) {
+        B8EncounterController controller = B8EncounterManager.requireController(player.serverLevel());
+        if (controller == null) {
+            player.sendSystemMessage(Component.literal("No B8 encounter is active."));
+            return 0;
+        }
+        controller.startH2(player.serverLevel(),
+                B8EncounterManager.encounterData(player.serverLevel()));
+        player.sendSystemMessage(Component.literal("B8 H2 gold-module throw triggered."));
         return 1;
     }
 

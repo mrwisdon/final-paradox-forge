@@ -78,6 +78,8 @@ public final class ClientModEvents {
         event.registerEntityRenderer(ModEntities.ZOMBIE_SUPERMATRIX.get(), ZombieSupermatrixRenderer::new);
         event.registerEntityRenderer(ModEntities.B8_H2_MODULE.get(), B8H2ModuleRenderer::new);
         event.registerEntityRenderer(ModEntities.B8_SNIPER_BULLET.get(), B8SniperBulletRenderer::new);
+        event.registerEntityRenderer(ModEntities.B8_DETONATOR_BOMB.get(), B8DetonatorBombRenderer::new);
+        event.registerEntityRenderer(ModEntities.B8_CRUSHING_WAVE.get(), InvisibleAbilityRenderer::new);
         event.registerEntityRenderer(ModEntities.APIGLO.get(), ZombieRenderer::new);
         event.registerEntityRenderer(ModEntities.THAR_KROO.get(), TharKrooRenderer::new);
         event.registerEntityRenderer(ModEntities.CONQUEROR_SHADOW.get(), SkeletonRenderer::new);

@@ -8,13 +8,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -23,6 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * server tick event so the fight survives reloads.
  */
 public final class B8EncounterManager {
+    private static final String ROVER_KILLER_KEY = "finalparadox.b8_rover_killer";
+    private static final String ROVER_HIT_TIME_KEY = "finalparadox.b8_rover_hit_time";
     private static final Map<String, B8EncounterController> CONTROLLERS = new ConcurrentHashMap<>();
 
     private B8EncounterManager() {
@@ -96,6 +101,38 @@ public final class B8EncounterManager {
         if (isActive(level)) {
             B8EncounterData.get(level).addSpectator(player.getUUID());
         }
+    }
+
+    /** Records the rider before rover magic damage fires LivingDeathEvent. */
+    public static void markRoverHit(LivingEntity target, UUID rider, long gameTime) {
+        if (!target.getTags().contains("b8_h3_enemigo3")) return;
+        target.getPersistentData().putUUID(ROVER_KILLER_KEY, rider);
+        target.getPersistentData().putLong(ROVER_HIT_TIME_KEY, gameTime);
+    }
+
+    /** Handles B8 affix death hooks before unrelated player-kill item logic. */
+    public static void onLivingDeath(LivingEntity victim, DamageSource source) {
+        if (!(victim.level() instanceof ServerLevel level) || !isActive(level)) return;
+        B8EncounterController controller = requireController(level);
+        if (controller == null) return;
+        boolean playerKilled = source.getEntity() instanceof ServerPlayer;
+        CompoundTagAccess marker = marker(victim);
+        if (!playerKilled && marker.hasKiller()
+                && marker.hitTime() == level.getGameTime()) {
+            playerKilled = true;
+        }
+        controller.onAddDeath(level, victim, playerKilled);
+        victim.getPersistentData().remove(ROVER_KILLER_KEY);
+        victim.getPersistentData().remove(ROVER_HIT_TIME_KEY);
+    }
+
+    private static CompoundTagAccess marker(LivingEntity victim) {
+        return new CompoundTagAccess(
+                victim.getPersistentData().hasUUID(ROVER_KILLER_KEY),
+                victim.getPersistentData().getLong(ROVER_HIT_TIME_KEY));
+    }
+
+    private record CompoundTagAccess(boolean hasKiller, long hitTime) {
     }
 
     /** Rover bullet hook: returns MISS/BLOCKED/HIT against the active matrix. */

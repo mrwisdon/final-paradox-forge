@@ -87,10 +87,17 @@ Source `h2/{ini,pos,gen,run,romper,boom,end,reset}`. The controller schedules
 - One module spawns per tick from the remaining pool (`run` -> `gen`), with
   the source Y offset roll 0/2/4/5/6 (1/5, 4/15, 4/15, 2/15, 2/15), plus the
   ender-eye launch/death sounds.
-- `B8H2ModuleEntity` (lightweight, not networked armor stands): falls 0.036
-  blocks/tick, rotates 3 deg/tick, emits the golden dust glow at +2. The
-  renderer draws the gold block at the stand head height, rotated by the
-  synced yaw.
+- `B8H2ModuleEntity` remains one lightweight entity per module rather than a
+  networked armor stand. It keeps the server hit position at the selected sky
+  point while its renderer reproduces the source armor stand's three-client-
+  tick teleport interpolation from anchor + `(0, 6.5, 0)`, creating the fast
+  outward throw. It then falls 0.036 blocks/tick, rotates 3 deg/tick with
+  partial-tick smoothing, emits the golden dust at +2, and carries the source
+  yellow glowing outline.
+- The renderer now matches the vanilla full-size armor-stand head item: the
+  gold block is centered at +1.6875, scaled to 0.625, and rotated around its
+  own center. This replaces the previous full-block, off-center transform
+  which made every module orbit/wobble while spinning.
 - Landing: stand Y <= anchor Y - 1.5 triggers `boom` at +1.7: squid-ink ring,
   explosion, generic-explode sound, then 5 damage to every B8 rover
   (source runs `danar_montura` per `14_montura_core`).
@@ -107,12 +114,13 @@ Source `h2/{ini,pos,gen,run,romper,boom,end,reset}`. The controller schedules
   (`b8.fase.2/3/4.ini.1`; phase 5 reuses the existing `b3.fase.5.ini.1`).
 - `endEncounter`/`onDefeat`/`prepare` all clear H2 modules and state.
 
-Known H2 differences to verify in-game: the source's Glowing outline is
-approximated by the per-tick dust particle (no entity outline), the squid-ink
-ring is rendered as 60 ring positions, and the block render is centered at the
-stand +1.0 (block body 1.0..2.0) instead of the exact head-item placement.
-The gold module throw/fall animation is judged not ideal by the user and is
-explicitly deferred to ChatGPT; see `b8-handoff-to-gpt.md`.
+Known H2 difference still to verify in-game: the squid-ink landing ring is
+rendered as 60 ring positions instead of the source's 64 exact offsets. The
+corrected launch interpolation, yellow outline, head-item scale/placement and
+centered rotation require a visual client pass before parity can be claimed;
+see `b8-handoff-to-gpt.md`.
+
+Visual test command: `/finalparadox b8 h2` while a B8 encounter is active.
 
 ## Anchor policy
 

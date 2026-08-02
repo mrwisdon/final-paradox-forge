@@ -479,7 +479,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         Vec3 direction = rider.getLookAngle().normalize();
         Vec3 origin = position().add(direction.scale(1.6D))
                 .add(0.0D, FIRE_ORIGIN_LOCAL_Y, 0.0D);
-        bullets.add(new RoverBullet(origin, direction.scale(BULLET_SPEED)));
+        bullets.add(new RoverBullet(origin, direction.scale(BULLET_SPEED), rider.getUUID()));
         server.sendParticles(ParticleTypes.LAVA, origin.x, origin.y, origin.z,
                 1, 0.0D, 0.0D, 0.0D, 0.0D);
         server.playSound(null, BlockPos.containing(origin), SoundEvents.IRON_GOLEM_REPAIR,
@@ -531,6 +531,9 @@ public final class TerrastalkerRoverEntity extends Entity {
             LivingEntity target = findBulletTarget(server, next.add(0.0D, -1.0D, 0.0D));
             if (target != null) {
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 1));
+                if (isEncounterMode()) {
+                    B8EncounterManager.markRoverHit(target, bullet.shooter, server.getGameTime());
+                }
                 target.hurt(server.damageSources().magic(), isImproved() ? 9.0F : 7.0F);
                 emitEnemyImpact(server, next);
                 server.playSound(null, target.blockPosition(), SoundEvents.SHROOMLIGHT_HIT,
@@ -1061,11 +1064,13 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final class RoverBullet {
         private Vec3 position;
         private final Vec3 velocity;
+        private final UUID shooter;
         private int life;
 
-        private RoverBullet(Vec3 position, Vec3 velocity) {
+        private RoverBullet(Vec3 position, Vec3 velocity, UUID shooter) {
             this.position = position;
             this.velocity = velocity;
+            this.shooter = shooter;
         }
     }
 }

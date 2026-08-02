@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -17,6 +18,8 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import org.joml.Vector3f;
 
+import java.util.Optional;
+
 /**
  * Falling gold-block module from the B8 H2 shield-breaking window. Mirrors
  * the source armor stand: falls 0.036 blocks/tick, rotates 3 degrees/tick,
@@ -25,6 +28,10 @@ import org.joml.Vector3f;
 public final class B8H2ModuleEntity extends Entity {
     public static final double FALL_SPEED = 0.036D;
     public static final double ROTATION_STEP = 3.0D;
+    /** Vanilla teleports armor stands over three client interpolation steps. */
+    public static final float LAUNCH_DURATION_TICKS = 3.0F;
+    /** Source summon position: arena anchor + (0, 6.5, 0). */
+    public static final double LAUNCH_ORIGIN_LOCAL_Y = 6.5D;
     /** Source triggers the floor boom at stand y <= 76.5 (anchor y - 1.5). */
     public static final double BOOM_ANCHOR_OFFSET = 1.5D;
     /** Source samples bullets 1.4 above the stand origin. */
@@ -34,8 +41,10 @@ public final class B8H2ModuleEntity extends Entity {
     /** Source emits the golden glow dust 2 above the stand origin. */
     public static final double GLOW_SAMPLE_Y = 2.0D;
 
-    private static final EntityDataAccessor<Float> DATA_YAW =
-            SynchedEntityData.defineId(B8H2ModuleEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Long> DATA_SPAWN_GAME_TIME =
+            SynchedEntityData.defineId(B8H2ModuleEntity.class, EntityDataSerializers.LONG);
+    private static final EntityDataAccessor<Optional<BlockPos>> DATA_ANCHOR =
+            SynchedEntityData.defineId(B8H2ModuleEntity.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
 
     private double anchorY;
 
@@ -46,22 +55,46 @@ public final class B8H2ModuleEntity extends Entity {
         setInvulnerable(true);
     }
 
-    public static B8H2ModuleEntity spawn(ServerLevel level, Vec3 position, double anchorY) {
+    public static B8H2ModuleEntity spawn(ServerLevel level, Vec3 position, BlockPos anchor) {
         B8H2ModuleEntity module = new B8H2ModuleEntity(ModEntities.B8_H2_MODULE.get(), level);
         module.setPos(position);
-        module.anchorY = anchorY;
-        module.entityData.set(DATA_YAW, 0.0F);
+        module.anchorY = anchor.getY();
+        module.entityData.set(DATA_ANCHOR, Optional.of(anchor.immutable()));
+        module.entityData.set(DATA_SPAWN_GAME_TIME, level.getGameTime());
+        module.setGlowingTag(true);
         level.addFreshEntity(module);
         return module;
     }
 
     @Override
     protected void defineSynchedData() {
-        entityData.define(DATA_YAW, 0.0F);
+        entityData.define(DATA_SPAWN_GAME_TIME, Long.MIN_VALUE);
+        entityData.define(DATA_ANCHOR, Optional.empty());
     }
 
-    public float moduleYaw() {
-        return entityData.get(DATA_YAW);
+    public float visualAge(float partialTick) {
+        long spawnGameTime = entityData.get(DATA_SPAWN_GAME_TIME);
+        if (spawnGameTime == Long.MIN_VALUE) return LAUNCH_DURATION_TICKS;
+        return Math.max(0.0F, level().getGameTime() - spawnGameTime + partialTick);
+    }
+
+    public float launchProgress(float partialTick) {
+        return Math.min(1.0F, Math.max(0.0F, visualAge(partialTick) / LAUNCH_DURATION_TICKS));
+    }
+
+    public float moduleYaw(float partialTick) {
+        return visualAge(partialTick) * (float) ROTATION_STEP;
+    }
+
+    public Optional<Vec3> launchOrigin() {
+        return entityData.get(DATA_ANCHOR).map(anchor -> new Vec3(
+                anchor.getX(), anchor.getY() + LAUNCH_ORIGIN_LOCAL_Y, anchor.getZ()));
+    }
+
+    @Override
+    public int getTeamColor() {
+        // Source armor stands are Glowing:1b members of the yellow team.
+        return 0xFFFF55;
     }
 
     @Override
@@ -73,7 +106,6 @@ public final class B8H2ModuleEntity extends Entity {
             return;
         }
         setPos(getX(), getY() - FALL_SPEED, getZ());
-        entityData.set(DATA_YAW, moduleYaw() + (float) ROTATION_STEP);
         server.sendParticles(new DustParticleOptions(new Vector3f(1.0F, 0.933F, 0.0F), 1.5F),
                 getX(), getY() + GLOW_SAMPLE_Y, getZ(),
                 1, 0.2D, 0.2D, 0.2D, 0.0D);
@@ -105,13 +137,28 @@ public final class B8H2ModuleEntity extends Entity {
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         anchorY = tag.getDouble("AnchorY");
-        entityData.set(DATA_YAW, tag.getFloat("Yaw"));
+        if (tag.contains("AnchorX") && tag.contains("AnchorZ")) {
+            entityData.set(DATA_ANCHOR, Optional.of(new BlockPos(
+                    tag.getInt("AnchorX"), (int) Math.round(anchorY), tag.getInt("AnchorZ"))));
+        }
+        int legacyAnimationAge = tag.contains("AnimationAge")
+                ? tag.getInt("AnimationAge")
+                : Math.max(0, Math.round(tag.getFloat("Yaw") / (float) ROTATION_STEP));
+        long spawnGameTime = tag.contains("SpawnGameTime")
+                ? tag.getLong("SpawnGameTime")
+                : level().getGameTime() - legacyAnimationAge;
+        entityData.set(DATA_SPAWN_GAME_TIME, spawnGameTime);
+        setGlowingTag(true);
     }
 
     @Override
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putDouble("AnchorY", anchorY);
-        tag.putFloat("Yaw", moduleYaw());
+        entityData.get(DATA_ANCHOR).ifPresent(anchor -> {
+            tag.putInt("AnchorX", anchor.getX());
+            tag.putInt("AnchorZ", anchor.getZ());
+        });
+        tag.putLong("SpawnGameTime", entityData.get(DATA_SPAWN_GAME_TIME));
     }
 
     @Override

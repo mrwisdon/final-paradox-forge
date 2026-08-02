@@ -239,6 +239,7 @@ public final class GameplayEvents {
     }
 
     @SubscribeEvent public static void onLivingDeath(LivingDeathEvent event){
+        B8EncounterManager.onLivingDeath(event.getEntity(), event.getSource());
         if(event.getEntity() instanceof ServerPlayer deadPlayer){
             B5EncounterManager.onPlayerDeath(deadPlayer);
             B8EncounterManager.onPlayerDeath(deadPlayer);

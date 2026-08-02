@@ -18,9 +18,11 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.monster.Zombie;
@@ -120,6 +122,12 @@ public final class B8EncounterController {
     private static final String ADD_TYPE_KEY = "finalparadox.b8_add_type";
     private static final String ADD_YAW_KEY = "finalparadox.b8_add_yaw";
     private static final String ADD_FIRE_KEY = "finalparadox.b8_sniper_fire";
+    private static final String CRUSH_COOLDOWN_KEY = "finalparadox.b8_crush_cooldown";
+    private static final String CRUSH_CAST_KEY = "finalparadox.b8_crush_cast";
+    private static final String CRUSH_DIR_X_KEY = "finalparadox.b8_crush_dir_x";
+    private static final String CRUSH_DIR_Z_KEY = "finalparadox.b8_crush_dir_z";
+    private static final String CRUSH_STAND_KEY = "finalparadox.b8_crush_stand";
+    private static final String CRUSH_OWNER_KEY = "finalparadox.b8_crush_owner";
     private static final String[] ROBOT_SKULLS = {
             "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTUyZGM0YmJiMjU5NDMwNWRjNTVjY2NjZWMxNGEyODI0YTg5NDc3YWFjYTQyYjRkYzVkZDU3OTJhODg2ZTg4MSJ9fX0=",
             "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzIyMDI2YTcwNGUyOWI2MGI5NDU1ZWMxYjllNTY3M2NjNjhjMjkxMGQ3Y2FmNzY0Yzg1N2IxMDhlYTkyNDRjOSJ9fX0=",
@@ -464,7 +472,7 @@ public final class B8EncounterController {
 
     /* ------------------------------ H2 modules ------------------------------ */
 
-    private void startH2(ServerLevel server, B8EncounterData data) {
+    public void startH2(ServerLevel server, B8EncounterData data) {
         h2CleanupModules(server, data);
         computeH2Candidates(server, data);
         data.setH2Active(true);
@@ -560,7 +568,7 @@ public final class B8EncounterController {
         BlockPos anchor = data.anchor();
         B8H2ModuleEntity module = B8H2ModuleEntity.spawn(server,
                 new Vec3(candidate[0], candidate[1] + pickH2YOffset(server), candidate[2]),
-                anchor.getY());
+                anchor);
         data.addCleanup(module.getUUID());
         BlockPos block = BlockPos.containing(module.position());
         server.playSound(null, block, SoundEvents.ENDER_EYE_LAUNCH,
@@ -1068,6 +1076,7 @@ public final class B8EncounterController {
                 150.0D, 0.25D, "b8_h3_golem");
         golem.addTag("afijo_lvl_1");
         golem.addTag("afijo_aplastante");
+        initializeCrushingCooldown(golem, server);
         faceBoss(golem, data);
         server.addFreshEntity(golem);
         data.addCleanup(golem.getUUID());
@@ -1207,7 +1216,195 @@ public final class B8EncounterController {
                     golem.setPersistentAngerTarget(nearest.getUUID());
                     golem.setTarget(nearest);
                 }
+                tickCrushingGolem(server, data, golem, age);
             }
+        }
+        cleanupOrphanedCrushingBars(server, box);
+    }
+
+    private void initializeCrushingCooldown(IronGolem golem, ServerLevel server) {
+        CompoundTag persistent = golem.getPersistentData();
+        if (persistent.contains(CRUSH_COOLDOWN_KEY)) return;
+        int cooldown = 3;
+        if (server.random.nextBoolean()) cooldown += 3;
+        if (server.random.nextBoolean()) cooldown += 3;
+        persistent.putInt(CRUSH_COOLDOWN_KEY, cooldown);
+    }
+
+    private void tickCrushingGolem(
+            ServerLevel server, B8EncounterData data, IronGolem golem, int setupAge) {
+        CompoundTag persistent = golem.getPersistentData();
+        initializeCrushingCooldown(golem, server);
+        int cast = persistent.getInt(CRUSH_CAST_KEY);
+        if (cast > 0) {
+            tickCrushingCast(server, data, golem, cast);
+            return;
+        }
+
+        ServerPlayer nearby = nearestNonSpectator(server, golem.position());
+        if (nearby != null && nearby.distanceToSqr(golem) <= 30.0D * 30.0D
+                && server.getGameTime() % 20L == 0L) {
+            persistent.putInt(CRUSH_COOLDOWN_KEY,
+                    persistent.getInt(CRUSH_COOLDOWN_KEY) - 1);
+        }
+        if (setupAge < H3_SETUP_TICKS || persistent.getInt(CRUSH_COOLDOWN_KEY) > 0
+                || !golem.onGround()) return;
+
+        List<ServerPlayer> visible = server.getEntitiesOfClass(
+                ServerPlayer.class, golem.getBoundingBox().inflate(9.0D),
+                player -> !player.isSpectator() && player.distanceToSqr(golem) <= 81.0D
+                        && golem.hasLineOfSight(player));
+        if (visible.isEmpty()) {
+            persistent.putInt(CRUSH_COOLDOWN_KEY, 5);
+            return;
+        }
+        beginCrushingCast(server, data, golem,
+                visible.get(server.random.nextInt(visible.size())));
+    }
+
+    private void beginCrushingCast(
+            ServerLevel server, B8EncounterData data, IronGolem golem, ServerPlayer target) {
+        Vec3 flat = target.getEyePosition().subtract(golem.getEyePosition()).multiply(1.0D, 0.0D, 1.0D);
+        if (flat.lengthSqr() < 1.0E-6D) flat = new Vec3(0.0D, 0.0D, 1.0D);
+        flat = flat.normalize();
+        CompoundTag persistent = golem.getPersistentData();
+        persistent.putInt(CRUSH_CAST_KEY, 50);
+        persistent.putInt(CRUSH_COOLDOWN_KEY, 12);
+        persistent.putDouble(CRUSH_DIR_X_KEY, flat.x);
+        persistent.putDouble(CRUSH_DIR_Z_KEY, flat.z);
+        golem.setNoAi(true);
+        faceDirection(golem, flat);
+
+        ArmorStand bar = new ArmorStand(EntityType.ARMOR_STAND, server);
+        bar.setPos(golem.getX(), golem.getY() + 3.0D, golem.getZ());
+        byte flags = bar.getEntityData().get(net.minecraft.world.entity.decoration.ArmorStand.DATA_CLIENT_FLAGS);
+        bar.getEntityData().set(net.minecraft.world.entity.decoration.ArmorStand.DATA_CLIENT_FLAGS,
+                (byte) (flags | 0x01 | 0x10)); // small + marker
+        bar.setNoGravity(true);
+        bar.setInvisible(true);
+        bar.setInvulnerable(true);
+        bar.setCustomNameVisible(true);
+        bar.setCustomName(Component.translatable(
+                "luisb1202.functions.afijos.aplastante.ini2.1"));
+        bar.addTag("b8_h3_crushing_cast");
+        bar.getPersistentData().putUUID(CRUSH_OWNER_KEY, golem.getUUID());
+        server.addFreshEntity(bar);
+        persistent.putUUID(CRUSH_STAND_KEY, bar.getUUID());
+        data.addCleanup(bar.getUUID());
+        server.playSound(null, golem.blockPosition(), SoundEvents.UI_BUTTON_CLICK.value(),
+                SoundSource.MASTER, 0.1F, 2.0F);
+
+        BlockPos anchor = data.anchor();
+        if (anchor != null) {
+            net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(
+                    anchor.offset(-40, -10, -40), anchor.offset(40, 30, 40));
+            for (IronGolem other : server.getEntitiesOfClass(
+                    IronGolem.class, box, candidate -> candidate.isAlive()
+                            && candidate.getTags().contains("afijo_aplastante"))) {
+                if (other != golem) {
+                    CompoundTag otherData = other.getPersistentData();
+                    initializeCrushingCooldown(other, server);
+                    otherData.putInt(CRUSH_COOLDOWN_KEY,
+                            otherData.getInt(CRUSH_COOLDOWN_KEY) + 1);
+                }
+            }
+        }
+    }
+
+    private void tickCrushingCast(
+            ServerLevel server, B8EncounterData data, IronGolem golem, int cast) {
+        CompoundTag persistent = golem.getPersistentData();
+        Vec3 direction = new Vec3(
+                persistent.getDouble(CRUSH_DIR_X_KEY), 0.0D,
+                persistent.getDouble(CRUSH_DIR_Z_KEY));
+        if (direction.lengthSqr() < 1.0E-6D) direction = new Vec3(0.0D, 0.0D, 1.0D);
+        direction = direction.normalize();
+        faceDirection(golem, direction);
+
+        int remaining = cast - 1;
+        persistent.putInt(CRUSH_CAST_KEY, remaining);
+        ArmorStand bar = crushingBar(server, persistent);
+        if (bar != null) {
+            bar.moveTo(golem.getX(), golem.getY() + 3.0D, golem.getZ(),
+                    golem.getYRot(), 0.0F);
+        }
+        String stageKey = switch (remaining) {
+            case 40 -> "luisb1202.functions.afijos.aplastante.cast_1.1";
+            case 30 -> "luisb1202.functions.afijos.aplastante.cast_2.1";
+            case 20 -> "luisb1202.functions.afijos.aplastante.cast_3.1";
+            case 10 -> "luisb1202.functions.afijos.aplastante.cast_4.1";
+            default -> null;
+        };
+        if (stageKey != null) {
+            if (bar != null) bar.setCustomName(Component.translatable(stageKey));
+            server.playSound(null, golem.blockPosition(), SoundEvents.UI_BUTTON_CLICK.value(),
+                    SoundSource.MASTER, 0.1F, 2.0F);
+        }
+
+        if (remaining >= 6 && remaining <= 9) {
+            golem.moveTo(golem.getX(), golem.getY() + 0.6D, golem.getZ(),
+                    golem.getYRot(), golem.getXRot());
+        } else if (remaining >= 2 && remaining <= 5) {
+            golem.moveTo(golem.getX(), golem.getY() - 0.6D, golem.getZ(),
+                    golem.getYRot(), golem.getXRot());
+        }
+        golem.setDeltaMovement(Vec3.ZERO);
+
+        if (remaining > 0) return;
+        golem.setNoAi(false);
+        persistent.remove(CRUSH_CAST_KEY);
+        if (bar != null) bar.discard();
+        persistent.remove(CRUSH_STAND_KEY);
+        B8CrushingWaveEntity wave = B8CrushingWaveEntity.spawn(
+                server, golem.position(), direction);
+        data.addCleanup(wave.getUUID());
+        server.playSound(null, golem.blockPosition(), SoundEvents.END_GATEWAY_SPAWN,
+                SoundSource.MASTER, 1.0F, 2.0F);
+    }
+
+    private static void faceDirection(IronGolem golem, Vec3 direction) {
+        float yaw = (float) Math.toDegrees(Math.atan2(-direction.x, direction.z));
+        golem.setYRot(yaw);
+        golem.yBodyRot = yaw;
+        golem.yHeadRot = yaw;
+    }
+
+    private ArmorStand crushingBar(ServerLevel server, CompoundTag persistent) {
+        if (!persistent.hasUUID(CRUSH_STAND_KEY)) return null;
+        Entity entity = server.getEntity(persistent.getUUID(CRUSH_STAND_KEY));
+        return entity instanceof ArmorStand stand ? stand : null;
+    }
+
+    private void cleanupOrphanedCrushingBars(
+            ServerLevel server, net.minecraft.world.phys.AABB box) {
+        for (ArmorStand stand : server.getEntitiesOfClass(
+                ArmorStand.class, box, entity -> entity.getTags().contains("b8_h3_crushing_cast"))) {
+            CompoundTag persistent = stand.getPersistentData();
+            if (!persistent.hasUUID(CRUSH_OWNER_KEY)) {
+                stand.discard();
+                continue;
+            }
+            Entity owner = server.getEntity(persistent.getUUID(CRUSH_OWNER_KEY));
+            if (!(owner instanceof IronGolem golem) || !golem.isAlive()
+                    || golem.getPersistentData().getInt(CRUSH_CAST_KEY) <= 0) {
+                stand.discard();
+            }
+        }
+    }
+
+    public void onAddDeath(ServerLevel server, LivingEntity victim, boolean playerKilled) {
+        if (victim.getTags().contains("b8_h3_golem")) {
+            CompoundTag persistent = victim.getPersistentData();
+            ArmorStand bar = crushingBar(server, persistent);
+            if (bar != null) bar.discard();
+            persistent.remove(CRUSH_STAND_KEY);
+            persistent.remove(CRUSH_CAST_KEY);
+        }
+        if (!playerKilled || !victim.getTags().contains("b8_h3_enemigo3")) return;
+        for (int index = 0; index < 2; index++) {
+            B8DetonatorBombEntity bomb = B8DetonatorBombEntity.spawn(
+                    server, victim.position(), server.random.nextInt(24));
+            data.addCleanup(bomb.getUUID());
         }
     }
 
@@ -1336,7 +1533,10 @@ public final class B8EncounterController {
         for (Entity entity : server.getEntitiesOfClass(Entity.class, box,
                 candidate -> candidate.isAlive()
                         && (candidate.getTags().contains("b8_add")
-                        || candidate.getTags().contains("b8_h3_sniper_bala")))) {
+                        || candidate.getTags().contains("b8_h3_sniper_bala")
+                        || candidate.getTags().contains("b8_h3_detonator_bomb")
+                        || candidate.getTags().contains("b8_h3_crushing_wave")
+                        || candidate.getTags().contains("b8_h3_crushing_cast")))) {
             entity.discard();
         }
         data.setAddCount(0);
