@@ -1835,17 +1835,14 @@ public final class B8EncounterController {
     }
 
     private void onDefeat() {
-        // M7 stub: victory/explosion/reward flow is implemented later.
-        data.setState(B8EncounterData.STATE_VICTORY);
+        // M7 stub: victory/explosion/reward flow lands here later. The
+        // encounter must end so riders can dismount and world rules/forceload
+        // are restored instead of leaving the fight stuck active.
         ZombieSupermatrixEntity matrix = matrix();
         if (matrix != null) matrix.discard();
-        h2CleanupModules(serverLevel, data);
-        clearH1(serverLevel, data);
-        clearH4(serverLevel, data);
-        h3Cleanup(serverLevel, data);
-        bossEvent.removeAllPlayers();
-        ArenaDeploymentData.get(serverLevel).clearActiveBoss();
-        notifyPlayers(Component.literal("B8 matrix defeated (victory flow pending M7). Use /finalparadox b8 reset."));
+        endEncounter(serverLevel, data);
+        notifyPlayers(Component.literal(
+                "B8 matrix defeated (victory flow pending M7). Use /finalparadox arena start b8 to fight again."));
     }
 
     /**

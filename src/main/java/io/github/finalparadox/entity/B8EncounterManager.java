@@ -69,6 +69,15 @@ public final class B8EncounterManager {
         return B8EncounterData.get(level).active();
     }
 
+    /** True only while the fight is actually in a combat phase (PHASE_1..5). */
+    public static boolean inCombat(ServerLevel level) {
+        B8EncounterController controller = requireController(level);
+        if (controller == null) return false;
+        int state = B8EncounterData.get(level).state();
+        return state >= B8EncounterData.STATE_PHASE_1
+                && state <= B8EncounterData.STATE_PHASE_5;
+    }
+
     public static Optional<B8EncounterController> controller(ServerLevel level) {
         return Optional.ofNullable(CONTROLLERS.get(key(level)));
     }
