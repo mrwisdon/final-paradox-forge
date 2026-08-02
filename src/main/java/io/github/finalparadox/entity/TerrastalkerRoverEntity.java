@@ -66,7 +66,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int MELTDOWN_TICKS = 100;
     private static final int FIRE_INTERVAL_TICKS = 3;
     private static final int MISSILE_COOLDOWN_TICKS = 60;
-    private static final int MISSILE_ENERGY_COST = 25;
+    private static final int MISSILE_ENERGY_COST = 5;
     private static final int MISSILE_MAX_LIFE = 100;
     private static final int MISSILE_BLOCK_LIMIT = 3;
     private static final double MISSILE_SPEED = 1.0D;
