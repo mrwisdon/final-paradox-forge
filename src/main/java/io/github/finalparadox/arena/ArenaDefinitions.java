@@ -40,6 +40,29 @@ public final class ArenaDefinitions {
             2,
             new Vec3i(0, 1, 0));
 
+    /**
+     * B8 Zombie Supermatrix arena. The source datapack force-loads the box
+     * X -3851..-3804, Z 1388..1436 around the combat diamond at floor Y 78;
+     * the structure is a 45x45 decorated combat floor with a central pedestal
+     * and a light-blue/glass ring, all inside that box. The floor anchor is
+     * the arena center; the matrix core sits at offset (0, 7, 0) above it.
+     *
+     * <p>The official encounter may be deployed at any anchor; the controller
+     * resolves every runtime coordinate (player spawn, containment teleport,
+     * spectator platform, hazards, reward pedestal) from the recorded floor
+     * anchor, so the source's absolute coordinates are never hard-coded.
+     */
+    public static final ArenaDefinition B8 = new ArenaDefinition(
+            "b8",
+            "arenas/b8",
+            new Vec3i(48, 14, 49),
+            new BlockPos(-23, -9, -24),
+            48,
+            1,
+            1,
+            2,
+            new Vec3i(0, 7, 0));
+
     /** Koyomi spawn, relative to the B5 floor anchor (arena center platform top). */
     public static final BlockPos B5_KOYO_OFFSET = new BlockPos(-41, 1, 2);
     /** Gariheuz spawn, relative to the B5 floor anchor. */
@@ -54,7 +77,8 @@ public final class ArenaDefinitions {
             B1.id(), B1,
             MARAWTHAR.id(), MARAWTHAR,
             "b9", MARAWTHAR,
-            B5.id(), B5);
+            B5.id(), B5,
+            B8.id(), B8);
 
     private ArenaDefinitions() {
     }

@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.B5EncounterManager;
+import io.github.finalparadox.entity.B8EncounterManager;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -36,17 +37,24 @@ public final class ArenaCommands {
                                 .executes(context -> deploy(context, ArenaDefinitions.B5, defaultAnchor(context.getSource())))
                                 .then(Commands.argument("anchor", BlockPosArgument.blockPos())
                                         .executes(context -> deploy(context, ArenaDefinitions.B5,
+                                                BlockPosArgument.getBlockPos(context, "anchor")))))
+                        .then(Commands.literal("b8")
+                                .executes(context -> deploy(context, ArenaDefinitions.B8, defaultAnchor(context.getSource())))
+                                .then(Commands.argument("anchor", BlockPosArgument.blockPos())
+                                        .executes(context -> deploy(context, ArenaDefinitions.B8,
                                                 BlockPosArgument.getBlockPos(context, "anchor"))))))
                 .then(Commands.literal("status").executes(ArenaCommands::status))
                 .then(Commands.literal("reset")
                         .then(Commands.literal("b1").executes(context -> reset(context, ArenaDefinitions.B1)))
                         .then(Commands.literal("marawthar")
                                 .executes(context -> reset(context, ArenaDefinitions.MARAWTHAR)))
-                        .then(Commands.literal("b5").executes(context -> reset(context, ArenaDefinitions.B5))))
+                        .then(Commands.literal("b5").executes(context -> reset(context, ArenaDefinitions.B5)))
+                        .then(Commands.literal("b8").executes(context -> reset(context, ArenaDefinitions.B8))))
                 .then(Commands.literal("start")
                         .then(Commands.literal("b1").executes(ArenaCommands::startB1))
                         .then(Commands.literal("marawthar").executes(ArenaCommands::startMarawThar))
-                        .then(Commands.literal("b5").executes(ArenaCommands::startB5)));
+                        .then(Commands.literal("b5").executes(ArenaCommands::startB5))
+                        .then(Commands.literal("b8").executes(ArenaCommands::startB8)));
     }
 
     private static BlockPos defaultAnchor(CommandSourceStack source) {
@@ -82,6 +90,7 @@ public final class ArenaCommands {
         }
 
         B5EncounterManager.reset(level);
+        B8EncounterManager.reset(level);
         data.begin(definition, anchor);
         source.sendSuccess(() -> Component.literal("Started " + definition.id().toUpperCase()
                 + " arena deployment at floor anchor " + ArenaDeploymentManager.format(anchor)
@@ -108,6 +117,7 @@ public final class ArenaCommands {
             return 0;
         }
         B5EncounterManager.reset(level);
+        B8EncounterManager.reset(level);
         BlockPos anchor = data.floorAnchor().orElseThrow();
         data.begin(definition, anchor);
         source.sendSuccess(() -> Component.literal("Restarted " + definition.id().toUpperCase()
@@ -231,6 +241,36 @@ public final class ArenaCommands {
             return 0;
         }
         source.sendSuccess(() -> Component.literal("B5 countdown started at floor anchor "
+                + ArenaDeploymentManager.format(anchor) + "."), true);
+        return 1;
+    }
+
+    private static int startB8(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        ServerLevel level = source.getLevel();
+        ArenaDefinition definition = ArenaDefinitions.B8;
+        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        if (data.state() != ArenaDeploymentData.DeploymentState.READY
+                || !matchesRecordedDefinition(data, definition)
+                || data.floorAnchor().isEmpty()) {
+            source.sendFailure(Component.literal("B8 arena is not ready. Deploy it first and check arena status."));
+            return 0;
+        }
+        if (B8EncounterManager.isActive(level)) {
+            source.sendFailure(Component.literal("The B8 encounter is already active."));
+            return 0;
+        }
+        if (ArenaDeploymentManager.findActiveBoss(level, data, definition).isPresent()) {
+            source.sendFailure(Component.literal("A stray Zombie Supermatrix exists in the recorded B8 arena. Remove it first."));
+            return 0;
+        }
+
+        BlockPos anchor = data.floorAnchor().orElseThrow();
+        if (!B8EncounterManager.begin(level, anchor)) {
+            source.sendFailure(Component.literal("Could not start the B8 encounter."));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("B8 encounter countdown started at floor anchor "
                 + ArenaDeploymentManager.format(anchor) + "."), true);
         return 1;
     }

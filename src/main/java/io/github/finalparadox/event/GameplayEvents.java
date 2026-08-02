@@ -14,6 +14,7 @@ import io.github.finalparadox.item.SoullessEdgeItem;
 import io.github.finalparadox.item.TyrannicalDecapitatorItem;
 import io.github.finalparadox.entity.WindTornadoEntity;
 import io.github.finalparadox.entity.B5EncounterManager;
+import io.github.finalparadox.entity.B8EncounterManager;
 import io.github.finalparadox.entity.BladeRingEntity;
 import io.github.finalparadox.entity.TeslaCoreEntity;
 import io.github.finalparadox.entity.FrostStormEntity;
@@ -188,6 +189,13 @@ public final class GameplayEvents {
 
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event) {
+        if (event.getEntity() instanceof net.minecraft.world.entity.Mob add
+                && (add.getTags().contains("b8_h3_enemigo1")
+                || add.getTags().contains("b8_h3_enemigo3"))
+                && !add.getTags().contains("b8_h3_reventado")
+                && add.getRandom().nextBoolean()) {
+            B8EncounterManager.burstAdd(add);
+        }
         triggerFrozenShatter(event);
         triggerLastSpark(event);
         if (event.getEntity() instanceof ServerPlayer injured) triggerReactiveArmor(injured);
@@ -231,7 +239,10 @@ public final class GameplayEvents {
     }
 
     @SubscribeEvent public static void onLivingDeath(LivingDeathEvent event){
-        if(event.getEntity() instanceof ServerPlayer deadPlayer)B5EncounterManager.onPlayerDeath(deadPlayer);
+        if(event.getEntity() instanceof ServerPlayer deadPlayer){
+            B5EncounterManager.onPlayerDeath(deadPlayer);
+            B8EncounterManager.onPlayerDeath(deadPlayer);
+        }
         if(!(event.getSource().getEntity() instanceof ServerPlayer player))return;
         ServerLevel level=player.serverLevel();LivingEntity victim=event.getEntity();
         if(player.getItemBySlot(EquipmentSlot.CHEST).is(ModItems.VOID_ARMOR.get())){int kills=player.getPersistentData().getInt(VoidArmorItem.KILLS_KEY)+1;if(kills>=12){kills=0;ChestLaserEntity.spawn(player);}player.getPersistentData().putInt(VoidArmorItem.KILLS_KEY,kills);player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.finalparadox.void_armor.kills",kills),true);}

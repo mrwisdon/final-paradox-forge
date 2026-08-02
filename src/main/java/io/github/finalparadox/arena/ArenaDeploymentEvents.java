@@ -2,6 +2,7 @@ package io.github.finalparadox.arena;
 
 import io.github.finalparadox.FinalParadox;
 import io.github.finalparadox.entity.B5EncounterManager;
+import io.github.finalparadox.entity.B8EncounterManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -18,6 +19,7 @@ public final class ArenaDeploymentEvents {
         for (ServerLevel level : event.getServer().getAllLevels()) {
             ArenaDeploymentManager.tick(level);
             B5EncounterManager.tick(level);
+            B8EncounterManager.tick(level);
         }
     }
 }

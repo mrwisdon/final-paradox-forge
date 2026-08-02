@@ -114,6 +114,11 @@ IDLE -> COUNTDOWN -> PHASE_1 -> PHASE_2 -> PHASE_3 -> PHASE_4 -> PHASE_5
 - 竞技场边界中心：`-3828 78 1412`
 - 非旁观玩家离中心超过 26 格时传送回 `-3815 79 1412`。
 
+> 锚点策略（2026-08-02 确认）：正式战斗固定部署在玩家部署场地时的 floor
+> anchor（从 `ArenaDeploymentData` 读取），上述坐标只是原版绝对证据，控制器
+> 必须按该锚点换算偏移，不能写死绝对坐标。完整偏移表见
+> `b8-arena-evidence.md` 的「Official encounter anchor policy」一节。
+
 需要防止重复启动、重复矩阵、重复调度和重载后双重 tick。测试命令可以保留，但正式遭遇只能由一个控制器拥有。
 
 ### M2：玩家、大地漫游器和战斗入口

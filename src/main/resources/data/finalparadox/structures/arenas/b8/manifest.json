@@ -1,0 +1,174 @@
+{
+  "name": "b8",
+  "source_world": "Final_Paradox_v1.1.15",
+  "source_level_dat_sha256": "717F3D6E30DD618C4F8AA9960668D7A7C36357D1CABC339325E8BCAFA2F863A6",
+  "source_bounds": {
+    "min": [
+      -3851,
+      69,
+      1388
+    ],
+    "max": [
+      -3804,
+      82,
+      1436
+    ]
+  },
+  "size": [
+    48,
+    14,
+    49
+  ],
+  "tile_size": 48,
+  "tile_counts": [
+    1,
+    1,
+    2
+  ],
+  "data_version": 3465,
+  "policy": {
+    "includes_air": true,
+    "includes_entities": false,
+    "includes_block_entities": false,
+    "unsafe_blocks_replaced_with_air": [
+      "minecraft:chain_command_block",
+      "minecraft:command_block",
+      "minecraft:jigsaw",
+      "minecraft:repeating_command_block",
+      "minecraft:spawner",
+      "minecraft:structure_block"
+    ]
+  },
+  "tiles": [
+    {
+      "file": "tile_0_0_0.nbt",
+      "source_min": [
+        -3851,
+        69,
+        1388
+      ],
+      "size": [
+        48,
+        14,
+        48
+      ],
+      "palette_size": 18,
+      "blocks": 32256,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          27519
+        ],
+        [
+          "minecraft:gray_concrete",
+          2682
+        ],
+        [
+          "minecraft:black_concrete",
+          872
+        ],
+        [
+          "minecraft:light_blue_concrete",
+          499
+        ],
+        [
+          "minecraft:quartz_block",
+          469
+        ],
+        [
+          "minecraft:blue_stained_glass",
+          145
+        ],
+        [
+          "minecraft:light_gray_concrete",
+          36
+        ],
+        [
+          "minecraft:quartz_slab",
+          18
+        ],
+        [
+          "minecraft:quartz_stairs",
+          12
+        ],
+        [
+          "minecraft:blast_furnace",
+          3
+        ],
+        [
+          "minecraft:observer",
+          1
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "D08E261F1B380C14CE5A018D4663A9AD0816B6AE306CE4448B4C6EDBD7C1F779",
+      "index": [
+        0,
+        0,
+        0
+      ],
+      "offset": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "file": "tile_0_0_1.nbt",
+      "source_min": [
+        -3851,
+        69,
+        1436
+      ],
+      "size": [
+        48,
+        14,
+        1
+      ],
+      "palette_size": 7,
+      "blocks": 672,
+      "top_block_names": [
+        [
+          "minecraft:air",
+          363
+        ],
+        [
+          "minecraft:gray_concrete",
+          158
+        ],
+        [
+          "minecraft:black_concrete",
+          70
+        ],
+        [
+          "minecraft:light_blue_concrete",
+          57
+        ],
+        [
+          "minecraft:quartz_block",
+          11
+        ],
+        [
+          "minecraft:blue_stained_glass",
+          11
+        ],
+        [
+          "minecraft:quartz_slab",
+          2
+        ]
+      ],
+      "sanitized": {},
+      "sha256": "944DD1B278887F5ADC28E2B6DAB23A04182733AF21A3674CFD367DC0052AE7A3",
+      "index": [
+        0,
+        0,
+        1
+      ],
+      "offset": [
+        0,
+        0,
+        48
+      ]
+    }
+  ]
+}

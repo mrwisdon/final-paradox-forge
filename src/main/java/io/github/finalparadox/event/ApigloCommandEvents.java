@@ -8,8 +8,11 @@ import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.TerrastalkerRoverEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
 import io.github.finalparadox.entity.ZombieSupermatrixEntity;
+import io.github.finalparadox.entity.B8EncounterController;
+import io.github.finalparadox.entity.B8EncounterManager;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
@@ -58,6 +61,47 @@ public final class ApigloCommandEvents {
                         .then(Commands.literal("remove")
                                 .executes(context -> removeSupermatrix(
                                         context.getSource().getPlayerOrException()))))
+                .then(Commands.literal("b8")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.literal("status")
+                                .executes(context -> b8Status(
+                                        context.getSource().getPlayerOrException())))
+                        .then(Commands.literal("reset")
+                                .executes(context -> b8Reset(
+                                        context.getSource().getPlayerOrException())))
+                        .then(Commands.literal("health")
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(0, 250))
+                                        .executes(context -> b8Health(
+                                                context.getSource().getPlayerOrException(),
+                                                IntegerArgumentType.getInteger(context, "amount")))))
+                        .then(Commands.literal("phase")
+                                .then(Commands.argument("phase", IntegerArgumentType.integer(1, 5))
+                                        .executes(context -> b8Phase(
+                                                context.getSource().getPlayerOrException(),
+                                                IntegerArgumentType.getInteger(context, "phase")))))
+                        .then(Commands.literal("vulnerable")
+                                .executes(context -> b8Vulnerable(
+                                        context.getSource().getPlayerOrException(), true)))
+                        .then(Commands.literal("invulnerable")
+                                .executes(context -> b8Vulnerable(
+                                        context.getSource().getPlayerOrException(), false)))
+                        .then(Commands.literal("h1")
+                                .executes(context -> b8H1(
+                                        context.getSource().getPlayerOrException(), 1))
+                                .then(Commands.argument("mode", IntegerArgumentType.integer(1, 3))
+                                        .executes(context -> b8H1(
+                                                context.getSource().getPlayerOrException(),
+                                                IntegerArgumentType.getInteger(context, "mode")))))
+                        .then(Commands.literal("h4")
+                                .then(Commands.argument("variant", IntegerArgumentType.integer(1, 3))
+                                        .executes(context -> b8H4(
+                                                context.getSource().getPlayerOrException(),
+                                                IntegerArgumentType.getInteger(context, "variant")))))
+                        .then(Commands.literal("add")
+                                .then(Commands.argument("type", StringArgumentType.word())
+                                        .executes(context -> b8Add(
+                                                context.getSource().getPlayerOrException(),
+                                                StringArgumentType.getString(context, "type"))))))
                 .then(Commands.literal("apiglo_menu")
                         .then(Commands.argument("boss", StringArgumentType.word())
                                 .then(Commands.argument("action", StringArgumentType.word())
@@ -90,6 +134,7 @@ public final class ApigloCommandEvents {
     }
 
     private static int spawnSupermatrix(ServerPlayer player, boolean vulnerable) {
+        if (guardActiveEncounter(player)) return 0;
         Vec3 look = player.getLookAngle();
         Vec3 horizontal = new Vec3(look.x, 0.0D, look.z);
         if (horizontal.lengthSqr() < 1.0E-6D) {
@@ -107,6 +152,7 @@ public final class ApigloCommandEvents {
     }
 
     private static int setSupermatrixState(ServerPlayer player, boolean vulnerable) {
+        if (guardActiveEncounter(player)) return 0;
         ZombieSupermatrixEntity matrix = nearestSupermatrix(player);
         if (matrix == null) {
             player.sendSystemMessage(Component.literal("No Zombie Supermatrix model found within 96 blocks."));
@@ -117,6 +163,7 @@ public final class ApigloCommandEvents {
     }
 
     private static int toggleSupermatrix(ServerPlayer player) {
+        if (guardActiveEncounter(player)) return 0;
         ZombieSupermatrixEntity matrix = nearestSupermatrix(player);
         if (matrix == null) {
             player.sendSystemMessage(Component.literal("No Zombie Supermatrix model found within 96 blocks."));
@@ -127,6 +174,7 @@ public final class ApigloCommandEvents {
     }
 
     private static int removeSupermatrix(ServerPlayer player) {
+        if (guardActiveEncounter(player)) return 0;
         ZombieSupermatrixEntity matrix = nearestSupermatrix(player);
         if (matrix == null) {
             player.sendSystemMessage(Component.literal("No Zombie Supermatrix model found within 96 blocks."));
@@ -143,6 +191,108 @@ public final class ApigloCommandEvents {
                 .min((left, right) -> Double.compare(
                         player.distanceToSqr(left), player.distanceToSqr(right)))
                 .orElse(null);
+    }
+
+    private static boolean guardActiveEncounter(ServerPlayer player) {
+        if (!B8EncounterManager.isActive(player.serverLevel())) return false;
+        player.sendSystemMessage(Component.literal(
+                "A B8 encounter is active and owns the matrix; use /finalparadox b8 commands."));
+        return true;
+    }
+
+    private static int b8Status(ServerPlayer player) {
+        B8EncounterController controller = B8EncounterManager.requireController(player.serverLevel());
+        if (controller == null) {
+            player.sendSystemMessage(Component.literal("No B8 encounter is active in this dimension."));
+            return 0;
+        }
+        player.sendSystemMessage(Component.literal(controller.status()));
+        return 1;
+    }
+
+    private static int b8Reset(ServerPlayer player) {
+        ServerLevel level = player.serverLevel();
+        boolean wasActive = B8EncounterManager.isActive(level);
+        B8EncounterManager.reset(level);
+        player.sendSystemMessage(Component.literal(wasActive
+                ? "B8 encounter reset; arena and matrix cleaned up."
+                : "B8 was already idle; nothing to reset."));
+        return 1;
+    }
+
+    private static int b8Health(ServerPlayer player, int amount) {
+        B8EncounterController controller = B8EncounterManager.requireController(player.serverLevel());
+        if (controller == null) {
+            player.sendSystemMessage(Component.literal("No B8 encounter is active."));
+            return 0;
+        }
+        controller.setHealth(amount);
+        player.sendSystemMessage(Component.literal("B8 matrix health set to " + amount + "."));
+        return 1;
+    }
+
+    private static int b8Phase(ServerPlayer player, int phase) {
+        B8EncounterController controller = B8EncounterManager.requireController(player.serverLevel());
+        if (controller == null) {
+            player.sendSystemMessage(Component.literal("No B8 encounter is active."));
+            return 0;
+        }
+        controller.forcePhase(phase);
+        player.sendSystemMessage(Component.literal("B8 forced to phase " + phase + "."));
+        return 1;
+    }
+
+    private static int b8Vulnerable(ServerPlayer player, boolean vulnerable) {
+        B8EncounterController controller = B8EncounterManager.requireController(player.serverLevel());
+        if (controller == null) {
+            player.sendSystemMessage(Component.literal("No B8 encounter is active."));
+            return 0;
+        }
+        controller.setVulnerable(vulnerable);
+        player.sendSystemMessage(Component.literal("B8 matrix is now "
+                + (vulnerable ? "vulnerable." : "invulnerable (compact).")));
+        return 1;
+    }
+
+    private static int b8H1(ServerPlayer player, int mode) {
+        B8EncounterController controller = B8EncounterManager.requireController(player.serverLevel());
+        if (controller == null) {
+            player.sendSystemMessage(Component.literal("No B8 encounter is active."));
+            return 0;
+        }
+        controller.startH1(player.serverLevel(),
+                B8EncounterManager.encounterData(player.serverLevel()), mode);
+        player.sendSystemMessage(Component.literal("B8 H1 triggered with " + mode + " beam(s)."));
+        return 1;
+    }
+
+    private static int b8H4(ServerPlayer player, int variant) {
+        B8EncounterController controller = B8EncounterManager.requireController(player.serverLevel());
+        if (controller == null) {
+            player.sendSystemMessage(Component.literal("No B8 encounter is active."));
+            return 0;
+        }
+        controller.startH4(player.serverLevel(),
+                B8EncounterManager.encounterData(player.serverLevel()), variant);
+        player.sendSystemMessage(Component.literal("B8 H4 triggered with variant " + variant + "."));
+        return 1;
+    }
+
+    private static int b8Add(ServerPlayer player, String type) {
+        if (!java.util.Set.of("zombie", "sniper", "golem", "tnt").contains(type)) {
+            player.sendSystemMessage(Component.literal("Unknown add type: " + type
+                    + " (zombie|sniper|golem|tnt)."));
+            return 0;
+        }
+        B8EncounterController controller = B8EncounterManager.requireController(player.serverLevel());
+        if (controller == null) {
+            player.sendSystemMessage(Component.literal("No B8 encounter is active."));
+            return 0;
+        }
+        controller.spawnAddWave(player.serverLevel(),
+                B8EncounterManager.encounterData(player.serverLevel()), type);
+        player.sendSystemMessage(Component.literal("B8 " + type + " add wave spawned."));
+        return 1;
     }
 
     private static int handleGuideAction(ServerPlayer player, String rawUuid, String action) {

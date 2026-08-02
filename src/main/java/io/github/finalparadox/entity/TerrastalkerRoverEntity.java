@@ -43,7 +43,6 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -488,9 +487,9 @@ public final class TerrastalkerRoverEntity extends Entity {
     }
 
     private void tickBullets(ServerLevel server) {
-        Iterator<RoverBullet> iterator = bullets.iterator();
-        while (iterator.hasNext()) {
-            RoverBullet bullet = iterator.next();
+        List<RoverBullet> consumed = new ArrayList<>();
+        Vec3 matrixHitCenter = null;
+        for (RoverBullet bullet : bullets) {
             Vec3 next = bullet.position.add(bullet.velocity);
             BlockHitResult blockHit = level().clip(new ClipContext(
                     bullet.position, next, ClipContext.Block.COLLIDER,
@@ -500,7 +499,7 @@ public final class TerrastalkerRoverEntity extends Entity {
                 if (isImproved() && level().getBlockState(blockHit.getBlockPos()).is(Blocks.SPAWNER)) {
                     level().destroyBlock(blockHit.getBlockPos(), true);
                 }
-                iterator.remove();
+                consumed.add(bullet);
                 continue;
             }
 
@@ -512,6 +511,23 @@ public final class TerrastalkerRoverEntity extends Entity {
                             new Vector3f(0.231F, 0.231F, 0.231F), 0.7F),
                     next.x, next.y, next.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
 
+            if (isEncounterMode()) {
+                int bulletResult = B8EncounterManager.testBullet(server, next);
+                if (bulletResult == B8EncounterController.BULLET_HIT) {
+                    matrixHitCenter = B8EncounterManager.bulletHitCenter(server);
+                    consumed.add(bullet);
+                    continue;
+                }
+                if (bulletResult == B8EncounterController.BULLET_BLOCKED) {
+                    consumed.add(bullet);
+                    continue;
+                }
+                if (B8EncounterManager.testModuleHit(server, next)) {
+                    consumed.add(bullet);
+                    continue;
+                }
+            }
+
             LivingEntity target = findBulletTarget(server, next.add(0.0D, -1.0D, 0.0D));
             if (target != null) {
                 target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 1));
@@ -519,11 +535,23 @@ public final class TerrastalkerRoverEntity extends Entity {
                 emitEnemyImpact(server, next);
                 server.playSound(null, target.blockPosition(), SoundEvents.SHROOMLIGHT_HIT,
                         SoundSource.MASTER, 2.0F, 2.0F);
-                iterator.remove();
+                consumed.add(bullet);
                 continue;
             }
 
-            if (bullet.life >= BULLET_LIFETIME_TICKS) iterator.remove();
+            if (bullet.life >= BULLET_LIFETIME_TICKS) consumed.add(bullet);
+        }
+        // Source hit.mcfunction removes every bullet inside the 1.5-block zone.
+        if (matrixHitCenter != null) {
+            double radiusSqr = 1.5D * 1.5D;
+            for (RoverBullet bullet : bullets) {
+                if (bullet.position.distanceToSqr(matrixHitCenter) <= radiusSqr) {
+                    consumed.add(bullet);
+                }
+            }
+        }
+        if (!consumed.isEmpty()) {
+            bullets.removeAll(consumed);
         }
     }
 
@@ -654,6 +682,15 @@ public final class TerrastalkerRoverEntity extends Entity {
                     SoundSource.MASTER, 2.0F, 0.9F);
         }
         reduceEnergy(amount, true);
+    }
+
+    /** True when any of this rover's bullets is within the given radius. */
+    public boolean hasBulletsNear(Vec3 center, double radius) {
+        double radiusSqr = radius * radius;
+        for (RoverBullet bullet : bullets) {
+            if (bullet.position.distanceToSqr(center) <= radiusSqr) return true;
+        }
+        return false;
     }
 
     private void reduceEnergy(int amount, boolean announce) {

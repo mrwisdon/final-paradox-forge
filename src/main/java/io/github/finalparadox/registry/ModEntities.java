@@ -15,6 +15,8 @@ import io.github.finalparadox.entity.FrostStormEntity;
 import io.github.finalparadox.entity.PicomerangEntity;
 import io.github.finalparadox.entity.TerrastalkerRoverEntity;
 import io.github.finalparadox.entity.ZombieSupermatrixEntity;
+import io.github.finalparadox.entity.B8H2ModuleEntity;
+import io.github.finalparadox.entity.B8SniperBulletEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
 import io.github.finalparadox.entity.GariBossEntity;
 import io.github.finalparadox.entity.HarvesterEntity;
@@ -186,6 +188,20 @@ public final class ModEntities {
                     .clientTrackingRange(128)
                     .updateInterval(1)
                     .build("zombie_supermatrix"));
+    public static final RegistryObject<EntityType<B8H2ModuleEntity>> B8_H2_MODULE = REGISTER.register(
+            "b8_h2_module", () -> EntityType.Builder
+                    .<B8H2ModuleEntity>of(B8H2ModuleEntity::new, MobCategory.MISC)
+                    .sized(1.0F, 1.0F)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build("b8_h2_module"));
+    public static final RegistryObject<EntityType<B8SniperBulletEntity>> B8_SNIPER_BULLET = REGISTER.register(
+            "b8_sniper_bullet", () -> EntityType.Builder
+                    .<B8SniperBulletEntity>of(B8SniperBulletEntity::new, MobCategory.MISC)
+                    .sized(0.4F, 0.4F)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build("b8_sniper_bullet"));
     public static final RegistryObject<EntityType<ApigloBossEntity>> APIGLO = REGISTER.register("apiglo", () ->
             EntityType.Builder.<ApigloBossEntity>of(ApigloBossEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.95F).clientTrackingRange(96).updateInterval(1).build("apiglo"));

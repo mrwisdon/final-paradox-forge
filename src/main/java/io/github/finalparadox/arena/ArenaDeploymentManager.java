@@ -4,6 +4,7 @@ import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
 import io.github.finalparadox.entity.GariBossEntity;
+import io.github.finalparadox.entity.ZombieSupermatrixEntity;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -154,6 +155,10 @@ public final class ArenaDeploymentManager {
         }
 
         AABB arenaBounds = new AABB(definition.minimumCorner(anchor), definition.maximumCorner(anchor).offset(1, 1, 1));
+        if (definition.id().equals(ArenaDefinitions.B8.id())) {
+            // The matrix core floats seven blocks above the floor anchor.
+            arenaBounds = arenaBounds.expandTowards(0.0D, 12.0D, 0.0D);
+        }
         Entity boss;
         if (definition.id().equals(ArenaDefinitions.MARAWTHAR.id())) {
             List<MarawTharBossEntity> bosses =
@@ -170,6 +175,11 @@ public final class ArenaDeploymentManager {
                 if (garis.isEmpty()) return Optional.empty();
                 boss = garis.get(0);
             }
+        } else if (definition.id().equals(ArenaDefinitions.B8.id())) {
+            List<ZombieSupermatrixEntity> matrices =
+                    level.getEntities(ModEntities.ZOMBIE_SUPERMATRIX.get(), arenaBounds, ZombieSupermatrixEntity::isAlive);
+            if (matrices.isEmpty()) return Optional.empty();
+            boss = matrices.get(0);
         } else {
             List<ApigloBossEntity> bosses =
                     level.getEntities(ModEntities.APIGLO.get(), arenaBounds, ApigloBossEntity::isAlive);
@@ -185,6 +195,9 @@ public final class ArenaDeploymentManager {
         if (definition.id().equals(ArenaDefinitions.MARAWTHAR.id())) return entity instanceof MarawTharBossEntity;
         if (definition.id().equals(ArenaDefinitions.B5.id())) {
             return entity instanceof KoyomiBossEntity || entity instanceof GariBossEntity;
+        }
+        if (definition.id().equals(ArenaDefinitions.B8.id())) {
+            return entity instanceof ZombieSupermatrixEntity;
         }
         return entity instanceof ApigloBossEntity;
     }
