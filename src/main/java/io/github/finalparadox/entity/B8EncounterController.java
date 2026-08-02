@@ -62,6 +62,7 @@ public final class B8EncounterController {
     public static final String TIMER_H4_INI = "h4_ini";
     public static final String TIMER_H4_INI2 = "h4_ini2";
     public static final String TIMER_H4_INI3 = "h4_ini3";
+    public static final String TIMER_RESPAWN = "respawn";
 
     public static final int BULLET_MISS = 0;
     public static final int BULLET_BLOCKED = 1;
@@ -273,6 +274,7 @@ public final class B8EncounterController {
                 case TIMER_H4_INI -> startH4(server, data, 1);
                 case TIMER_H4_INI2 -> startH4(server, data, 2);
                 case TIMER_H4_INI3 -> startH4(server, data, 3);
+                case TIMER_RESPAWN -> respawn(server, data);
                 default -> {
                 }
             }
@@ -1709,6 +1711,65 @@ public final class B8EncounterController {
                 center.offset(-40, -10, -40), center.offset(40, 30, 40));
         return !server.getEntitiesOfClass(Entity.class, box,
                 entity -> entity.isAlive() && entity.getTags().contains("14_acechador_core")).isEmpty();
+    }
+
+    /* ------------------------------ M6 defeat flow ------------------------------ */
+
+    public void onPlayerDeath(ServerLevel server, ServerPlayer player) {
+        if (!data.active()) return;
+        data.addSpectator(player.getUUID());
+        if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
+            player.gameMode.changeGameModeForPlayer(GameType.SPECTATOR);
+        }
+        BlockPos center = data.anchor();
+        if (center != null) {
+            player.teleportTo(server,
+                    center.getX(), center.getY() + SPECTATOR_TP.y(), center.getZ(),
+                    player.getYRot(), player.getXRot());
+        }
+        if (allPlayersSpectator(server)) {
+            defeat(server, data);
+        }
+    }
+
+    private boolean allPlayersSpectator(ServerLevel server) {
+        for (ServerPlayer player : server.players()) {
+            if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) return false;
+        }
+        return true;
+    }
+
+    private void defeat(ServerLevel server, B8EncounterData data) {
+        if (data.state() == B8EncounterData.STATE_DEFEAT) return;
+        data.setState(B8EncounterData.STATE_DEFEAT);
+        for (ServerPlayer player : server.players()) {
+            player.connection.send(new ClientboundSetTitleTextPacket(
+                    Component.translatable("luisb1202.functions.bossfight.b1.derrota.1")));
+            player.connection.send(new ClientboundSetSubtitleTextPacket(
+                    Component.translatable("luisb1202.functions.bossfight.b1.derrota.2")));
+            server.playSound(null, player.blockPosition(), SoundEvents.WITHER_DEATH,
+                    SoundSource.MASTER, 1.0F, 1.8F);
+        }
+        data.addTimer(new B8EncounterData.TimerEntry(TIMER_RESPAWN, server.getGameTime() + 100));
+    }
+
+    private void respawn(ServerLevel server, B8EncounterData data) {
+        BlockPos anchor = data.anchor();
+        endEncounter(server, data);
+        if (anchor == null) return;
+        for (ServerPlayer player : server.players()) {
+            if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
+                player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
+                player.teleportTo(server,
+                        anchor.getX() + 14, anchor.getY() + 1, anchor.getZ(),
+                        90.0F, 0.0F);
+            }
+            player.removeEffect(MobEffects.WITHER);
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.DAMAGE_RESISTANCE, 2020, 1, false, false, false));
+        }
+        notifyPlayers(Component.literal(
+                "B8 defeat: arena reset; use /finalparadox arena start b8 to retry."));
     }
 
     public void setHealth(int health) {

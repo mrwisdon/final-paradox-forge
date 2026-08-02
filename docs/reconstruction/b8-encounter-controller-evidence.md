@@ -1,6 +1,6 @@
 # B8 encounter controller and persistence (M1)
 
-Updated: 2026-08-02 (M2..M5 added)
+Updated: 2026-08-02 (M2..M6 added)
 
 ## Scope
 
@@ -273,6 +273,25 @@ wave dispatches.
   phase threshold; `enterPhase` closes the matrix and clears the H2 cycle.
 - Fase 5 rounds 3-6 (acechador) are a stub: the source evoker sound and
   tellraw translations play, but the hostile acechador itself is deferred.
+
+## M6: vehicle damage, player death and defeat
+
+Source `b8/{morir,derrota,respawn}` and `danar_montura*`:
+
+- Encounter-mode rover energy damage announces the original tellraw
+  `<!> -<amount>% 能量` in red (source `b8/danar_montura.1..3`) instead of the
+  generic mod message; each hazard still damages only the ridden rover.
+- Vehicle destruction keeps the existing rover meltdown (kills the rider at
+  zero energy), which now feeds into the death flow below.
+- `onPlayerDeath`: the dead player becomes spectator, is teleported to
+  `anchor + (0,13,0)`, and when every online player is a spectator the defeat
+  flow fires (`b8/morir`).
+- `defeat`: state DEFEAT, title/subtitle `§4☠` / `§4§l战败！` (`b1.derrota`),
+  wither-death sound, and a persisted +100t respawn timer.
+- `respawn`: full encounter cleanup, spectators restored to survival and
+  teleported to `anchor + (14,1,0)` yaw 90, wither cleared, resistance 101
+  applied, ready to re-challenge (`b8/respawn`; the source's adventure-mode
+  restore is replaced by survival because the mod never forces adventure).
 
 ### Acechador (hostile Terrastalker) - deferred
 

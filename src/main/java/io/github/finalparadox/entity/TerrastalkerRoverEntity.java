@@ -700,8 +700,22 @@ public final class TerrastalkerRoverEntity extends Entity {
         if (amount <= 0 || isMeltingDown()) return;
         entityData.set(DATA_ENERGY, Math.max(0, getEnergy() - amount));
         if (announce && getFirstPassenger() instanceof ServerPlayer rider) {
-            rider.displayClientMessage(Component.translatable(
-                    "message.finalparadox.rover.energy_damage", amount), true);
+            if (isEncounterMode()) {
+                // Source b8/danar_montura tellraw: "<!> -<amount>% energy" in red.
+                rider.displayClientMessage(
+                        Component.translatable("luisb1202.functions.bossfight.b8.danar_montura.1")
+                                .withStyle(net.minecraft.ChatFormatting.RED, net.minecraft.ChatFormatting.BOLD)
+                                .append(Component.translatable("luisb1202.functions.bossfight.b8.danar_montura.2")
+                                        .withStyle(net.minecraft.ChatFormatting.RED))
+                                .append(Component.literal(String.valueOf(amount))
+                                        .withStyle(net.minecraft.ChatFormatting.RED))
+                                .append(Component.translatable("luisb1202.functions.bossfight.b8.danar_montura.3")
+                                        .withStyle(net.minecraft.ChatFormatting.RED)),
+                        true);
+            } else {
+                rider.displayClientMessage(Component.translatable(
+                        "message.finalparadox.rover.energy_damage", amount), true);
+            }
         }
     }
 

@@ -98,9 +98,8 @@ public final class B8EncounterManager {
 
     public static void onPlayerDeath(ServerPlayer player) {
         ServerLevel level = player.serverLevel();
-        if (isActive(level)) {
-            B8EncounterData.get(level).addSpectator(player.getUUID());
-        }
+        B8EncounterController controller = requireController(level);
+        if (controller != null) controller.onPlayerDeath(level, player);
     }
 
     /** Records the rider before rover magic damage fires LivingDeathEvent. */
