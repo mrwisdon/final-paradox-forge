@@ -12,6 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -286,6 +287,7 @@ public final class TerrastalkerRoverEntity extends Entity {
                 } finally {
                     allowDismount = false;
                 }
+                rider.connection.send(new ClientboundSetPassengersPacket(this));
                 return;
             }
             if (!rider.getUUID().equals(fireInputOwnerId)) {
@@ -929,6 +931,10 @@ public final class TerrastalkerRoverEntity extends Entity {
         // Place the rider behind the rover on the ground instead of leaving
         // them standing in the cabin (vanilla keeps the riding position).
         if (level() instanceof ServerLevel server) {
+            // Force the client to clear its riding state even if the vanilla
+            // passenger sync was missed; otherwise the camera yaw and strafing
+            // stay locked and the player appears stuck in the cabin.
+            player.connection.send(new ClientboundSetPassengersPacket(this));
             double yaw = Math.toRadians(getMovementYaw());
             double x = getX() + Math.sin(yaw) * 1.5D;
             double z = getZ() - Math.cos(yaw) * 1.5D;
