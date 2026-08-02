@@ -892,6 +892,21 @@ public final class TerrastalkerRoverEntity extends Entity {
         } finally {
             allowDismount = false;
         }
+        // Place the rider behind the rover on the ground instead of leaving
+        // them standing in the cabin (vanilla keeps the riding position).
+        if (level() instanceof ServerLevel server) {
+            double yaw = Math.toRadians(getMovementYaw());
+            double x = getX() + Math.sin(yaw) * 1.5D;
+            double z = getZ() - Math.cos(yaw) * 1.5D;
+            BlockPos ground = BlockPos.containing(x, getY(), z);
+            while (ground.getY() > server.getMinBuildHeight() + 1
+                    && server.getBlockState(ground)
+                    .getCollisionShape(server, ground).isEmpty()) {
+                ground = ground.below();
+            }
+            player.teleportTo(server, x, ground.getY() + 1.0D, z,
+                    player.getYRot(), player.getXRot());
+        }
         level().playSound(null, blockPosition(), SoundEvents.ARMOR_EQUIP_NETHERITE,
                 SoundSource.MASTER, 2.0F, 0.0F);
     }

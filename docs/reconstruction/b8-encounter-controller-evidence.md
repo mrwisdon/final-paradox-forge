@@ -44,7 +44,8 @@ Source `fase/1/ini` -> `ini_monturas/**` -> `el_montura`:
 - After a forced dismount the rover will not auto-mount the same player again
   until that player releases Shift (the double-sneak window is 10 ticks), so
   holding Shift cannot instantly remount and replay the controls guide
-  (fixed 2026-08-02).
+  (fixed 2026-08-02). The rider is also placed on the ground behind the rover
+  on dismount instead of being left standing inside the cabin.
 - `runLoop()` phase 1, ronda 0: when every online non-spectator player rides a
   living B8 rover (`fase/1/run`'s `14_id2>=1` equivalent), it schedules the
   ride countdown (ronda -> 1): 1s/2s/3s titles + bells, `comenzar` at +4s.
