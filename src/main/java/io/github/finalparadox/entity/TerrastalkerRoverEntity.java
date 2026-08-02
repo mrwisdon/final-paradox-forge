@@ -265,6 +265,17 @@ public final class TerrastalkerRoverEntity extends Entity {
         }
 
         if (getFirstPassenger() instanceof ServerPlayer rider) {
+            if (dismountMountLocked && rider.getUUID().equals(dismountedPlayerId)) {
+                // The dismount did not stick (or an auto-mount raced in); force
+                // the rider out again so /tp cannot be reverted to the cabin.
+                allowDismount = true;
+                try {
+                    rider.stopRiding();
+                } finally {
+                    allowDismount = false;
+                }
+                return;
+            }
             if (!rider.getUUID().equals(fireInputOwnerId)) {
                 fireInputOwnerId = rider.getUUID();
                 fireInputHeld = false;
@@ -891,6 +902,16 @@ public final class TerrastalkerRoverEntity extends Entity {
             player.stopRiding();
         } finally {
             allowDismount = false;
+        }
+        if (player.getVehicle() == this) {
+            // The mount event can silently swallow the dismount; remove the
+            // passenger directly as a fallback.
+            allowDismount = true;
+            try {
+                removePassenger(player);
+            } finally {
+                allowDismount = false;
+            }
         }
         // Place the rider behind the rover on the ground instead of leaving
         // them standing in the cabin (vanilla keeps the riding position).
