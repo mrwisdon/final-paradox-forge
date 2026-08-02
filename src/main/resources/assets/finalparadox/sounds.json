@@ -1,77 +1,130 @@
 {
   "apiglo_intro": {
     "sounds": [
-      { "name": "finalparadox:music/apiglo_y_glaivorus_intro", "stream": true }
+      {
+        "name": "finalparadox:music/apiglo_y_glaivorus_intro",
+        "stream": true
+      }
     ]
   },
   "apiglo_loop": {
     "sounds": [
-      { "name": "finalparadox:music/apiglo_y_glaivorus", "stream": true }
+      {
+        "name": "finalparadox:music/apiglo_y_glaivorus",
+        "stream": true
+      }
     ]
   },
   "thar_kroo": {
     "sounds": [
-      { "name": "finalparadox:music/paso_estigio_intro", "stream": true }
+      {
+        "name": "finalparadox:music/paso_estigio_intro",
+        "stream": true
+      }
     ]
   },
   "conqueror_shadow_intro": {
     "sounds": [
-      { "name": "finalparadox:music/sombra_del_conquistador_intro", "stream": true }
+      {
+        "name": "finalparadox:music/sombra_del_conquistador_intro",
+        "stream": true
+      }
     ]
   },
   "conqueror_shadow_loop": {
     "sounds": [
-      { "name": "finalparadox:music/sombra_del_conquistador_loop", "stream": true }
+      {
+        "name": "finalparadox:music/sombra_del_conquistador_loop",
+        "stream": true
+      }
     ]
   },
   "marawthar_intro": {
     "sounds": [
-      { "name": "finalparadox:music/furia_del_conquistador_ini", "stream": true }
+      {
+        "name": "finalparadox:music/furia_del_conquistador_ini",
+        "stream": true
+      }
     ]
   },
   "marawthar_intermission": {
     "sounds": [
-      { "name": "finalparadox:music/furia_del_conquistador_interfase", "stream": true }
+      {
+        "name": "finalparadox:music/furia_del_conquistador_interfase",
+        "stream": true
+      }
     ]
   },
   "marawthar_loop": {
     "sounds": [
-      { "name": "finalparadox:music/furia_del_conquistador_loop", "stream": true }
+      {
+        "name": "finalparadox:music/furia_del_conquistador_loop",
+        "stream": true
+      }
     ]
   },
   "marawthar_victory": {
     "sounds": [
-      { "name": "finalparadox:music/abatir_jefe", "stream": true }
+      {
+        "name": "finalparadox:music/abatir_jefe",
+        "stream": true
+      }
     ]
   },
   "koyomi_main_intro": {
     "sounds": [
-      { "name": "finalparadox:music/koyomi_main_intro", "stream": true }
+      {
+        "name": "finalparadox:music/koyomi_main_intro",
+        "stream": true
+      }
     ]
   },
   "koyomi_main_loop": {
     "sounds": [
-      { "name": "finalparadox:music/koyomi_main_loop", "stream": true }
+      {
+        "name": "finalparadox:music/koyomi_main_loop",
+        "stream": true
+      }
     ]
   },
   "koyomi_inter_intro": {
     "sounds": [
-      { "name": "finalparadox:music/koyomi_inter_intro", "stream": true }
+      {
+        "name": "finalparadox:music/koyomi_inter_intro",
+        "stream": true
+      }
     ]
   },
   "koyomi_inter_loop": {
     "sounds": [
-      { "name": "finalparadox:music/koyomi_inter_loop", "stream": true }
+      {
+        "name": "finalparadox:music/koyomi_inter_loop",
+        "stream": true
+      }
     ]
   },
   "koyomi_inter_final": {
     "sounds": [
-      { "name": "finalparadox:music/koyomi_inter_final", "stream": true }
+      {
+        "name": "finalparadox:music/koyomi_inter_final",
+        "stream": true
+      }
     ]
   },
   "abatir_jefe": {
     "sounds": [
-      { "name": "finalparadox:music/abatir_jefe", "stream": true }
+      {
+        "name": "finalparadox:music/abatir_jefe",
+        "stream": true
+      }
+    ]
+  },
+  "b8_abordo_loop": {
+    "sounds": [
+      {
+        "name": "finalparadox:music/b8_abordo_loop",
+        "stream": true
+      }
     ]
   }
 }

@@ -339,3 +339,42 @@ warn markers now inherit the beam's yaw and travel toward the player position
 locked at generation. The beam locks once at creation and does NOT re-aim
 continuously (confirmed by user on 2026-08-02); the two random beams of
 `h1/ini3` keep a fixed random yaw (`gen_random` behavior).
+
+## M8: music and dialogue (2026-08-02)
+
+Source `bossfight/musica/megamatriz/**`, `musica/abatir_boss`,
+`b8/dialogos/*` and `b8/victoria`:
+
+- Music: `b8_abordo_loop.ogg` (copy of the original `abordo_del_terracechador`
+  track) registered as `ModSounds.B8_ABORDO_LOOP` + `sounds.json` entry.
+  `playB8Music` starts the loop at `comenzar` (source
+  `fase/1/comenzar` -> `musica/megamatriz/ini` -> `loop`) and re-schedules a
+  persisted `TIMER_MUSIC_LOOP` every 2448t (source 122.4s).
+- Victory music: source `explosion` -> `musica/abatir_boss` plays the
+  `abatir_jefe` record at the moment of death; the 2s-later `victoria` keeps
+  it (its reset does not stop records). The mod matches this: `onDefeat`
+  cancels pending B8-loop timers, stops records and starts `ABATIR_JEFE`;
+  `endEncounter` skips `stopRecords` on a victory-state cleanup so the track
+  is not cut, while defeat/skip cleanups still stop it.
+- Dialogue: persisted absolute-gameTime timers map 1:1 to the source
+  schedulers (`b8/ini` -> ini8@2s, `ini_monturas/ini` -> ini3@2s,
+  `h2/ini` -> ini1@2s + immediate ini6, `h2/end` -> ini2@2s + immediate ini5,
+  `matriz/hacer_invulnerable` -> ini7, `h1/ini` and `h4/ini` ->
+  `frases_h1`@0.5s, `victoria` -> ini4). All 15 translation keys
+  (`dia1.1`-`dia8.1`, `frases_h1.1`-`.6`, `afijos.descubrir.hd.3`) were
+  copied verbatim from the VM zh_cn pack and the original `resources.zip`
+  en_us into the mod lang files.
+- Reload behavior: timers are removed when fired and persisted with absolute
+  due ticks, so a mid-encounter reload fires only pending timers (no
+  duplicate dialogue). A pending music-loop timer restarts the B8 track
+  after reload, which is the intended loop behavior.
+
+### Known differences (M8)
+
+- The source `dialogos/ini4` repeats `dia4` at +5s (dia4.3) and +10s
+  (dia4.4, Koros line) after victory; the mod currently shows only the first
+  line (dia4.2) because the post-victory timer list is cleared by
+  `endEncounter`. Cosmetic; recorded for a follow-up if parity is desired.
+- `TIMER_MUSIC_LOOP` after a previous victory is only stopped by the next
+  encounter's defeat/skip cleanup, matching the source (its resets do not
+  stop records either).

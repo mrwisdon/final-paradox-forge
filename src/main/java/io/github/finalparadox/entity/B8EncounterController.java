@@ -2,9 +2,13 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.registry.ModItems;
+import io.github.finalparadox.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -14,6 +18,7 @@ import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -68,6 +73,16 @@ public final class B8EncounterController {
     public static final String TIMER_H4_INI3 = "h4_ini3";
     public static final String TIMER_RESPAWN = "respawn";
     public static final String TIMER_VICTORY = "victory";
+    public static final String TIMER_MUSIC_LOOP = "music_loop";
+    public static final String TIMER_DIALOGUE_1 = "dialogue_1";
+    public static final String TIMER_DIALOGUE_2 = "dialogue_2";
+    public static final String TIMER_DIALOGUE_3 = "dialogue_3";
+    public static final String TIMER_DIALOGUE_4 = "dialogue_4";
+    public static final String TIMER_DIALOGUE_5 = "dialogue_5";
+    public static final String TIMER_DIALOGUE_6 = "dialogue_6";
+    public static final String TIMER_DIALOGUE_7 = "dialogue_7";
+    public static final String TIMER_DIALOGUE_8 = "dialogue_8";
+    public static final String TIMER_FRASES_H1 = "frases_h1";
 
     public static final int BULLET_MISS = 0;
     public static final int BULLET_BLOCKED = 1;
@@ -141,6 +156,10 @@ public final class B8EncounterController {
     };
     private static final String SNIPER_SKULL =
             "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjhiNjg1MzkwNmMzMzU1NThjODhjODBkYzEzZjA1YzMxNDE1MTU2MzBiZmFiMTM5ZWVjOGY0ZmRkOTQwZDdhZiJ9fX0=";
+    private static final long MUSIC_LOOP_INTERVAL = 2448; // source 122.4s
+    private static final String DIALOGUE_BASE = "luisb1202.functions.bossfight.b8.dialogos.";
+    private static final String SPEAKER_KOROS = "luisb1202.functions.afijos.descubrir.hd.3";
+    private static final String SPEAKER_MATRIX = DIALOGUE_BASE + "dia4.1";
 
     // Anchor-relative offsets from the player-deployed floor anchor.
     private static final Vec3iOffset PLAYER_SPAWN = new Vec3iOffset(11, 1, 1);
@@ -201,6 +220,7 @@ public final class B8EncounterController {
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_COUNTDOWN_2, now + 80));
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_COUNTDOWN_1, now + 100));
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_SUMMON, now + 120));
+        data.addTimer(new B8EncounterData.TimerEntry(TIMER_DIALOGUE_8, now + 40)); // source ini8 @2s
         notifyPlayers(Component.literal("B8 encounter started. Countdown: 3..."));
     }
 
@@ -281,6 +301,16 @@ public final class B8EncounterController {
                 case TIMER_H4_INI3 -> startH4(server, data, 3);
                 case TIMER_RESPAWN -> respawn(server, data);
                 case TIMER_VICTORY -> victory(server, data);
+                case TIMER_MUSIC_LOOP -> playB8Music(server);
+                case TIMER_DIALOGUE_1 -> dialogue(server, 1);
+                case TIMER_DIALOGUE_2 -> dialogue(server, 2);
+                case TIMER_DIALOGUE_3 -> dialogue(server, 3);
+                case TIMER_DIALOGUE_4 -> dialogue(server, 4);
+                case TIMER_DIALOGUE_5 -> dialogue(server, 5);
+                case TIMER_DIALOGUE_6 -> dialogue(server, 6);
+                case TIMER_DIALOGUE_7 -> dialogue(server, 7);
+                case TIMER_DIALOGUE_8 -> dialogue(server, 8);
+                case TIMER_FRASES_H1 -> frasesH1(server);
                 default -> {
                 }
             }
@@ -297,6 +327,7 @@ public final class B8EncounterController {
         }
         // Source fase/1/comenzar schedules h2/ini at +1s.
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_H2_INI, server.getGameTime() + 20));
+        playB8Music(server);
         notifyPlayers(Component.literal("B8 battle started."));
     }
 
@@ -350,6 +381,7 @@ public final class B8EncounterController {
                     SoundSource.MASTER, 1.0F, 1.5F);
         }
         spawnMounts(server, data);
+        data.addTimer(new B8EncounterData.TimerEntry(TIMER_DIALOGUE_3, server.getGameTime() + 40));
         notifyPlayers(Component.literal("Mounts spawned. All non-spectator players must board to start."));
     }
 
@@ -492,6 +524,8 @@ public final class B8EncounterController {
         server.playSound(null, center, SoundEvents.NETHERITE_BLOCK_BREAK,
                 SoundSource.MASTER, 10.0F, 0.0F);
         emitH2Particulas(server, data);
+        data.addTimer(new B8EncounterData.TimerEntry(TIMER_DIALOGUE_1, server.getGameTime() + 40));
+        dialogue(server, 6);
         notifyPlayers(Component.literal("B8 H2: gold modules incoming."));
     }
 
@@ -561,6 +595,9 @@ public final class B8EncounterController {
                 data.setH2Active(false);
                 data.setH2EndDelay(-1);
                 openMatrix();
+                data.addTimer(new B8EncounterData.TimerEntry(
+                        TIMER_DIALOGUE_2, server.getGameTime() + 50));
+                dialogue(server, 5);
                 notifyPlayers(Component.literal("B8 matrix is now vulnerable."));
             }
         } else {
@@ -698,6 +735,7 @@ public final class B8EncounterController {
                     server.random.nextFloat() * 360.0F, 0, 0));
         }
         showHazardTitle(server);
+        data.addTimer(new B8EncounterData.TimerEntry(TIMER_FRASES_H1, server.getGameTime() + 10));
     }
 
     private void tickH1(ServerLevel server, B8EncounterData data) {
@@ -818,6 +856,7 @@ public final class B8EncounterController {
         if (variant >= 3) {
             data.addTimer(new B8EncounterData.TimerEntry(TIMER_H4_GEN_3, server.getGameTime() + 90));
         }
+        data.addTimer(new B8EncounterData.TimerEntry(TIMER_FRASES_H1, server.getGameTime() + 10));
     }
 
     private void addH4Source(ServerLevel server, B8EncounterData data) {
@@ -1816,6 +1855,7 @@ public final class B8EncounterController {
             serverLevel.playSound(null, player.blockPosition(), SoundEvents.NOTE_BLOCK_PLING.value(),
                     SoundSource.MASTER, 1.0F, 1.5F);
         }
+        dialogue(serverLevel, 7);
         // M5: phase timelines (add waves, hazard scheduling) land here.
         notifyPlayers(Component.literal("B8 entered phase " + phase + " (matrix closed and invulnerable)."));
     }
@@ -1842,6 +1882,11 @@ public final class B8EncounterController {
 
     private void onDefeat() {
         if (data.state() == B8EncounterData.STATE_VICTORY) return;
+        // Source b8/explosion -> musica/abatir_boss: switch to the victory
+        // track at the moment of death and cancel the pending B8 loop.
+        cancelPendingMusicLoop(data);
+        stopRecords(serverLevel);
+        playRecord(serverLevel, ModSounds.ABATIR_JEFE.get());
         // Source b8/explosion: 0 health -> gold/cloud/lightning burst at the
         // core, then victory two seconds later.
         ZombieSupermatrixEntity matrix = matrix();
@@ -1891,6 +1936,7 @@ public final class B8EncounterController {
             server.playSound(null, player.blockPosition(), SoundEvents.WITHER_DEATH,
                     SoundSource.MASTER, 0.7F, 1.4F);
         }
+        dialogue(server, 4);
         BlockPos anchor = data.anchor();
         if (anchor != null) {
             for (ServerPlayer player : server.players()) {
@@ -1975,6 +2021,76 @@ public final class B8EncounterController {
         }
         endEncounter(server, data);
         notifyPlayers(Component.literal("B8 boss skipped; reward dropped."));
+    }
+
+    /* ------------------------------ M8 music and dialogue ------------------------------ */
+
+    private void playB8Music(ServerLevel server) {
+        playRecord(server, ModSounds.B8_ABORDO_LOOP.get());
+        data.addTimer(new B8EncounterData.TimerEntry(
+                TIMER_MUSIC_LOOP, server.getGameTime() + MUSIC_LOOP_INTERVAL));
+    }
+
+    private void cancelPendingMusicLoop(B8EncounterData data) {
+        List<B8EncounterData.TimerEntry> pending = new ArrayList<>();
+        for (B8EncounterData.TimerEntry timer : data.timers()) {
+            if (TIMER_MUSIC_LOOP.equals(timer.type())) pending.add(timer);
+        }
+        for (B8EncounterData.TimerEntry timer : pending) data.removeTimer(timer);
+    }
+
+    private void playRecord(ServerLevel server, SoundEvent event) {
+        for (ServerPlayer player : server.players()) {
+            player.playNotifySound(event, SoundSource.RECORDS, 999999.0F, 1.0F);
+        }
+    }
+
+    private void stopRecords(ServerLevel server) {
+        for (ServerPlayer player : server.players()) {
+            player.connection.send(new ClientboundStopSoundPacket(null, SoundSource.RECORDS));
+        }
+    }
+
+    private void dialogue(ServerLevel server, int index) {
+        switch (index) {
+            case 1 -> showDialogue(server, SPEAKER_KOROS, DIALOGUE_BASE + "dia1.1",
+                    true, SoundEvents.TRIDENT_RETURN, 1.7F);
+            case 2 -> showDialogue(server, SPEAKER_KOROS, DIALOGUE_BASE + "dia2.1",
+                    true, SoundEvents.TRIDENT_RETURN, 1.7F);
+            case 3 -> showDialogue(server, SPEAKER_KOROS, DIALOGUE_BASE + "dia3.1",
+                    true, SoundEvents.TRIDENT_RETURN, 1.7F);
+            case 4 -> showDialogue(server, SPEAKER_MATRIX, DIALOGUE_BASE + "dia4.2",
+                    false, SoundEvents.ENDERMAN_AMBIENT, 0.0F);
+            case 5 -> showDialogue(server, SPEAKER_MATRIX, DIALOGUE_BASE + "dia5.1",
+                    false, SoundEvents.ENDERMAN_AMBIENT, 0.0F);
+            case 6 -> showDialogue(server, SPEAKER_MATRIX, DIALOGUE_BASE + "dia6.1",
+                    false, SoundEvents.ENDERMAN_AMBIENT, 0.0F);
+            case 7 -> showDialogue(server, SPEAKER_MATRIX, DIALOGUE_BASE + "dia7.1",
+                    false, SoundEvents.ENDERMAN_AMBIENT, 0.0F);
+            case 8 -> showDialogue(server, SPEAKER_MATRIX, DIALOGUE_BASE + "dia8.1",
+                    false, SoundEvents.ENDERMAN_AMBIENT, 0.0F);
+            default -> {
+            }
+        }
+    }
+
+    private void showDialogue(
+            ServerLevel server, String speakerKey, String messageKey,
+            boolean korosStyle, SoundEvent sound, float pitch) {
+        Component speaker = korosStyle
+                ? Component.translatable(speakerKey)
+                .withStyle(style -> style.withBold(true).withItalic(true)
+                        .withColor(TextColor.fromRgb(0xFBBDFF)))
+                : Component.translatable(speakerKey);
+        for (ServerPlayer player : server.players()) {
+            player.sendSystemMessage(speaker.copy().append(Component.translatable(messageKey)));
+            server.playSound(null, player.blockPosition(), sound, SoundSource.MASTER, 1.0F, pitch);
+        }
+    }
+
+    private void frasesH1(ServerLevel server) {
+        String key = DIALOGUE_BASE + "frases_h1." + (1 + server.random.nextInt(6));
+        showDialogue(server, SPEAKER_MATRIX, key, false, SoundEvents.ENDERMAN_AMBIENT, 0.0F);
     }
 
     /**
@@ -2067,6 +2183,9 @@ public final class B8EncounterController {
     }
 
     public void endEncounter(ServerLevel server, B8EncounterData data) {
+        // The victory track (started at boss death) keeps playing after a
+        // win, matching the source reset that does not stop records.
+        boolean endedInVictory = data.state() == B8EncounterData.STATE_VICTORY;
         ZombieSupermatrixEntity matrix = matrix();
         if (matrix != null) matrix.discard();
         for (UUID uuid : data.cleanupEntities()) {
@@ -2089,6 +2208,7 @@ public final class B8EncounterController {
         data.clearSpectators();
         data.clearMounts();
         data.clearCleanup();
+        if (!endedInVictory) stopRecords(server);
         lastBossValue = -1;
     }
 
