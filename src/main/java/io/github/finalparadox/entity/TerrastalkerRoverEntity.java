@@ -66,6 +66,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int IMPROVED_DRAIN_INTERVAL_TICKS = 19;
     private static final int COLLISION_COOLDOWN_TICKS = 10;
     private static final int DISMOUNT_WINDOW_TICKS = 5;
+    private static final int DISMOUNT_MOUNT_COOLDOWN_TICKS = 20;
     private static final String FIRE_SCORE_KEY = "finalparadox.terrastalker_fire_score";
     private static final double MOVE_SPEED = 0.14D;
     private static final double BULLET_SPEED = 1.8D;
@@ -113,6 +114,8 @@ public final class TerrastalkerRoverEntity extends Entity {
             SynchedEntityData.defineId(TerrastalkerRoverEntity.class, EntityDataSerializers.BOOLEAN);
 
     private UUID ownerId;
+    private UUID dismountedPlayerId;
+    private int dismountMountCooldown;
     private int drainTicks;
     private int gaitScore;
     private int collisionCooldown;
@@ -248,6 +251,7 @@ public final class TerrastalkerRoverEntity extends Entity {
 
         capturePreviousVisualState();
         if (collisionCooldown > 0) collisionCooldown--;
+        if (dismountMountCooldown > 0) dismountMountCooldown--;
         tickBullets(server);
 
         if (isMeltingDown()) {
@@ -628,7 +632,9 @@ public final class TerrastalkerRoverEntity extends Entity {
         List<ServerPlayer> candidates = server.getEntitiesOfClass(
                 ServerPlayer.class, getBoundingBox().inflate(2.0D),
                 player -> !player.isSpectator() && player.getVehicle() == null
-                        && player.isShiftKeyDown());
+                        && player.isShiftKeyDown()
+                        && (dismountMountCooldown <= 0
+                        || !player.getUUID().equals(dismountedPlayerId)));
         if (candidates.isEmpty()) return;
         ServerPlayer rider = candidates.stream()
                 .min(Comparator.comparingDouble(this::distanceToSqr)).orElse(null);
@@ -873,6 +879,8 @@ public final class TerrastalkerRoverEntity extends Entity {
         previousDismountAttempt = Long.MIN_VALUE;
         clearFireInput();
         setFiring(false);
+        dismountedPlayerId = player.getUUID();
+        dismountMountCooldown = DISMOUNT_MOUNT_COOLDOWN_TICKS;
         allowDismount = true;
         try {
             player.stopRiding();
