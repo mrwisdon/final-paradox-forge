@@ -847,7 +847,10 @@ public final class TerrastalkerRoverEntity extends Entity {
     }
 
     public void onDismountAttempt(ServerPlayer player) {
-        if (hasBoss(player)) {
+        // Only the active B8 encounter locks the mount. Other mod bosses also
+        // carry the "boss" tag, so a level-wide scan would block dismounts
+        // everywhere else; the encounter check scopes it to the actual fight.
+        if (B8EncounterManager.isActive(player.serverLevel())) {
             previousDismountAttempt = Long.MIN_VALUE;
             level().playSound(null, player.blockPosition(), SoundEvents.ANVIL_LAND,
                     SoundSource.MASTER, 2.0F, 2.0F);
