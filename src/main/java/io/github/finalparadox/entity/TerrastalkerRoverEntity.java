@@ -118,7 +118,6 @@ public final class TerrastalkerRoverEntity extends Entity {
     private UUID dismountedPlayerId;
     private boolean dismountMountLocked;
     private int dismountReleaseCounter;
-    private boolean lastRiderSneak;
     private int drainTicks;
     private int gaitScore;
     private int collisionCooldown;
@@ -291,15 +290,6 @@ public final class TerrastalkerRoverEntity extends Entity {
                 rider.connection.send(new ClientboundSetPassengersPacket(this));
                 return;
             }
-            // Server-side sneak press-edge detector: the vanilla sneak packet
-            // reaches the server reliably, so the double-sneak dismount does
-            // not depend on the custom C2S dismount packet.
-            boolean sneakDown = rider.isShiftKeyDown();
-            if (sneakDown && !lastRiderSneak) {
-                onDismountAttempt(rider);
-                if (rider.getVehicle() != this) return;
-            }
-            lastRiderSneak = sneakDown;
             if (!rider.getUUID().equals(fireInputOwnerId)) {
                 fireInputOwnerId = rider.getUUID();
                 fireInputHeld = false;
@@ -318,7 +308,6 @@ public final class TerrastalkerRoverEntity extends Entity {
                 reduceEnergy(2, true);
             }
         } else {
-            lastRiderSneak = false;
             clearFireInput();
             setMoving(false);
             setFiring(false);
@@ -687,7 +676,6 @@ public final class TerrastalkerRoverEntity extends Entity {
 
     private void onMounted(ServerPlayer rider) {
         previousDismountAttempt = Long.MIN_VALUE;
-        lastRiderSneak = rider.isShiftKeyDown();
         fireInputOwnerId = rider.getUUID();
         fireInputHeld = false;
         // `subirse/ini` invokes frame/index immediately, before the scheduled
