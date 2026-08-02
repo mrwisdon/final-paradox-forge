@@ -5,6 +5,7 @@ import io.github.finalparadox.entity.TerrastalkerRoverEntity;
 import io.github.finalparadox.network.ModNetwork;
 import io.github.finalparadox.network.TerrastalkerDismountPacket;
 import io.github.finalparadox.network.TerrastalkerFireInputPacket;
+import io.github.finalparadox.network.TerrastalkerMissilePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
@@ -16,6 +17,7 @@ import net.minecraftforge.fml.common.Mod;
         value = Dist.CLIENT)
 public final class TerrastalkerRoverInput {
     private static boolean wasShiftDown;
+    private static boolean wasAttackDown;
     private static boolean sentFireInput;
     private static int controlledRoverId = -1;
 
@@ -38,6 +40,10 @@ public final class TerrastalkerRoverInput {
         if (controlsActive && shiftDown && !wasShiftDown) {
             ModNetwork.CHANNEL.sendToServer(new TerrastalkerDismountPacket());
         }
+        boolean attackDown = minecraft.options.keyAttack.isDown();
+        if (controlsActive && attackDown && !wasAttackDown) {
+            ModNetwork.CHANNEL.sendToServer(new TerrastalkerMissilePacket());
+        }
 
         boolean fireInput = controlsActive && shiftDown;
         if (rover != null) {
@@ -51,10 +57,12 @@ public final class TerrastalkerRoverInput {
             sentFireInput = false;
         }
         wasShiftDown = shiftDown;
+        wasAttackDown = attackDown;
     }
 
     private static void resetLocalState() {
         wasShiftDown = false;
+        wasAttackDown = false;
         sentFireInput = false;
         controlledRoverId = -1;
     }

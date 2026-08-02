@@ -37,5 +37,11 @@ public final class ModNetwork {
                 .decoder(TerrastalkerFireInputPacket::decode)
                 .consumerMainThread(TerrastalkerFireInputPacket::handle)
                 .add();
+        CHANNEL.messageBuilder(TerrastalkerMissilePacket.class, 3,
+                        NetworkDirection.PLAY_TO_SERVER)
+                .encoder(TerrastalkerMissilePacket::encode)
+                .decoder(TerrastalkerMissilePacket::decode)
+                .consumerMainThread(TerrastalkerMissilePacket::handle)
+                .add();
     }
 }
