@@ -41,9 +41,10 @@ Source `fase/1/ini` -> `ini_monturas/**` -> `el_montura`:
 - Mounting is open to the nearest unoccupied rover (source `subirse/ini`); no
   per-rover ownership gate. The controller records rider->rover UUIDs for
   cleanup/recovery and re-spawns only missing rovers on reload.
-- After a forced dismount the rover suppresses re-mounting the same player for
-  20 ticks, so a held Shift edge cannot instantly remount and replay the
-  controls guide (fixed 2026-08-02).
+- After a forced dismount the rover will not auto-mount the same player again
+  until that player releases Shift (the double-sneak window is 10 ticks), so
+  holding Shift cannot instantly remount and replay the controls guide
+  (fixed 2026-08-02).
 - `runLoop()` phase 1, ronda 0: when every online non-spectator player rides a
   living B8 rover (`fase/1/run`'s `14_id2>=1` equivalent), it schedules the
   ride countdown (ronda -> 1): 1s/2s/3s titles + bells, `comenzar` at +4s.

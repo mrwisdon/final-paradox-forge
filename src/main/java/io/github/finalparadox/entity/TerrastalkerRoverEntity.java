@@ -65,8 +65,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int BULLET_LIFETIME_TICKS = 30;
     private static final int IMPROVED_DRAIN_INTERVAL_TICKS = 19;
     private static final int COLLISION_COOLDOWN_TICKS = 10;
-    private static final int DISMOUNT_WINDOW_TICKS = 5;
-    private static final int DISMOUNT_MOUNT_COOLDOWN_TICKS = 20;
+    private static final int DISMOUNT_WINDOW_TICKS = 10;
     private static final String FIRE_SCORE_KEY = "finalparadox.terrastalker_fire_score";
     private static final double MOVE_SPEED = 0.14D;
     private static final double BULLET_SPEED = 1.8D;
@@ -115,7 +114,7 @@ public final class TerrastalkerRoverEntity extends Entity {
 
     private UUID ownerId;
     private UUID dismountedPlayerId;
-    private int dismountMountCooldown;
+    private boolean dismountMountLocked;
     private int drainTicks;
     private int gaitScore;
     private int collisionCooldown;
@@ -251,7 +250,13 @@ public final class TerrastalkerRoverEntity extends Entity {
 
         capturePreviousVisualState();
         if (collisionCooldown > 0) collisionCooldown--;
-        if (dismountMountCooldown > 0) dismountMountCooldown--;
+        if (dismountMountLocked) {
+            ServerPlayer dismounted = server.getServer().getPlayerList()
+                    .getPlayer(dismountedPlayerId);
+            if (dismounted == null || !dismounted.isShiftKeyDown()) {
+                dismountMountLocked = false;
+            }
+        }
         tickBullets(server);
 
         if (isMeltingDown()) {
@@ -633,8 +638,8 @@ public final class TerrastalkerRoverEntity extends Entity {
                 ServerPlayer.class, getBoundingBox().inflate(2.0D),
                 player -> !player.isSpectator() && player.getVehicle() == null
                         && player.isShiftKeyDown()
-                        && (dismountMountCooldown <= 0
-                        || !player.getUUID().equals(dismountedPlayerId)));
+                        && !(dismountMountLocked
+                        && player.getUUID().equals(dismountedPlayerId)));
         if (candidates.isEmpty()) return;
         ServerPlayer rider = candidates.stream()
                 .min(Comparator.comparingDouble(this::distanceToSqr)).orElse(null);
@@ -880,7 +885,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         clearFireInput();
         setFiring(false);
         dismountedPlayerId = player.getUUID();
-        dismountMountCooldown = DISMOUNT_MOUNT_COOLDOWN_TICKS;
+        dismountMountLocked = true;
         allowDismount = true;
         try {
             player.stopRiding();
