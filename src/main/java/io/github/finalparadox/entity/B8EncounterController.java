@@ -1,12 +1,14 @@
 package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
@@ -24,8 +26,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.projectile.Snowball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -63,6 +67,7 @@ public final class B8EncounterController {
     public static final String TIMER_H4_INI2 = "h4_ini2";
     public static final String TIMER_H4_INI3 = "h4_ini3";
     public static final String TIMER_RESPAWN = "respawn";
+    public static final String TIMER_VICTORY = "victory";
 
     public static final int BULLET_MISS = 0;
     public static final int BULLET_BLOCKED = 1;
@@ -275,6 +280,7 @@ public final class B8EncounterController {
                 case TIMER_H4_INI2 -> startH4(server, data, 2);
                 case TIMER_H4_INI3 -> startH4(server, data, 3);
                 case TIMER_RESPAWN -> respawn(server, data);
+                case TIMER_VICTORY -> victory(server, data);
                 default -> {
                 }
             }
@@ -1835,14 +1841,140 @@ public final class B8EncounterController {
     }
 
     private void onDefeat() {
-        // M7 stub: victory/explosion/reward flow lands here later. The
-        // encounter must end so riders can dismount and world rules/forceload
-        // are restored instead of leaving the fight stuck active.
+        if (data.state() == B8EncounterData.STATE_VICTORY) return;
+        // Source b8/explosion: 0 health -> gold/cloud/lightning burst at the
+        // core, then victory two seconds later.
         ZombieSupermatrixEntity matrix = matrix();
-        if (matrix != null) matrix.discard();
-        endEncounter(serverLevel, data);
-        notifyPlayers(Component.literal(
-                "B8 matrix defeated (victory flow pending M7). Use /finalparadox arena start b8 to fight again."));
+        if (matrix != null) {
+            emitVictoryExplosion(serverLevel, matrix.position());
+            matrix.discard();
+        }
+        BlockPos anchor = data.anchor();
+        if (anchor != null) {
+            net.minecraft.world.entity.LightningBolt bolt =
+                    EntityType.LIGHTNING_BOLT.create(serverLevel);
+            if (bolt != null) {
+                bolt.moveTo(anchor.getX() + 0.5D, anchor.getY() + 8.0D, anchor.getZ() + 0.5D);
+                serverLevel.addFreshEntity(bolt);
+            }
+        }
+        data.setState(B8EncounterData.STATE_VICTORY);
+        data.addTimer(new B8EncounterData.TimerEntry(TIMER_VICTORY, serverLevel.getGameTime() + 40));
+    }
+
+    private void emitVictoryExplosion(ServerLevel server, Vec3 center) {
+        for (int index = 0; index < 64; index++) {
+            double angle = Math.toRadians(5.625D * (index + 1));
+            server.sendParticles(ParticleTypes.CLOUD,
+                    center.x, center.y, center.z, 0,
+                    Math.sin(angle), 0.0D, Math.cos(angle), 1.0D);
+        }
+        server.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
+                center.x, center.y, center.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        server.sendParticles(ParticleTypes.CLOUD,
+                center.x, center.y, center.z, 20, 0.0D, 0.0D, 0.0D, 1.0D);
+        server.sendParticles(new ItemParticleOption(
+                        ParticleTypes.ITEM, new ItemStack(Items.GOLD_BLOCK)),
+                center.x, center.y, center.z, 200, 0.0D, 0.0D, 0.0D, 1.0D);
+        server.playSound(null, BlockPos.containing(center), SoundEvents.END_PORTAL_SPAWN,
+                SoundSource.MASTER, 4.0F, 1.5F);
+    }
+
+    private void victory(ServerLevel server, B8EncounterData data) {
+        for (ServerPlayer player : server.players()) {
+            player.connection.send(new ClientboundSetTitleTextPacket(
+                    Component.translatable("luisb1202.functions.bossfight.b1.victoria.1")));
+            player.connection.send(new ClientboundSetSubtitleTextPacket(
+                    Component.translatable("luisb1202.functions.bossfight.b8.victoria.1")));
+            server.playSound(null, player.blockPosition(), SoundEvents.PLAYER_LEVELUP,
+                    SoundSource.MASTER, 1.0F, 0.8F);
+            server.playSound(null, player.blockPosition(), SoundEvents.WITHER_DEATH,
+                    SoundSource.MASTER, 0.7F, 1.4F);
+        }
+        BlockPos anchor = data.anchor();
+        if (anchor != null) {
+            for (ServerPlayer player : server.players()) {
+                if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
+                    player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
+                    player.teleportTo(server,
+                            anchor.getX() + 14, anchor.getY() + 1, anchor.getZ(),
+                            90.0F, 0.0F);
+                }
+                player.setRespawnPosition(server.dimension(), server.getSharedSpawnPos(),
+                        0.0F, false, false);
+            }
+            spawnReward(server, anchor);
+            spawnCelebration(server, anchor);
+        }
+        endEncounter(server, data);
+        notifyPlayers(Component.literal("B8 victory! Reward dropped at the arena."));
+    }
+
+    private void spawnReward(ServerLevel server, BlockPos anchor) {
+        BlockPos pos = anchor.offset(-33, 2, 0);
+        ItemStack stack = new ItemStack(ModItems.ADAPTIVE_DEFENSE_MATRIX.get());
+        ItemEntity item = new ItemEntity(server,
+                pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, stack);
+        item.setDeltaMovement(0.0D, 0.5D, 0.0D);
+        item.setPickUpDelay(10);
+        server.addFreshEntity(item);
+        server.playSound(null, pos, SoundEvents.EXPERIENCE_ORB_PICKUP,
+                SoundSource.MASTER, 1.0F, 2.0F);
+        server.sendParticles(ParticleTypes.EXPLOSION,
+                pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+    }
+
+    private void spawnCelebration(ServerLevel server, BlockPos anchor) {
+        int[] palette = {0xFF5555, 0xFFAA00, 0xFFFF55, 0x55FF55, 0x55FFFF, 0x5555FF, 0xFF55FF};
+        for (int index = 0; index < 6; index++) {
+            ItemStack firework = new ItemStack(Items.FIREWORK_ROCKET);
+            CompoundTag tag = new CompoundTag();
+            CompoundTag fireworks = new CompoundTag();
+            net.minecraft.nbt.ListTag explosions = new net.minecraft.nbt.ListTag();
+            CompoundTag explosion = new CompoundTag();
+            explosion.putInt("Colors", palette[server.random.nextInt(palette.length)]);
+            explosions.add(explosion);
+            fireworks.put("Explosions", explosions);
+            fireworks.putByte("Flight", (byte) 2);
+            tag.put("Fireworks", fireworks);
+            firework.setTag(tag);
+            FireworkRocketEntity rocket = new FireworkRocketEntity(server,
+                    anchor.getX() + 0.5D + (server.random.nextInt(21) - 10),
+                    anchor.getY() + 8.0D,
+                    anchor.getZ() + 0.5D + (server.random.nextInt(21) - 10),
+                    firework);
+            server.addFreshEntity(rocket);
+        }
+    }
+
+    /** Source b8/omitir: admin skip with the same reward and cleanup. */
+    public void skip(ServerLevel server, B8EncounterData data) {
+        for (ServerPlayer player : server.players()) {
+            player.connection.send(new ClientboundSetTitleTextPacket(
+                    Component.translatable("luisb1202.functions.bossfight.b8.omitir.2")));
+            player.connection.send(new ClientboundSetSubtitleTextPacket(
+                    Component.translatable("luisb1202.functions.bossfight.b8.omitir.3")));
+            server.playSound(null, player.blockPosition(), SoundEvents.PLAYER_LEVELUP,
+                    SoundSource.MASTER, 1.0F, 0.8F);
+            server.playSound(null, player.blockPosition(), SoundEvents.WITHER_DEATH,
+                    SoundSource.MASTER, 0.7F, 1.4F);
+        }
+        BlockPos anchor = data.anchor();
+        if (anchor != null) {
+            for (ServerPlayer player : server.players()) {
+                if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
+                    player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
+                    player.teleportTo(server,
+                            anchor.getX() + 14, anchor.getY() + 1, anchor.getZ(),
+                            90.0F, 0.0F);
+                }
+                player.setRespawnPosition(server.dimension(), server.getSharedSpawnPos(),
+                        0.0F, false, false);
+            }
+            spawnReward(server, anchor);
+        }
+        endEncounter(server, data);
+        notifyPlayers(Component.literal("B8 boss skipped; reward dropped."));
     }
 
     /**

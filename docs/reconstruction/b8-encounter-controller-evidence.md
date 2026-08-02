@@ -1,6 +1,6 @@
 # B8 encounter controller and persistence (M1)
 
-Updated: 2026-08-02 (M2..M6 added)
+Updated: 2026-08-02 (M2..M7 added)
 
 ## Scope
 
@@ -298,6 +298,27 @@ Source `b8/{morir,derrota,respawn}` and `danar_montura*`:
   teleported to `anchor + (14,1,0)` yaw 90, wither cleared, resistance 101
   applied, ready to re-challenge (`b8/respawn`; the source's adventure-mode
   restore is replaced by survival because the mod never forces adventure).
+
+## M7: victory, reward and cleanup
+
+Source `b8/{explosion,victoria,omitir,reset}` and
+`items/megamatriz_perneras/item_forja_drop_2`:
+
+- At 0 health (`onDefeat`): the 64-direction cloud burst, explosion emitter,
+  cloud/gold-block-item particles, end-portal-spawn sound and a lightning bolt
+  at the core (source `explosion`), the matrix is discarded, state VICTORY,
+  and a persisted +40t victory timer fires. Re-entry is guarded (idempotent).
+- `victory`: title/subtitle `§a§l恭喜！` / `§f§l你击败了僵尸超级矩阵！`
+  (`b1.victoria.1`/`b8.victoria.1`), level-up + wither-death sounds,
+  spectators restored to survival at `anchor + (14,1,0)` yaw 90, respawn
+  points restored to the world spawn, the reward dropped at
+  `anchor + (-33,2,0)` (the mod's `AdaptiveDefenseMatrixItem`, the Forge
+  equivalent of `megamatriz_perneras`, with pickup sound and pop motion), a
+  six-rocket fireworks celebration, then the full `endEncounter` cleanup
+  (matrix/rovers/hazards/adds/bossbar/gamerules/forceload/timers).
+- Victory, defeat, reset and the skip command (`omitir` maps to the same
+  reward + cleanup) all converge on idempotent cleanup; dropped rewards are
+  not part of the cleanup set.
 
 ### Acechador (hostile Terrastalker) - deferred
 

@@ -69,6 +69,9 @@ public final class ApigloCommandEvents {
                         .then(Commands.literal("reset")
                                 .executes(context -> b8Reset(
                                         context.getSource().getPlayerOrException())))
+                        .then(Commands.literal("skip")
+                                .executes(context -> b8Skip(
+                                        context.getSource().getPlayerOrException())))
                         .then(Commands.literal("health")
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(0, 250))
                                         .executes(context -> b8Health(
@@ -220,6 +223,18 @@ public final class ApigloCommandEvents {
         player.sendSystemMessage(Component.literal(wasActive
                 ? "B8 encounter reset; arena and matrix cleaned up."
                 : "B8 was already idle; nothing to reset."));
+        return 1;
+    }
+
+    private static int b8Skip(ServerPlayer player) {
+        B8EncounterController controller = B8EncounterManager.requireController(player.serverLevel());
+        if (controller == null) {
+            player.sendSystemMessage(Component.literal("No B8 encounter is active."));
+            return 0;
+        }
+        controller.skip(player.serverLevel(),
+                B8EncounterManager.encounterData(player.serverLevel()));
+        player.sendSystemMessage(Component.literal("B8 boss skipped."));
         return 1;
     }
 
