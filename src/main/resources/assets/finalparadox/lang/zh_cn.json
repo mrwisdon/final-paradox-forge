@@ -754,7 +754,7 @@
   "message.finalparadox.defense_matrix.cooldown": "防御矩阵仍在冷却中！",
   "message.finalparadox.defense_matrix.boss": "Boss战中不能使用防御矩阵！",
   "message.finalparadox.defense_matrix.ready": "[Ω] 防御矩阵已重新就绪！",
-  "message.finalparadox.defense_matrix.energy": "§e§l大地漫游器-能量：§a%1$s%",
+  "message.finalparadox.defense_matrix.energy": "§e§l大地漫游器-能量：§a%1$s%%",
   "message.finalparadox.defense_matrix.leggings_slot": "§c请从空出的护腿槽中丢出防御矩阵。",
   "message.finalparadox.rover.already_active": "§c你已经拥有一台大地漫游器。",
   "message.finalparadox.rover.controls.title": "这些是大地漫游器的控制按键：",

@@ -754,7 +754,7 @@
   "message.finalparadox.defense_matrix.cooldown": "Defense Matrix is on cooldown!",
   "message.finalparadox.defense_matrix.boss": "You cannot use it during boss fights!",
   "message.finalparadox.defense_matrix.ready": "[Ω] Defense Matrix is now available again!",
-  "message.finalparadox.defense_matrix.energy": "§e§lTerrastalker-Energy: §a%1$s%",
+  "message.finalparadox.defense_matrix.energy": "§e§lTerrastalker-Energy: §a%1$s%%",
   "message.finalparadox.defense_matrix.leggings_slot": "§cDrop the matrix from an empty leggings slot.",
   "message.finalparadox.rover.already_active": "§cYou already have an active Terrastalker.",
   "message.finalparadox.rover.controls.title": "These are the Terrastalker's controls:",
