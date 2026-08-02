@@ -42,8 +42,9 @@ Source `fase/1/ini` -> `ini_monturas/**` -> `el_montura`:
   per-rover ownership gate. The controller records rider->rover UUIDs for
   cleanup/recovery and re-spawns only missing rovers on reload.
 - After a forced dismount the rover will not auto-mount the same player again
-  until that player releases Shift (the double-sneak window is 10 ticks), so
-  holding Shift cannot instantly remount and replay the controls guide
+  until that player releases Shift for 10 consecutive ticks (the double-sneak
+  window is 10 ticks). A brief release between the two sneak taps must not
+  clear the lock, or the final held press instantly re-mounts the rider
   (fixed 2026-08-02). The rider is also placed on the ground behind the rover
   on dismount instead of being left standing inside the cabin.
 - `runLoop()` phase 1, ronda 0: when every online non-spectator player rides a

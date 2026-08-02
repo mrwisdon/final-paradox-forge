@@ -66,6 +66,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int IMPROVED_DRAIN_INTERVAL_TICKS = 19;
     private static final int COLLISION_COOLDOWN_TICKS = 10;
     private static final int DISMOUNT_WINDOW_TICKS = 10;
+    private static final int DISMOUNT_RELEASE_TICKS = 10;
     private static final String FIRE_SCORE_KEY = "finalparadox.terrastalker_fire_score";
     private static final double MOVE_SPEED = 0.14D;
     private static final double BULLET_SPEED = 1.8D;
@@ -115,6 +116,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private UUID ownerId;
     private UUID dismountedPlayerId;
     private boolean dismountMountLocked;
+    private int dismountReleaseCounter;
     private int drainTicks;
     private int gaitScore;
     private int collisionCooldown;
@@ -253,8 +255,18 @@ public final class TerrastalkerRoverEntity extends Entity {
         if (dismountMountLocked) {
             ServerPlayer dismounted = server.getServer().getPlayerList()
                     .getPlayer(dismountedPlayerId);
-            if (dismounted == null || !dismounted.isShiftKeyDown()) {
+            if (dismounted == null) {
                 dismountMountLocked = false;
+                dismountReleaseCounter = 0;
+            } else if (!dismounted.isShiftKeyDown()) {
+                // A double-sneak gesture itself contains a brief release between
+                // taps; only clear the re-mount lock after a sustained release.
+                if (++dismountReleaseCounter >= DISMOUNT_RELEASE_TICKS) {
+                    dismountMountLocked = false;
+                    dismountReleaseCounter = 0;
+                }
+            } else {
+                dismountReleaseCounter = 0;
             }
         }
         tickBullets(server);
@@ -897,6 +909,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         setFiring(false);
         dismountedPlayerId = player.getUUID();
         dismountMountLocked = true;
+        dismountReleaseCounter = 0;
         allowDismount = true;
         try {
             player.stopRiding();
