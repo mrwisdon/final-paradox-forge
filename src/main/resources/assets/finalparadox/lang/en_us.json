@@ -770,6 +770,8 @@
   "message.finalparadox.rover.mount_hint.alt": "§e§o▶§f§oHold sneak to mount§e§o◀",
   "message.finalparadox.rover.exploding": "§c§lABOUT TO EXPLODE!",
   "entity.finalparadox.terrastalker_rover": "Terrastalker",
+  "entity.finalparadox.zombie_supermatrix": "Zombie Supermatrix",
+  "entity.finalparadox.zombie_supermatrix.name": "<Zombie Supermatrix>",
   "item.finalparadox.koyo_spawn_egg": "Koyomi Spawn Egg",
   "item.finalparadox.gari_spawn_egg": "Gariheuz Spawn Egg",
   "entity.finalparadox.koyo": "§4§lKoyomi",

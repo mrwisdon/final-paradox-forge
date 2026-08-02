@@ -770,6 +770,8 @@
   "message.finalparadox.rover.mount_hint.alt": "§e§o▶§f§o按住潜行以乘坐§e§o◀",
   "message.finalparadox.rover.exploding": "§c§l要爆炸了！",
   "entity.finalparadox.terrastalker_rover": "大地漫游器",
+  "entity.finalparadox.zombie_supermatrix": "僵尸超级矩阵",
+  "entity.finalparadox.zombie_supermatrix.name": "<僵尸超级矩阵>",
   "item.finalparadox.koyo_spawn_egg": "柯约米刷怪蛋",
   "item.finalparadox.gari_spawn_egg": "加里赫兹刷怪蛋",
   "entity.finalparadox.koyo": "§4§l柯约米",
