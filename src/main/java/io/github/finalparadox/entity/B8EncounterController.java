@@ -221,7 +221,6 @@ public final class B8EncounterController {
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_COUNTDOWN_1, now + 100));
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_SUMMON, now + 120));
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_DIALOGUE_8, now + 40)); // source ini8 @2s
-        notifyPlayers(Component.literal("B8 encounter started. Countdown: 3..."));
     }
 
     public void recover(ServerLevel server, B8EncounterData data) {
@@ -349,7 +348,6 @@ public final class B8EncounterController {
         // Source fase/1/comenzar schedules h2/ini at +1s.
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_H2_INI, server.getGameTime() + 20));
         playB8Music(server);
-        notifyPlayers(Component.literal("B8 battle started."));
     }
 
     private void showCountdown(String key) {
@@ -403,7 +401,6 @@ public final class B8EncounterController {
         }
         spawnMounts(server, data);
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_DIALOGUE_3, server.getGameTime() + 40));
-        notifyPlayers(Component.literal("Mounts spawned. All non-spectator players must board to start."));
     }
 
     private void spawnMounts(ServerLevel server, B8EncounterData data) {
@@ -547,7 +544,6 @@ public final class B8EncounterController {
         emitH2Particulas(server, data);
         data.addTimer(new B8EncounterData.TimerEntry(TIMER_DIALOGUE_1, server.getGameTime() + 40));
         dialogue(server, 6);
-        notifyPlayers(Component.literal("B8 H2: gold modules incoming."));
     }
 
     private void emitH2Particulas(ServerLevel server, B8EncounterData data) {
@@ -619,7 +615,6 @@ public final class B8EncounterController {
                 data.addTimer(new B8EncounterData.TimerEntry(
                         TIMER_DIALOGUE_2, server.getGameTime() + 50));
                 dialogue(server, 5);
-                notifyPlayers(Component.literal("B8 matrix is now vulnerable."));
             }
         } else {
             data.setH2EndDelay(-1);
@@ -1834,8 +1829,6 @@ public final class B8EncounterController {
             player.addEffect(new MobEffectInstance(
                     MobEffects.DAMAGE_RESISTANCE, 2020, 1, false, false, false));
         }
-        notifyPlayers(Component.literal(
-                "B8 defeat: arena reset; use /finalparadox arena start b8 to retry."));
     }
 
     public void setHealth(int health) {
@@ -1878,7 +1871,6 @@ public final class B8EncounterController {
         }
         dialogue(serverLevel, 7);
         // M5: phase timelines (add waves, hazard scheduling) land here.
-        notifyPlayers(Component.literal("B8 entered phase " + phase + " (matrix closed and invulnerable)."));
     }
 
     public void forcePhase(int phase) {
@@ -1974,7 +1966,6 @@ public final class B8EncounterController {
             spawnCelebration(server, anchor);
         }
         endEncounter(server, data);
-        notifyPlayers(Component.literal("B8 victory! Reward dropped at the arena."));
     }
 
     private void spawnReward(ServerLevel server, BlockPos anchor) {
@@ -2041,7 +2032,6 @@ public final class B8EncounterController {
             spawnReward(server, anchor);
         }
         endEncounter(server, data);
-        notifyPlayers(Component.literal("B8 boss skipped; reward dropped."));
     }
 
     /* ------------------------------ M8 music and dialogue ------------------------------ */
@@ -2268,12 +2258,6 @@ public final class B8EncounterController {
             case B8EncounterData.STATE_CLEANUP -> "CLEANUP";
             default -> "UNKNOWN(" + state + ")";
         };
-    }
-
-    private void notifyPlayers(Component message) {
-        for (ServerPlayer player : serverLevel.players()) {
-            player.sendSystemMessage(message);
-        }
     }
 
     private void forceChunks(ServerLevel server, B8EncounterData data, boolean force) {
