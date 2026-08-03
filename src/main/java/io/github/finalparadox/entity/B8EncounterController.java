@@ -178,6 +178,8 @@ public final class B8EncounterController {
     private ServerLevel serverLevel;
     private B8EncounterData data;
     private int runTicks;
+    /** Source h3/sniper/main caps firing at one sniper per tick (limit=1). */
+    private boolean sniperFiredThisTick;
     private int lastBossValue = -1;
     private long lastHitTick = Long.MIN_VALUE;
 
@@ -1225,6 +1227,7 @@ public final class B8EncounterController {
     }
 
     private void tickAdds(ServerLevel server, B8EncounterData data) {
+        sniperFiredThisTick = false;
         BlockPos center = data.anchor();
         if (center == null) return;
         net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(
@@ -1261,8 +1264,9 @@ public final class B8EncounterController {
             }
             if ("b8_h3_enemigo2".equals(type)) {
                 int fire = persistent.getInt(ADD_FIRE_KEY) + 1;
-                if (fire >= H3_SNIPER_FIRE_INTERVAL) {
+                if (fire >= H3_SNIPER_FIRE_INTERVAL && !sniperFiredThisTick) {
                     fire = 0;
+                    sniperFiredThisTick = true;
                     spawnSniperBullet(server, data, add);
                 }
                 persistent.putInt(ADD_FIRE_KEY, fire);
