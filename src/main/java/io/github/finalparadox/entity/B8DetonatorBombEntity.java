@@ -29,6 +29,7 @@ import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
@@ -44,6 +45,11 @@ import net.minecraftforge.network.NetworkHooks;
 public final class B8DetonatorBombEntity extends Slime {
     public static final int FUSE_TICKS = 100;
     public static final double BLAST_RADIUS = 25.0D;
+    /** Throw origin above the dying skeleton's feet: its TNT head height. */
+    public static final double THROW_HEIGHT = 1.7D;
+    private static final double THROW_GRAVITY = 0.08D;
+    private static final double THROW_DRAG = 0.91D;
+    private static final double THROW_UP_SPEED = 1.0D;
 
     private static final EntityDataAccessor<Integer> DATA_FUSE =
             SynchedEntityData.defineId(B8DetonatorBombEntity.class, EntityDataSerializers.INT);
@@ -55,10 +61,14 @@ public final class B8DetonatorBombEntity extends Slime {
     private int flashTicks;
     private int flashStep;
     private boolean destroyed;
+    private double throwVx;
+    private double throwVy;
+    private double throwVz;
 
     public B8DetonatorBombEntity(EntityType<? extends Slime> type, Level level) {
         super(type, level);
         setNoAi(true);
+        setNoGravity(true);
         setPersistenceRequired();
         xpReward = 0;
     }
@@ -74,14 +84,26 @@ public final class B8DetonatorBombEntity extends Slime {
         B8DetonatorBombEntity bomb = new B8DetonatorBombEntity(
                 ModEntities.B8_DETONATOR_BOMB.get(), level);
         double radians = Math.toRadians(Math.floorMod(directionIndex, 24) * 15.0D);
-        bomb.setPos(origin.x, origin.y + 0.5D, origin.z);
-        bomb.setDeltaMovement(Math.sin(radians), 0.6D, Math.cos(radians));
+        bomb.setPos(origin.x, origin.y + THROW_HEIGHT, origin.z);
+        bomb.throwVx = Math.sin(radians);
+        bomb.throwVy = THROW_UP_SPEED;
+        bomb.throwVz = Math.cos(radians);
+        bomb.setDeltaMovement(Vec3.ZERO);
         bomb.setHealth(10.0F);
         bomb.addTag("b8_h3_detonator_bomb");
         bomb.addTag("afijo_lvl_3");
         bomb.setGlowingTag(true);
         level.addFreshEntity(bomb);
         bomb.joinFlashTeam(level, true);
+        level.sendParticles(ParticleTypes.EXPLOSION,
+                origin.x, origin.y + THROW_HEIGHT, origin.z,
+                1, 0.0D, 0.0D, 0.0D, 0.0D);
+        level.sendParticles(ParticleTypes.CLOUD,
+                origin.x, origin.y + THROW_HEIGHT, origin.z,
+                8, 0.2D, 0.2D, 0.2D, 0.2D);
+        level.sendParticles(ParticleTypes.LAVA,
+                origin.x, origin.y + THROW_HEIGHT, origin.z,
+                3, 0.0D, 0.0D, 0.0D, 0.0D);
         level.playSound(null, bomb.blockPosition(), SoundEvents.TNT_PRIMED,
                 SoundSource.MASTER, 1.0F, 1.0F);
         return bomb;
@@ -115,13 +137,21 @@ public final class B8DetonatorBombEntity extends Slime {
         }
 
         if (!hasLanded()) {
+            // Manual throw physics: a visible parabola independent of vanilla
+            // slime movement (NoGravity + zeroed delta keeps it stable).
+            throwVy -= THROW_GRAVITY;
+            throwVy *= 0.98D;
+            throwVx *= THROW_DRAG;
+            throwVz *= THROW_DRAG;
+            setPos(getX() + throwVx, getY() + throwVy, getZ() + throwVz);
+            setDeltaMovement(Vec3.ZERO);
             server.sendParticles(ParticleTypes.LARGE_SMOKE,
                     getX(), getY() + 0.5D, getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
             if (random.nextInt(5) == 0) {
                 server.sendParticles(ParticleTypes.LAVA,
                         getX(), getY() + 0.5D, getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
             }
-            if (onGround()) {
+            if (shouldLand(server)) {
                 entityData.set(DATA_LANDED, true);
                 setDeltaMovement(Vec3.ZERO);
                 addTag("hostile");
@@ -134,6 +164,25 @@ public final class B8DetonatorBombEntity extends Slime {
         entityData.set(DATA_FUSE, fuse);
         tickFlash(server, fuse);
         if (fuse >= FUSE_TICKS) explode(server);
+    }
+
+    /**
+     * Landing check for the manually integrated throw: stop against solid
+     * bodies (walls) and rest on the floor once the vertical speed turns down.
+     */
+    private boolean shouldLand(ServerLevel server) {
+        if (onGround()) return true;
+        BlockPos body = BlockPos.containing(getX(), getY() + 0.5D, getZ());
+        if (!server.getBlockState(body).getCollisionShape(server, body).isEmpty()) {
+            setPos(getX() - throwVx, getY(), getZ() - throwVz);
+            return true;
+        }
+        if (throwVy > 0.0D) return false;
+        BlockPos feet = BlockPos.containing(getX(), getY() - 0.1D, getZ());
+        BlockState state = server.getBlockState(feet);
+        if (state.getCollisionShape(server, feet).isEmpty()) return false;
+        setPos(getX(), feet.getY() + 1.0D, getZ());
+        return true;
     }
 
     private void tickFlash(ServerLevel server, int fuse) {
