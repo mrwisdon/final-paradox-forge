@@ -68,7 +68,8 @@ public final class TerrastalkerRoverEntity extends Entity {
     /** 5t cadence with 2x damage; bursts feel like an autocannon while the
      *  vanilla 20t hit-invulnerability window only eats 3 of every 4 rounds. */
     private static final int FIRE_INTERVAL_TICKS = 5;
-    private static final float BULLET_DAMAGE_B8 = 14.0F;
+    /** Original B8 mount round damage; the encounter cannon has no splash. */
+    private static final float BULLET_DAMAGE_B8 = 7.0F;
     private static final float BULLET_DAMAGE_IMPROVED = 18.0F;
     /** Original B8 cadence: fast enough to plink all matrix fragments. */
     private static final int ENCOUNTER_FIRE_INTERVAL_TICKS = 3;
@@ -907,6 +908,8 @@ public final class TerrastalkerRoverEntity extends Entity {
      */
     private void cannonExplosion(
             ServerLevel server, Vec3 point, UUID shooter, LivingEntity direct) {
+        // The B8 encounter mount keeps the original plain cannon: no splash.
+        if (isEncounterMode()) return;
         server.sendParticles(ParticleTypes.EXPLOSION,
                 point.x, point.y, point.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
         server.sendParticles(ParticleTypes.CLOUD,
