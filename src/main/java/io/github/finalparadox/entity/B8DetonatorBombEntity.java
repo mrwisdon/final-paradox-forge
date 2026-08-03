@@ -64,6 +64,10 @@ public final class B8DetonatorBombEntity extends Slime {
     private double throwVx;
     private double throwVy;
     private double throwVz;
+    /** Feet Y where the throw started; used as the void fallback bound. */
+    private double throwOriginY;
+    /** Top of the first solid floor under the throw origin; NaN if none. */
+    private double landingY = Double.NaN;
 
     public B8DetonatorBombEntity(EntityType<? extends Slime> type, Level level) {
         super(type, level);
@@ -88,6 +92,8 @@ public final class B8DetonatorBombEntity extends Slime {
         bomb.throwVx = Math.sin(radians);
         bomb.throwVy = THROW_UP_SPEED;
         bomb.throwVz = Math.cos(radians);
+        bomb.throwOriginY = origin.y + THROW_HEIGHT;
+        bomb.landingY = findFloorY(level, origin.x, origin.y + THROW_HEIGHT, origin.z);
         bomb.setDeltaMovement(Vec3.ZERO);
         bomb.setHealth(10.0F);
         bomb.addTag("b8_h3_detonator_bomb");
@@ -107,6 +113,18 @@ public final class B8DetonatorBombEntity extends Slime {
         level.playSound(null, bomb.blockPosition(), SoundEvents.TNT_PRIMED,
                 SoundSource.MASTER, 1.0F, 1.0F);
         return bomb;
+    }
+
+    private static double findFloorY(ServerLevel level, double x, double y, double z) {
+        BlockPos start = BlockPos.containing(x, y, z);
+        for (int dy = 0; dy < 64; dy++) {
+            BlockPos pos = start.below(dy);
+            BlockState state = level.getBlockState(pos);
+            if (!state.getCollisionShape(level, pos).isEmpty()) {
+                return pos.getY() + 1.0D;
+            }
+        }
+        return Double.NaN;
     }
 
     @Override
@@ -167,22 +185,34 @@ public final class B8DetonatorBombEntity extends Slime {
     }
 
     /**
-     * Landing check for the manually integrated throw: stop against solid
-     * bodies (walls) and rest on the floor once the vertical speed turns down.
+     * Landing check for the manually integrated throw: never sink into the
+     * floor or fall below the arena. The bomb stops against walls (snapped to
+     * the wall top) and rests exactly on the floor surface found at spawn;
+     * if no floor was found it stops before drifting into the void.
      */
     private boolean shouldLand(ServerLevel server) {
-        if (onGround()) return true;
         BlockPos body = BlockPos.containing(getX(), getY() + 0.5D, getZ());
         if (!server.getBlockState(body).getCollisionShape(server, body).isEmpty()) {
-            setPos(getX() - throwVx, getY(), getZ() - throwVz);
+            // Back up to the previous (outside) position and stop: hitting a
+            // wall or the ceiling must never push the bomb through or outside.
+            setPos(getX() - throwVx, getY() - throwVy, getZ() - throwVz);
+            throwVx = 0.0D;
+            throwVz = 0.0D;
+            throwVy = Math.min(0.0D, throwVy);
             return true;
         }
         if (throwVy > 0.0D) return false;
-        BlockPos feet = BlockPos.containing(getX(), getY() - 0.1D, getZ());
-        BlockState state = server.getBlockState(feet);
-        if (state.getCollisionShape(server, feet).isEmpty()) return false;
-        setPos(getX(), feet.getY() + 1.0D, getZ());
-        return true;
+        if (!Double.isNaN(landingY)) {
+            if (getY() <= landingY) {
+                setPos(getX(), landingY, getZ());
+                return true;
+            }
+            return false;
+        }
+        // No known floor: stop once it drops below the throw origin so it can
+        // never end up below the arena floor.
+        if (getY() < throwOriginY - 1.0D) return true;
+        return false;
     }
 
     private void tickFlash(ServerLevel server, int fuse) {
