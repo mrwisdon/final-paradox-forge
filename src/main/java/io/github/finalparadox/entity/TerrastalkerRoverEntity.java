@@ -689,7 +689,7 @@ public final class TerrastalkerRoverEntity extends Entity {
                                 && !target.isInvulnerable()
                                 && target != getFirstPassenger()
                                 && isSourceHostile(target)
-                                && target.distanceToSqr(sample)
+                                && target.getBoundingBox().distanceToSqr(sample)
                                 <= BULLET_SAMPLE_RADIUS * BULLET_SAMPLE_RADIUS).isEmpty();
         if (!triggered) return null;
         return server.getEntitiesOfClass(LivingEntity.class,
@@ -698,8 +698,9 @@ public final class TerrastalkerRoverEntity extends Entity {
                                 && !target.isInvulnerable()
                                 && target != getFirstPassenger()
                                 && isSourceHostile(target)
-                                && target.distanceToSqr(sample) <= 4.0D)
-                .stream().min(Comparator.comparingDouble(target -> target.distanceToSqr(sample)))
+                                && target.getBoundingBox().distanceToSqr(sample) <= 4.0D)
+                .stream().min(Comparator.comparingDouble(
+                        target -> target.getBoundingBox().distanceToSqr(sample)))
                 .orElse(null);
     }
 
@@ -990,7 +991,7 @@ public final class TerrastalkerRoverEntity extends Entity {
                 new AABB(point, point).inflate(CANNON_SPLASH_RADIUS),
                 entity -> entity.isAlive() && !entity.isInvulnerable()
                         && entity != direct && isSourceHostile(entity))) {
-            if (victim.distanceToSqr(point) > radiusSqr) continue;
+            if (victim.getBoundingBox().distanceToSqr(point) > radiusSqr) continue;
             if (isEncounterMode()) {
                 B8EncounterManager.markRoverHit(victim, shooter, server.getGameTime());
             }
