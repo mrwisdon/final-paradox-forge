@@ -167,8 +167,8 @@ public final class B8EncounterController {
     private static final Vec3iOffset MATRIX_CORE = new Vec3iOffset(0, 7, 0);
     private static final Vec3iOffset SPECTATOR_TP = new Vec3iOffset(0, 13, 0);
     private static final Vec3iOffset TP_BACK = new Vec3iOffset(13, 1, 0);
-    /** Victory reward lands in front of the player's post-fight teleport spot;
-     *  the source's fixed -33 offset points into bare terrain on deployed arenas. */
+    /** Spot for the victory sound/particles (in front of the post-fight
+     *  teleport); the matrix itself is granted straight into inventories. */
     private static final Vec3iOffset REWARD_DROP = new Vec3iOffset(14, 2, 0);
     private static final int FORCELOAD_MIN_X = -23;
     private static final int FORCELOAD_MAX_X = 24;
@@ -1984,13 +1984,19 @@ public final class B8EncounterController {
     }
 
     private void spawnReward(ServerLevel server, BlockPos anchor) {
+        // Grant the matrix directly so nobody can miss it, no matter where the
+        // fight ended; a full inventory drops the leftover at the player's feet.
+        ItemStack matrix = new ItemStack(ModItems.ADAPTIVE_DEFENSE_MATRIX.get());
+        for (ServerPlayer player : server.players()) {
+            if (player.isSpectator()) continue;
+            if (!player.getInventory().add(matrix.copy())) {
+                ItemEntity drop = new ItemEntity(server,
+                        player.getX(), player.getY() + 0.5D, player.getZ(), matrix.copy());
+                drop.setPickUpDelay(0);
+                server.addFreshEntity(drop);
+            }
+        }
         BlockPos pos = anchor.offset(REWARD_DROP.x(), REWARD_DROP.y(), REWARD_DROP.z());
-        ItemStack stack = new ItemStack(ModItems.ADAPTIVE_DEFENSE_MATRIX.get());
-        ItemEntity item = new ItemEntity(server,
-                pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, stack);
-        item.setDeltaMovement(0.0D, 0.5D, 0.0D);
-        item.setPickUpDelay(10);
-        server.addFreshEntity(item);
         server.playSound(null, pos, SoundEvents.EXPERIENCE_ORB_PICKUP,
                 SoundSource.MASTER, 1.0F, 2.0F);
         server.sendParticles(ParticleTypes.EXPLOSION,
