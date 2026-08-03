@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.FinalParadox;
 import io.github.finalparadox.item.AdaptiveDefenseMatrixItem;
+import io.github.finalparadox.network.TerrastalkerGrenadePacket;
 import io.github.finalparadox.network.TerrastalkerJumpPacket;
 import io.github.finalparadox.network.TerrastalkerMissilePacket;
 import io.github.finalparadox.registry.ModEntities;
@@ -95,6 +96,20 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final double MISSILE_AIM_HIT_DISTANCE = 1.5D;
     private static final int MISSILE_LAUNCH_TICKS = 6;
     private static final float MISSILE_MAX_TURN_DEGREES = 12.0F;
+    /** Defensive grenade ring: 12 grenades pop outward around the rover and
+     *  explode in sequence, clearing a 3-block band around the vehicle. The
+     *  B8 encounter mount keeps the original loadout and has no launcher. */
+    private static final int GRENADE_COUNT = 12;
+    private static final double GRENADE_RING_RADIUS = 2.5D;
+    private static final double GRENADE_LAUNCH_Y_OFFSET = 1.0D;
+    private static final double GRENADE_SPEED = 0.5D;
+    private static final double GRENADE_UPWARD_SPEED = 0.25D;
+    private static final double GRENADE_GRAVITY = 0.02D;
+    private static final int GRENADE_FLIGHT_TICKS = 5;
+    private static final int GRENADE_STAGGER_TICKS = 1;
+    private static final double GRENADE_BLAST_RADIUS = 3.0D;
+    private static final float GRENADE_DAMAGE = 20.0F;
+    private static final int GRENADE_COOLDOWN_TICKS = 20 * 15;
     /** Parabolic jump with vanilla gravity; apex = v0^2 / (2g) = 4 blocks. */
     private static final double JUMP_GRAVITY = 0.08D;
     private static final double JUMP_VELOCITY = 0.8D;
@@ -165,6 +180,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private Vec3 recoveryPosition;
     private final List<RoverBullet> bullets = new ArrayList<>();
     private final List<RoverMissile> missiles = new ArrayList<>();
+    private final List<RoverGrenade> grenades = new ArrayList<>();
     private int missileLoaded = MISSILE_MAGAZINE_CAP;
     private int missileReserve = MISSILE_RESERVE_CAP;
     private int missileLoadTicks = MISSILE_LOAD_TICKS;
@@ -173,6 +189,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private int cannonReserve = CANNON_RESERVE_CAP;
     private int cannonLoadTicks = CANNON_LOAD_TICKS;
     private int cannonRegenTicks = CANNON_REGEN_TICKS;
+    private int grenadeCooldownTicks;
     private double jumpVelocity;
     private boolean airborne;
 
@@ -300,6 +317,7 @@ public final class TerrastalkerRoverEntity extends Entity {
 
         capturePreviousVisualState();
         if (collisionCooldown > 0) collisionCooldown--;
+        if (grenadeCooldownTicks > 0) grenadeCooldownTicks--;
         if (dismountMountLocked) {
             ServerPlayer dismounted = server.getServer().getPlayerList()
                     .getPlayer(dismountedPlayerId);
@@ -321,6 +339,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         tickMissileMagazine();
         tickCannonMagazine();
         tickMissiles(server);
+        tickGrenades(server);
         tickJump(server);
 
         if (isMeltingDown()) {
@@ -733,6 +752,40 @@ public final class TerrastalkerRoverEntity extends Entity {
     }
 
     /**
+     * Defensive grenade hook called from {@link TerrastalkerGrenadePacket}.
+     * Fires 12 grenades in a ring around the rover; each one pops outward and
+     * explodes one tick after its neighbor so the blast sweeps around the
+     * vehicle, clearing anything hugging its flanks. Cooldown only, no energy
+     * cost, and the B8 encounter mount does not carry the launcher.
+     */
+    public void launchDefensiveGrenades(ServerPlayer rider) {
+        if (level().isClientSide || !(level() instanceof ServerLevel server)) return;
+        if (getFirstPassenger() != rider || isMeltingDown()) return;
+        if (isEncounterMode()) return;
+        if (grenadeCooldownTicks > 0) {
+            rider.sendSystemMessage(Component.translatable(
+                    "message.finalparadox.rover.grenade.cooldown"));
+            return;
+        }
+        grenadeCooldownTicks = GRENADE_COOLDOWN_TICKS;
+        Vec3 origin = position().add(0.0D, GRENADE_LAUNCH_Y_OFFSET, 0.0D);
+        for (int index = 0; index < GRENADE_COUNT; index++) {
+            double angle = Math.toRadians(index * (360.0D / GRENADE_COUNT));
+            Vec3 direction = new Vec3(Math.sin(angle), 0.0D, Math.cos(angle));
+            grenades.add(new RoverGrenade(
+                    origin,
+                    direction.scale(GRENADE_SPEED)
+                            .add(0.0D, GRENADE_UPWARD_SPEED, 0.0D),
+                    index * GRENADE_STAGGER_TICKS));
+        }
+        server.playSound(null, blockPosition(), SoundEvents.FIREWORK_ROCKET_LAUNCH,
+                SoundSource.MASTER, 1.2F, 0.9F);
+        server.sendParticles(ParticleTypes.FLASH,
+                getX(), getY() + GRENADE_LAUNCH_Y_OFFSET, getZ(),
+                1, 0.0D, 0.0D, 0.0D, 0.0D);
+    }
+
+    /**
      * Jump hook called from {@link TerrastalkerJumpPacket}: rises 4 blocks
      * over the next ticks and falls back, costing 2% of the max energy.
      */
@@ -898,6 +951,37 @@ public final class TerrastalkerRoverEntity extends Entity {
         if (!consumed.isEmpty()) missiles.removeAll(consumed);
     }
 
+    /**
+     * Advances the defensive grenade ring. Each grenade waits out its stagger
+     * slot, then flies a short outward arc (the trail is the visual) and
+     * explodes at the end of its flight, sweeping the ring over several ticks.
+     */
+    private void tickGrenades(ServerLevel server) {
+        if (grenades.isEmpty()) return;
+        List<RoverGrenade> consumed = new ArrayList<>();
+        for (RoverGrenade grenade : grenades) {
+            if (grenade.delayTicks > 0) {
+                grenade.delayTicks--;
+                continue;
+            }
+            grenade.life++;
+            if (grenade.life > GRENADE_FLIGHT_TICKS) {
+                // Safety net: never let a stray grenade outlive its fuse.
+                grenadeExplosion(server, grenade.position);
+                consumed.add(grenade);
+                continue;
+            }
+            grenade.velocity = grenade.velocity.add(0.0D, -GRENADE_GRAVITY, 0.0D);
+            grenade.position = grenade.position.add(grenade.velocity);
+            spawnGrenadeTrail(server, grenade.position);
+            if (grenade.life >= GRENADE_FLIGHT_TICKS) {
+                grenadeExplosion(server, grenade.position);
+                consumed.add(grenade);
+            }
+        }
+        if (!consumed.isEmpty()) grenades.removeAll(consumed);
+    }
+
     private boolean hasHostileNear(ServerLevel server, Vec3 point, double radius) {
         return !server.getEntitiesOfClass(LivingEntity.class,
                         new AABB(point, point).inflate(radius),
@@ -965,6 +1049,49 @@ public final class TerrastalkerRoverEntity extends Entity {
                 B8EncounterManager.markRoverHit(victim, shooter, server.getGameTime());
             }
             victim.hurt(server.damageSources().magic(), MISSILE_DAMAGE);
+        }
+    }
+
+    private void spawnGrenadeTrail(ServerLevel server, Vec3 point) {
+        server.sendParticles(ParticleTypes.FLAME,
+                point.x, point.y, point.z, 1, 0.0D, 0.0D, 0.0D, 0.02D);
+        server.sendParticles(ParticleTypes.SMOKE,
+                point.x, point.y, point.z, 1, 0.0D, 0.0D, 0.0D, 0.02D);
+    }
+
+    /**
+     * One grenade of the defensive ring. Every explosion keeps its own blast
+     * radius but the vanilla 20-tick hurt window would swallow all but the
+     * first, so the invulnerability timer is cleared before each hit; a mob
+     * between two ring points takes the full 2-3 overlapping hits.
+     */
+    private void grenadeExplosion(ServerLevel server, Vec3 point) {
+        server.sendParticles(ParticleTypes.EXPLOSION,
+                point.x, point.y, point.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        server.sendParticles(ParticleTypes.CLOUD,
+                point.x, point.y, point.z, 14, 0.25D, 0.25D, 0.25D, 0.2D);
+        server.sendParticles(ParticleTypes.FLAME,
+                point.x, point.y, point.z, 10, 0.35D, 0.35D, 0.35D, 0.06D);
+        server.sendParticles(ParticleTypes.LARGE_SMOKE,
+                point.x, point.y, point.z, 16, 0.3D, 0.3D, 0.3D, 0.08D);
+        server.playSound(null, BlockPos.containing(point),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 1.4F, 1.5F);
+
+        double radiusSqr = GRENADE_BLAST_RADIUS * GRENADE_BLAST_RADIUS;
+        for (LivingEntity victim : server.getEntitiesOfClass(LivingEntity.class,
+                new AABB(point, point).inflate(GRENADE_BLAST_RADIUS),
+                entity -> entity.isAlive() && !entity.isInvulnerable()
+                        && isSourceHostile(entity))) {
+            if (victim.getBoundingBox().distanceToSqr(point) > radiusSqr) continue;
+            victim.invulnerableTime = 0;
+            victim.hurt(server.damageSources().magic(), GRENADE_DAMAGE);
+            Vec3 away = victim.position().subtract(point)
+                    .multiply(1.0D, 0.0D, 1.0D);
+            if (away.lengthSqr() > 0.0001D) {
+                victim.setDeltaMovement(victim.getDeltaMovement()
+                        .add(away.normalize().scale(0.45D).add(0.0D, 0.2D, 0.0D)));
+                victim.hurtMarked = true;
+            }
         }
     }
 
@@ -1110,6 +1237,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.move"));
         rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.fire"));
         rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.missile"));
+        rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.grenade"));
         rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.jump"));
         rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.dismount"));
     }
@@ -1455,6 +1583,7 @@ public final class TerrastalkerRoverEntity extends Entity {
                 ? tag.getInt("CannonLoadTicks") : CANNON_LOAD_TICKS;
         cannonRegenTicks = tag.contains("CannonRegenTicks")
                 ? tag.getInt("CannonRegenTicks") : CANNON_REGEN_TICKS;
+        grenadeCooldownTicks = Math.max(0, tag.getInt("GrenadeCooldownTicks"));
         meltdownAge = tag.getInt("MeltdownAge");
         if (tag.contains("RecoveryX")) {
             recoveryPosition = new Vec3(
@@ -1487,6 +1616,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         tag.putInt("CannonReserve", cannonReserve);
         tag.putInt("CannonLoadTicks", cannonLoadTicks);
         tag.putInt("CannonRegenTicks", cannonRegenTicks);
+        tag.putInt("GrenadeCooldownTicks", grenadeCooldownTicks);
         tag.putInt("MeltdownAge", meltdownAge);
         if (recoveryPosition != null) {
             tag.putDouble("RecoveryX", recoveryPosition.x);
@@ -1605,6 +1735,19 @@ public final class TerrastalkerRoverEntity extends Entity {
             this.velocity = velocity;
             this.aimPoint = aimPoint;
             this.shooter = shooter;
+        }
+    }
+
+    private static final class RoverGrenade {
+        private Vec3 position;
+        private Vec3 velocity;
+        private int delayTicks;
+        private int life;
+
+        private RoverGrenade(Vec3 position, Vec3 velocity, int delayTicks) {
+            this.position = position;
+            this.velocity = velocity;
+            this.delayTicks = delayTicks;
         }
     }
 }
