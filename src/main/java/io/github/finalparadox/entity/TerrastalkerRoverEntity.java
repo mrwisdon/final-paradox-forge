@@ -72,9 +72,11 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final double MISSILE_SPEED = 1.0D;
     private static final double MISSILE_BLAST_RADIUS = 3.0D;
     private static final float MISSILE_DAMAGE = 40.0F;
-    private static final double MISSILE_TARGET_RANGE = 32.0D;
     private static final double MISSILE_HIT_DISTANCE = 1.0D;
-    private static final double MISSILE_HOMING_RATE = 0.12D;
+    private static final double MISSILE_AIM_RANGE = 64.0D;
+    private static final double MISSILE_AIM_HIT_DISTANCE = 1.5D;
+    private static final int MISSILE_LAUNCH_TICKS = 6;
+    private static final float MISSILE_MAX_TURN_DEGREES = 12.0F;
     private static final int BULLET_LIFETIME_TICKS = 30;
     private static final int IMPROVED_DRAIN_INTERVAL_TICKS = 19;
     private static final int COLLISION_COOLDOWN_TICKS = 10;
@@ -630,10 +632,11 @@ public final class TerrastalkerRoverEntity extends Entity {
     }
 
     /**
-     * Missile hook called from {@link TerrastalkerMissilePacket}. Locks onto
-     * the nearest hostile creature at launch (allies never targeted), then the
-     * missile homes in, breaks up to 3 blocks on the way and explodes for 40
-     * true damage against every hostile creature within 3 blocks.
+     * Missile hook called from {@link TerrastalkerMissilePacket}. TOW-style
+     * wire guidance: the missile does not lock an entity, it flies toward the
+     * rider's current aim point (recomputed every tick while the rider stays
+     * on board). It breaks up to 3 blocks on the way and explodes for 40 true
+     * damage against every hostile creature within 3 blocks.
      */
     public void launchMissile(ServerPlayer rider) {
         if (level().isClientSide || !(level() instanceof ServerLevel server)) return;
@@ -651,10 +654,9 @@ public final class TerrastalkerRoverEntity extends Entity {
         Vec3 direction = rider.getLookAngle().normalize();
         Vec3 origin = position().add(direction.scale(1.6D))
                 .add(0.0D, FIRE_ORIGIN_LOCAL_Y, 0.0D);
-        LivingEntity target = findMissileTarget(server, rider);
         missiles.add(new RoverMissile(
                 origin, direction.scale(MISSILE_SPEED),
-                target != null ? target.getUUID() : null, rider.getUUID()));
+                aimPoint(rider), rider.getUUID()));
         missileCooldown = MISSILE_COOLDOWN_TICKS;
         reduceEnergy(MISSILE_ENERGY_COST, false);
         server.sendParticles(ParticleTypes.LAVA, origin.x, origin.y, origin.z,
@@ -663,44 +665,49 @@ public final class TerrastalkerRoverEntity extends Entity {
                 SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.MASTER, 1.0F, 0.7F);
     }
 
-    private LivingEntity findMissileTarget(ServerLevel server, ServerPlayer rider) {
-        return server.getEntitiesOfClass(LivingEntity.class,
-                        getBoundingBox().inflate(MISSILE_TARGET_RANGE),
-                        entity -> entity.isAlive()
-                                && entity != rider
-                                && !entity.isInvulnerable()
-                                && isSourceHostile(entity))
-                .stream().min(Comparator.comparingDouble(this::distanceToSqr))
-                .orElse(null);
+    /** The point the rider is currently aiming at, capped at 64 blocks. */
+    private static Vec3 aimPoint(ServerPlayer rider) {
+        Vec3 eye = rider.getEyePosition();
+        Vec3 look = rider.getLookAngle().normalize();
+        if (rider.level() instanceof ServerLevel server) {
+            BlockHitResult hit = server.clip(new ClipContext(
+                    eye, eye.add(look.scale(MISSILE_AIM_RANGE)),
+                    ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, rider));
+            if (hit.getType() != HitResult.Type.MISS) return hit.getLocation();
+        }
+        return eye.add(look.scale(MISSILE_AIM_RANGE));
     }
 
     private void tickMissiles(ServerLevel server) {
         if (missiles.isEmpty()) return;
         List<RoverMissile> consumed = new ArrayList<>();
         for (RoverMissile missile : missiles) {
-            LivingEntity target = missile.targetId == null
-                    ? null
-                    : server.getEntity(missile.targetId) instanceof LivingEntity living
-                    ? living : null;
-            if (target != null && target.isAlive() && !target.isInvulnerable()) {
-                Vec3 current = missile.velocity.normalize();
-                Vec3 desired = target.position()
-                        .add(0.0D, target.getBbHeight() * 0.5D, 0.0D)
-                        .subtract(missile.position).normalize();
-                missile.velocity = current.lerp(desired, MISSILE_HOMING_RATE)
-                        .normalize().scale(MISSILE_SPEED);
+            // Wire guidance: keep following the rider's current aim point
+            // while they stay on board; otherwise finish toward the last one.
+            ServerPlayer rider = getFirstPassenger() instanceof ServerPlayer p
+                    && p.getUUID().equals(missile.shooter) ? p : null;
+            if (rider != null && rider.isAlive()) {
+                missile.aimPoint = aimPoint(rider);
+            }
+            if (missile.life >= MISSILE_LAUNCH_TICKS) {
+                Vec3 delta = missile.aimPoint.subtract(missile.position);
+                if (delta.lengthSqr() > 1.0E-6D) {
+                    missile.velocity = limitTurn(
+                            missile.velocity, delta.normalize(), MISSILE_MAX_TURN_DEGREES)
+                            .scale(MISSILE_SPEED);
+                }
             }
             Vec3 next = missile.position.add(missile.velocity);
             missile.position = next;
             missile.life++;
             spawnMissileTrail(server, next);
 
-            if (target != null && target.isAlive()) {
-                if (target.getBoundingBox().inflate(MISSILE_HIT_DISTANCE).contains(next)) {
-                    missileExplosion(server, next, missile.shooter);
-                    consumed.add(missile);
-                    continue;
-                }
+            if (hasHostileNear(server, next, MISSILE_HIT_DISTANCE)
+                    || next.distanceToSqr(missile.aimPoint)
+                    <= MISSILE_AIM_HIT_DISTANCE * MISSILE_AIM_HIT_DISTANCE) {
+                missileExplosion(server, next, missile.shooter);
+                consumed.add(missile);
+                continue;
             }
 
             BlockPos block = BlockPos.containing(next);
@@ -720,6 +727,40 @@ public final class TerrastalkerRoverEntity extends Entity {
             }
         }
         if (!consumed.isEmpty()) missiles.removeAll(consumed);
+    }
+
+    private boolean hasHostileNear(ServerLevel server, Vec3 point, double radius) {
+        return !server.getEntitiesOfClass(LivingEntity.class,
+                        new AABB(point, point).inflate(radius),
+                        entity -> entity.isAlive()
+                                && !entity.isInvulnerable()
+                                && isSourceHostile(entity))
+                .isEmpty();
+    }
+
+    /** Rotates {@code current} toward {@code desired} by at most the given angle. */
+    private static Vec3 limitTurn(Vec3 current, Vec3 desired, float maxDegrees) {
+        Vec3 u = current.normalize();
+        Vec3 v = desired.normalize();
+        double cos = Math.max(-1.0D, Math.min(1.0D, u.dot(v)));
+        double angle = Math.acos(cos);
+        double maxRad = Math.toRadians(maxDegrees);
+        if (angle <= maxRad) return v;
+        Vec3 axis;
+        if (angle > Math.PI - 1.0E-4D) {
+            Vec3 fallback = u.cross(new Vec3(0.0D, 1.0D, 0.0D));
+            axis = fallback.lengthSqr() > 1.0E-6D
+                    ? fallback : u.cross(new Vec3(1.0D, 0.0D, 0.0D));
+        } else {
+            axis = u.cross(v);
+        }
+        axis = axis.normalize();
+        double s = Math.sin(maxRad);
+        double c = Math.cos(maxRad);
+        return u.scale(c)
+                .add(axis.cross(u).scale(s))
+                .add(axis.scale(axis.dot(u) * (1.0D - c)))
+                .normalize();
     }
 
     private void spawnMissileTrail(ServerLevel server, Vec3 point) {
@@ -1315,15 +1356,15 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final class RoverMissile {
         private Vec3 position;
         private Vec3 velocity;
-        private final UUID targetId;
+        private Vec3 aimPoint;
         private final UUID shooter;
         private int life;
         private int blocksBroken;
 
-        private RoverMissile(Vec3 position, Vec3 velocity, UUID targetId, UUID shooter) {
+        private RoverMissile(Vec3 position, Vec3 velocity, Vec3 aimPoint, UUID shooter) {
             this.position = position;
             this.velocity = velocity;
-            this.targetId = targetId;
+            this.aimPoint = aimPoint;
             this.shooter = shooter;
         }
     }
