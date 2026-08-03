@@ -763,6 +763,8 @@
   "message.finalparadox.rover.controls.fire": " §e§o▶ §6Hold Shift §e§l->§f§l Fire §7(you cannot steer while firing)",
   "message.finalparadox.rover.controls.missile": " §e§o▶ §6Attack key §e§l->§f§l Launch missile §7(follows your aim)",
   "message.finalparadox.rover.controls.dismount": " §e§o▶ §6Press Shift twice §e§l->§c§l Leave the Terrastalker",
+  "message.finalparadox.rover.controls.jump": " §e§o▶ §6Space §e§l->§f§l Jump 4 blocks §7(costs 2% energy)",
+  "message.finalparadox.rover.jump.no_energy": "§cNot enough energy to jump!",
   "message.finalparadox.rover.cannon.display": "Cannon: §a%1$s§f/§e%2$s",
   "message.finalparadox.rover.missile.cooldown": "§cMissile recharging!",
   "message.finalparadox.rover.missile.display": "Missiles: §a%1$s§f/§e%2$s",

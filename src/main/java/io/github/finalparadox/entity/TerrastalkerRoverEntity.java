@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.FinalParadox;
 import io.github.finalparadox.item.AdaptiveDefenseMatrixItem;
+import io.github.finalparadox.network.TerrastalkerJumpPacket;
 import io.github.finalparadox.network.TerrastalkerMissilePacket;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
@@ -94,6 +95,10 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final double MISSILE_AIM_HIT_DISTANCE = 1.5D;
     private static final int MISSILE_LAUNCH_TICKS = 6;
     private static final float MISSILE_MAX_TURN_DEGREES = 12.0F;
+    private static final double JUMP_HEIGHT = 4.0D;
+    private static final double JUMP_RISE_SPEED = 0.4D;
+    private static final double JUMP_FALL_SPEED = 0.2D;
+    private static final double JUMP_ENERGY_PERCENT = 0.02D;
     private static final int BULLET_LIFETIME_TICKS = 30;
     private static final int IMPROVED_DRAIN_INTERVAL_TICKS = 19;
     private static final int COLLISION_COOLDOWN_TICKS = 10;
@@ -168,6 +173,8 @@ public final class TerrastalkerRoverEntity extends Entity {
     private int cannonReserve = CANNON_RESERVE_CAP;
     private int cannonLoadTicks = CANNON_LOAD_TICKS;
     private int cannonRegenTicks = CANNON_REGEN_TICKS;
+    private double jumpRiseRemaining;
+    private boolean airborne;
 
     public TerrastalkerRoverEntity(EntityType<TerrastalkerRoverEntity> type, Level level) {
         super(type, level);
@@ -314,6 +321,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         tickMissileMagazine();
         tickCannonMagazine();
         tickMissiles(server);
+        tickJump(server);
 
         if (isMeltingDown()) {
             tickMeltdown(server);
@@ -485,17 +493,21 @@ public final class TerrastalkerRoverEntity extends Entity {
 
         Vec3 forwardProbe = horizontalDirection(movementYaw).scale(TERRAIN_PROBE_FORWARD);
         Vec3 probe = position().add(forwardProbe);
-        if (!hasHeadClearance(probe, movementYaw) || !hasSupportWithinSourceDepth(probe)) {
+        boolean jumping = jumpRiseRemaining > 0.0D || airborne;
+        if (!jumping && (!hasHeadClearance(probe, movementYaw)
+                || !hasSupportWithinSourceDepth(probe))) {
             setDeltaMovement(Vec3.ZERO);
             return false;
         }
 
         Vec3 resolved = horizontal;
-        Vec3 destination = position().add(horizontal);
-        if (isSolidAt(destination)) {
-            resolved = resolved.add(0.0D, TERRAIN_STEP, 0.0D);
-        } else if (!isSolidAt(destination.add(0.0D, -TERRAIN_STEP, 0.0D))) {
-            resolved = resolved.add(0.0D, -TERRAIN_STEP, 0.0D);
+        if (!jumping) {
+            Vec3 destination = position().add(horizontal);
+            if (isSolidAt(destination)) {
+                resolved = resolved.add(0.0D, TERRAIN_STEP, 0.0D);
+            } else if (!isSolidAt(destination.add(0.0D, -TERRAIN_STEP, 0.0D))) {
+                resolved = resolved.add(0.0D, -TERRAIN_STEP, 0.0D);
+            }
         }
 
         setDeltaMovement(resolved);
@@ -717,6 +729,59 @@ public final class TerrastalkerRoverEntity extends Entity {
                 4, 0.0D, 0.0D, 0.0D, 0.0D);
         server.playSound(null, BlockPos.containing(origin),
                 SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.MASTER, 1.0F, 0.7F);
+    }
+
+    /**
+     * Jump hook called from {@link TerrastalkerJumpPacket}: rises 4 blocks
+     * over the next ticks and falls back, costing 2% of the max energy.
+     */
+    public void doJump(ServerPlayer rider) {
+        if (level().isClientSide || !(level() instanceof ServerLevel server)) return;
+        if (getFirstPassenger() != rider || isMeltingDown()) return;
+        if (jumpRiseRemaining > 0.0D || airborne) return;
+        int cost = Math.max(1, (int) Math.ceil(maxEnergy() * JUMP_ENERGY_PERCENT));
+        if (getEnergy() < cost) {
+            rider.sendSystemMessage(Component.translatable(
+                    "message.finalparadox.rover.jump.no_energy"));
+            return;
+        }
+        reduceEnergy(cost, true);
+        jumpRiseRemaining = JUMP_HEIGHT;
+        airborne = true;
+        server.playSound(null, blockPosition(), SoundEvents.SLIME_JUMP_SMALL,
+                SoundSource.MASTER, 1.0F, 0.8F);
+        server.sendParticles(ParticleTypes.CLOUD,
+                getX(), getY() + 0.2D, getZ(), 8, 0.3D, 0.1D, 0.3D, 0.1D);
+    }
+
+    private void tickJump(ServerLevel server) {
+        if (jumpRiseRemaining > 0.0D) {
+            BlockPos head = BlockPos.containing(getX(), getY() + 1.2D, getZ());
+            if (!server.getBlockState(head).getCollisionShape(server, head).isEmpty()) {
+                jumpRiseRemaining = 0.0D;
+            } else {
+                double step = Math.min(JUMP_RISE_SPEED, jumpRiseRemaining);
+                setPos(getX(), getY() + step, getZ());
+                jumpRiseRemaining -= step;
+                setDeltaMovement(Vec3.ZERO);
+            }
+            if (jumpRiseRemaining <= 0.0D) airborne = true;
+            return;
+        }
+        if (airborne) {
+            BlockPos below = BlockPos.containing(getX(), getY() - 0.1D, getZ());
+            if (!server.getBlockState(below).getCollisionShape(server, below).isEmpty()) {
+                airborne = false;
+                setPos(getX(), below.getY() + 1.0D, getZ());
+            } else {
+                setPos(getX(), getY() - JUMP_FALL_SPEED, getZ());
+                setDeltaMovement(Vec3.ZERO);
+            }
+        }
+    }
+
+    private int maxEnergy() {
+        return isEncounterMode() ? B8_MAX_ENERGY : IMPROVED_MAX_ENERGY;
     }
 
     /** The point the rider is currently aiming at, capped at 64 blocks. */
@@ -1046,6 +1111,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.move"));
         rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.fire"));
         rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.missile"));
+        rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.jump"));
         rider.sendSystemMessage(Component.translatable("message.finalparadox.rover.controls.dismount"));
     }
 
