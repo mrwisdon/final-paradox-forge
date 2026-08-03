@@ -95,9 +95,9 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final double MISSILE_AIM_HIT_DISTANCE = 1.5D;
     private static final int MISSILE_LAUNCH_TICKS = 6;
     private static final float MISSILE_MAX_TURN_DEGREES = 12.0F;
-    private static final double JUMP_HEIGHT = 4.0D;
-    private static final double JUMP_RISE_SPEED = 0.8D;
-    private static final double JUMP_FALL_SPEED = 0.5D;
+    /** Parabolic jump with vanilla gravity; apex = v0^2 / (2g) = 4 blocks. */
+    private static final double JUMP_GRAVITY = 0.08D;
+    private static final double JUMP_VELOCITY = 0.8D;
     private static final double JUMP_ENERGY_PERCENT = 0.02D;
     private static final int BULLET_LIFETIME_TICKS = 30;
     private static final int IMPROVED_DRAIN_INTERVAL_TICKS = 19;
@@ -173,7 +173,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private int cannonReserve = CANNON_RESERVE_CAP;
     private int cannonLoadTicks = CANNON_LOAD_TICKS;
     private int cannonRegenTicks = CANNON_REGEN_TICKS;
-    private double jumpRiseRemaining;
+    private double jumpVelocity;
     private boolean airborne;
 
     public TerrastalkerRoverEntity(EntityType<TerrastalkerRoverEntity> type, Level level) {
@@ -493,7 +493,7 @@ public final class TerrastalkerRoverEntity extends Entity {
 
         Vec3 forwardProbe = horizontalDirection(movementYaw).scale(TERRAIN_PROBE_FORWARD);
         Vec3 probe = position().add(forwardProbe);
-        boolean jumping = jumpRiseRemaining > 0.0D || airborne;
+        boolean jumping = airborne;
         if (!jumping && (!hasHeadClearance(probe, movementYaw)
                 || !hasSupportWithinSourceDepth(probe))) {
             setDeltaMovement(Vec3.ZERO);
@@ -738,7 +738,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     public void doJump(ServerPlayer rider) {
         if (level().isClientSide || !(level() instanceof ServerLevel server)) return;
         if (getFirstPassenger() != rider || isMeltingDown()) return;
-        if (jumpRiseRemaining > 0.0D || airborne) return;
+        if (airborne) return;
         int cost = Math.max(1, (int) Math.ceil(maxEnergy() * JUMP_ENERGY_PERCENT));
         if (getEnergy() < cost) {
             rider.sendSystemMessage(Component.translatable(
@@ -746,7 +746,7 @@ public final class TerrastalkerRoverEntity extends Entity {
             return;
         }
         reduceEnergy(cost, true);
-        jumpRiseRemaining = JUMP_HEIGHT;
+        jumpVelocity = JUMP_VELOCITY;
         airborne = true;
         server.playSound(null, blockPosition(), SoundEvents.SLIME_JUMP_SMALL,
                 SoundSource.MASTER, 1.0F, 0.8F);
@@ -755,27 +755,25 @@ public final class TerrastalkerRoverEntity extends Entity {
     }
 
     private void tickJump(ServerLevel server) {
-        if (jumpRiseRemaining > 0.0D) {
+        if (!airborne) return;
+        // Stop rising against a ceiling so the rover never clips through it.
+        if (jumpVelocity > 0.0D) {
             BlockPos head = BlockPos.containing(getX(), getY() + 1.2D, getZ());
             if (!server.getBlockState(head).getCollisionShape(server, head).isEmpty()) {
-                jumpRiseRemaining = 0.0D;
-            } else {
-                double step = Math.min(JUMP_RISE_SPEED, jumpRiseRemaining);
-                setPos(getX(), getY() + step, getZ());
-                jumpRiseRemaining -= step;
-                setDeltaMovement(Vec3.ZERO);
+                jumpVelocity = 0.0D;
             }
-            if (jumpRiseRemaining <= 0.0D) airborne = true;
-            return;
         }
-        if (airborne) {
+        // Parabolic physics: gravity decelerates the rise and accelerates the
+        // fall, landing exactly on the floor surface.
+        jumpVelocity -= JUMP_GRAVITY;
+        setPos(getX(), getY() + jumpVelocity, getZ());
+        setDeltaMovement(Vec3.ZERO);
+        if (jumpVelocity <= 0.0D) {
             BlockPos below = BlockPos.containing(getX(), getY() - 0.1D, getZ());
             if (!server.getBlockState(below).getCollisionShape(server, below).isEmpty()) {
                 airborne = false;
+                jumpVelocity = 0.0D;
                 setPos(getX(), below.getY() + 1.0D, getZ());
-            } else {
-                setPos(getX(), getY() - JUMP_FALL_SPEED, getZ());
-                setDeltaMovement(Vec3.ZERO);
             }
         }
     }
