@@ -200,17 +200,27 @@ public final class TerrastalkerRoverEntity extends Entity {
     }
 
     public static boolean spawnImproved(ServerPlayer player) {
-        if (player.getPersistentData().getInt(AdaptiveDefenseMatrixItem.COOLDOWN_KEY) > 0) {
+        return spawnImproved(player, false);
+    }
+
+    /**
+     * Improved-mount entry point. The {@code force} flag is used by the debug
+     * command so an admin can always summon one for testing, bypassing the
+     * item cooldown, boss-arena and ownership restrictions of the real item.
+     */
+    public static boolean spawnImproved(ServerPlayer player, boolean force) {
+        if (!force && player.getPersistentData().getInt(
+                AdaptiveDefenseMatrixItem.COOLDOWN_KEY) > 0) {
             player.displayClientMessage(
                     Component.translatable("message.finalparadox.defense_matrix.cooldown"), true);
             return false;
         }
-        if (hasBoss(player)) {
+        if (!force && hasBoss(player)) {
             player.displayClientMessage(
                     Component.translatable("message.finalparadox.defense_matrix.boss"), true);
             return false;
         }
-        if (hasOwnedRover(player)) {
+        if (!force && hasOwnedRover(player)) {
             player.displayClientMessage(
                     Component.translatable("message.finalparadox.rover.already_active"), true);
             return false;
@@ -227,8 +237,10 @@ public final class TerrastalkerRoverEntity extends Entity {
         rover.onMounted(player);
         rover.emitImprovedSpawnEffect(player.serverLevel());
         rover.pushImprovedSpawnTargets(player.serverLevel(), player);
-        player.getPersistentData().putInt(
-                AdaptiveDefenseMatrixItem.COOLDOWN_KEY, IMPROVED_COOLDOWN_TICKS);
+        if (!force) {
+            player.getPersistentData().putInt(
+                    AdaptiveDefenseMatrixItem.COOLDOWN_KEY, IMPROVED_COOLDOWN_TICKS);
+        }
         return true;
     }
 

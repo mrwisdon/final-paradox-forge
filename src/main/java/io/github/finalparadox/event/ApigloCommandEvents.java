@@ -35,10 +35,16 @@ public final class ApigloCommandEvents {
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("spawn")
                                 .executes(context -> spawnEncounterRover(
-                                        context.getSource().getPlayerOrException())))
+                                        context.getSource().getPlayerOrException()))
+                                .then(Commands.literal("boss")
+                                        .executes(context -> spawnEncounterRover(
+                                                context.getSource().getPlayerOrException())))
+                                .then(Commands.literal("improved")
+                                        .executes(context -> spawnImprovedRover(
+                                                context.getSource().getPlayerOrException()))))
                         .then(Commands.literal("damage")
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1, 100))
-                                        .executes(context -> damageEncounterRover(
+                                        .executes(context -> damageRover(
                                                 context.getSource().getPlayerOrException(),
                                                 IntegerArgumentType.getInteger(context, "amount"))))))
                 .then(Commands.literal("supermatrix")
@@ -130,12 +136,23 @@ public final class ApigloCommandEvents {
                 .orElse(0);
     }
 
-    private static int damageEncounterRover(ServerPlayer player, int amount) {
-        if (!(player.getVehicle() instanceof TerrastalkerRoverEntity rover) || !rover.isEncounterMode()) {
-            player.displayClientMessage(Component.literal("You are not riding a B8 Terrastalker."), true);
+    private static int spawnImprovedRover(ServerPlayer player) {
+        if (TerrastalkerRoverEntity.spawnImproved(player, true)) {
+            player.sendSystemMessage(Component.literal("Spawned the improved Terrastalker."));
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int damageRover(ServerPlayer player, int amount) {
+        if (!(player.getVehicle() instanceof TerrastalkerRoverEntity rover)) {
+            player.displayClientMessage(Component.literal("You are not riding a Terrastalker."), true);
             return 0;
         }
         rover.damageEnergy(amount);
+        player.displayClientMessage(Component.literal("Damaged the "
+                + (rover.isEncounterMode() ? "B8 boss" : "improved")
+                + " Terrastalker by " + amount + " energy."), true);
         return 1;
     }
 
