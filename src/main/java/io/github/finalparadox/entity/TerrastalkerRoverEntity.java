@@ -65,12 +65,11 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int VARIANT_IMPROVED = 0;
     private static final int VARIANT_B8 = 1;
     private static final int MELTDOWN_TICKS = 100;
-    /** 10t cadence with 3x damage: every second round lands inside the
-     *  vanilla 20t hit-invulnerability window, matching the old effective DPS
-     *  while feeling like an autocannon burst. */
-    private static final int FIRE_INTERVAL_TICKS = 10;
-    private static final float BULLET_DAMAGE_B8 = 21.0F;
-    private static final float BULLET_DAMAGE_IMPROVED = 27.0F;
+    /** 5t cadence with 2x damage; bursts feel like an autocannon while the
+     *  vanilla 20t hit-invulnerability window only eats 3 of every 4 rounds. */
+    private static final int FIRE_INTERVAL_TICKS = 5;
+    private static final float BULLET_DAMAGE_B8 = 14.0F;
+    private static final float BULLET_DAMAGE_IMPROVED = 18.0F;
     private static final int MISSILE_MAGAZINE_CAP = 2;
     private static final int MISSILE_RESERVE_CAP = 6;
     private static final int MISSILE_LOAD_TICKS = 60;
