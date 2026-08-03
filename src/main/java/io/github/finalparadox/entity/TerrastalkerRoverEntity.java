@@ -70,6 +70,13 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int MISSILE_RESERVE_CAP = 6;
     private static final int MISSILE_LOAD_TICKS = 60;
     private static final int MISSILE_REGEN_TICKS = 200;
+    private static final int CANNON_MAGAZINE_CAP = 16;
+    private static final int CANNON_RESERVE_CAP = 160;
+    private static final int CANNON_LOAD_TICKS = 40;
+    private static final int CANNON_REGEN_TICKS = 200;
+    private static final int CANNON_REGEN_AMOUNT = 32;
+    private static final double CANNON_SPLASH_RADIUS = 2.0D;
+    private static final float CANNON_SPLASH_DAMAGE_RATIO = 0.5F;
     private static final int MISSILE_MAX_LIFE = 100;
     private static final int MISSILE_BLOCK_LIMIT = 3;
     private static final double MISSILE_SPEED = 1.0D;
@@ -150,6 +157,10 @@ public final class TerrastalkerRoverEntity extends Entity {
     private int missileReserve = MISSILE_RESERVE_CAP;
     private int missileLoadTicks = MISSILE_LOAD_TICKS;
     private int missileRegenTicks = MISSILE_REGEN_TICKS;
+    private int cannonLoaded = CANNON_MAGAZINE_CAP;
+    private int cannonReserve = CANNON_RESERVE_CAP;
+    private int cannonLoadTicks = CANNON_LOAD_TICKS;
+    private int cannonRegenTicks = CANNON_REGEN_TICKS;
 
     public TerrastalkerRoverEntity(EntityType<TerrastalkerRoverEntity> type, Level level) {
         super(type, level);
@@ -294,6 +305,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         }
         tickBullets(server);
         tickMissileMagazine();
+        tickCannonMagazine();
         tickMissiles(server);
 
         if (isMeltingDown()) {
@@ -332,10 +344,19 @@ public final class TerrastalkerRoverEntity extends Entity {
                 missileLine = missileLine.append(Component.translatable(
                         "message.finalparadox.rover.missile.reloading"));
             }
+            MutableComponent cannonLine = Component.translatable(
+                    "message.finalparadox.rover.cannon.display",
+                    cannonLoaded, cannonReserve);
+            if (cannonLoaded <= 0) {
+                cannonLine = cannonLine.append(Component.translatable(
+                        "message.finalparadox.rover.missile.reloading"));
+            }
             rider.displayClientMessage(Component.translatable(
                             "message.finalparadox.defense_matrix.energy", getEnergy())
                     .append(Component.literal("  "))
-                    .append(missileLine), true);
+                    .append(missileLine)
+                    .append(Component.literal("  "))
+                    .append(cannonLine), true);
             if (collisionCooldown == 0 && pushHostiles(server, rider)) {
                 collisionCooldown = COLLISION_COOLDOWN_TICKS;
                 reduceEnergy(2, true);
@@ -399,11 +420,12 @@ public final class TerrastalkerRoverEntity extends Entity {
             snapStoppedGait();
         }
 
-        if (firing) {
+        if (firing && cannonLoaded > 0) {
             int fireScore = rider.getPersistentData().getInt(FIRE_SCORE_KEY) + 1;
             if (fireScore >= FIRE_INTERVAL_TICKS) {
                 rider.getPersistentData().putInt(FIRE_SCORE_KEY, 0);
                 fire(server, rider);
+                cannonLoaded--;
             } else {
                 rider.getPersistentData().putInt(FIRE_SCORE_KEY, fireScore);
             }
@@ -563,6 +585,7 @@ public final class TerrastalkerRoverEntity extends Entity {
                     ClipContext.Fluid.NONE, this));
             if (blockHit.getType() != HitResult.Type.MISS) {
                 emitBlockImpact(server, blockHit.getLocation());
+                cannonExplosion(server, blockHit.getLocation(), bullet.shooter, null);
                 if (isImproved() && level().getBlockState(blockHit.getBlockPos()).is(Blocks.SPAWNER)) {
                     level().destroyBlock(blockHit.getBlockPos(), true);
                 }
@@ -582,14 +605,17 @@ public final class TerrastalkerRoverEntity extends Entity {
                 int bulletResult = B8EncounterManager.testBullet(server, next);
                 if (bulletResult == B8EncounterController.BULLET_HIT) {
                     matrixHitCenter = B8EncounterManager.bulletHitCenter(server);
+                    cannonExplosion(server, next, bullet.shooter, null);
                     consumed.add(bullet);
                     continue;
                 }
                 if (bulletResult == B8EncounterController.BULLET_BLOCKED) {
+                    cannonExplosion(server, next, bullet.shooter, null);
                     consumed.add(bullet);
                     continue;
                 }
                 if (B8EncounterManager.testModuleHit(server, next)) {
+                    cannonExplosion(server, next, bullet.shooter, null);
                     consumed.add(bullet);
                     continue;
                 }
@@ -603,13 +629,17 @@ public final class TerrastalkerRoverEntity extends Entity {
                 }
                 target.hurt(server.damageSources().magic(), isImproved() ? 9.0F : 7.0F);
                 emitEnemyImpact(server, next);
+                cannonExplosion(server, next, bullet.shooter, target);
                 server.playSound(null, target.blockPosition(), SoundEvents.SHROOMLIGHT_HIT,
                         SoundSource.MASTER, 2.0F, 2.0F);
                 consumed.add(bullet);
                 continue;
             }
 
-            if (bullet.life >= BULLET_LIFETIME_TICKS) consumed.add(bullet);
+            if (bullet.life >= BULLET_LIFETIME_TICKS) {
+                cannonExplosion(server, next, bullet.shooter, null);
+                consumed.add(bullet);
+            }
         }
         // Source hit.mcfunction removes every bullet inside the 1.5-block zone.
         if (matrixHitCenter != null) {
@@ -708,6 +738,32 @@ public final class TerrastalkerRoverEntity extends Entity {
                 missileLoaded += take;
                 missileReserve -= take;
                 missileLoadTicks = MISSILE_LOAD_TICKS;
+            }
+        }
+    }
+
+    /**
+     * Autocannon magazine: 16 rounds + up to 160 reserve. Every 10s the
+     * reserve regains 32 rounds (cap 160); an empty magazine reloads in 2s,
+     * refilling from the reserve.
+     */
+    private void tickCannonMagazine() {
+        if (cannonReserve < CANNON_RESERVE_CAP) {
+            cannonRegenTicks--;
+            if (cannonRegenTicks <= 0) {
+                cannonReserve = Math.min(CANNON_RESERVE_CAP,
+                        cannonReserve + CANNON_REGEN_AMOUNT);
+                cannonRegenTicks = CANNON_REGEN_TICKS;
+            }
+        }
+        if (cannonLoaded <= 0 && cannonReserve > 0) {
+            cannonLoadTicks--;
+            if (cannonLoadTicks <= 0) {
+                int take = Math.min(
+                        CANNON_MAGAZINE_CAP - cannonLoaded, cannonReserve);
+                cannonLoaded += take;
+                cannonReserve -= take;
+                cannonLoadTicks = CANNON_LOAD_TICKS;
             }
         }
     }
@@ -830,6 +886,44 @@ public final class TerrastalkerRoverEntity extends Entity {
                 B8EncounterManager.markRoverHit(victim, shooter, server.getGameTime());
             }
             victim.hurt(server.damageSources().magic(), MISSILE_DAMAGE);
+        }
+    }
+
+    /**
+     * Bradley-style autocannon burst: a small explosion on every impact that
+     * splashes half damage plus a light knockback to nearby hostiles. The
+     * directly hit entity already took full damage and is excluded.
+     */
+    private void cannonExplosion(
+            ServerLevel server, Vec3 point, UUID shooter, LivingEntity direct) {
+        server.sendParticles(ParticleTypes.EXPLOSION,
+                point.x, point.y, point.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        server.sendParticles(ParticleTypes.CLOUD,
+                point.x, point.y, point.z, 8, 0.2D, 0.2D, 0.2D, 0.3D);
+        server.sendParticles(ParticleTypes.FLAME,
+                point.x, point.y, point.z, 6, 0.3D, 0.3D, 0.3D, 0.05D);
+        server.playSound(null, BlockPos.containing(point),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 0.5F, 2.0F);
+
+        double radiusSqr = CANNON_SPLASH_RADIUS * CANNON_SPLASH_RADIUS;
+        for (LivingEntity victim : server.getEntitiesOfClass(LivingEntity.class,
+                new AABB(point, point).inflate(CANNON_SPLASH_RADIUS),
+                entity -> entity.isAlive() && !entity.isInvulnerable()
+                        && entity != direct && isSourceHostile(entity))) {
+            if (victim.distanceToSqr(point) > radiusSqr) continue;
+            if (isEncounterMode()) {
+                B8EncounterManager.markRoverHit(victim, shooter, server.getGameTime());
+            }
+            float splash = (isImproved() ? 9.0F : 7.0F)
+                    * CANNON_SPLASH_DAMAGE_RATIO;
+            victim.hurt(server.damageSources().magic(), splash);
+            Vec3 away = victim.position().subtract(point)
+                    .multiply(1.0D, 0.0D, 1.0D);
+            if (away.lengthSqr() > 0.0001D) {
+                victim.setDeltaMovement(victim.getDeltaMovement()
+                        .add(away.normalize().scale(0.35D).add(0.0D, 0.15D, 0.0D)));
+                victim.hurtMarked = true;
+            }
         }
     }
 
@@ -1268,6 +1362,16 @@ public final class TerrastalkerRoverEntity extends Entity {
                 ? tag.getInt("MissileLoadTicks") : MISSILE_LOAD_TICKS;
         missileRegenTicks = tag.contains("MissileRegenTicks")
                 ? tag.getInt("MissileRegenTicks") : MISSILE_REGEN_TICKS;
+        cannonLoaded = Math.max(0, Math.min(CANNON_MAGAZINE_CAP,
+                tag.contains("CannonLoaded") ? tag.getInt("CannonLoaded")
+                        : CANNON_MAGAZINE_CAP));
+        cannonReserve = Math.max(0, Math.min(CANNON_RESERVE_CAP,
+                tag.contains("CannonReserve") ? tag.getInt("CannonReserve")
+                        : CANNON_RESERVE_CAP));
+        cannonLoadTicks = tag.contains("CannonLoadTicks")
+                ? tag.getInt("CannonLoadTicks") : CANNON_LOAD_TICKS;
+        cannonRegenTicks = tag.contains("CannonRegenTicks")
+                ? tag.getInt("CannonRegenTicks") : CANNON_REGEN_TICKS;
         meltdownAge = tag.getInt("MeltdownAge");
         if (tag.contains("RecoveryX")) {
             recoveryPosition = new Vec3(
@@ -1296,6 +1400,10 @@ public final class TerrastalkerRoverEntity extends Entity {
         tag.putInt("MissileReserve", missileReserve);
         tag.putInt("MissileLoadTicks", missileLoadTicks);
         tag.putInt("MissileRegenTicks", missileRegenTicks);
+        tag.putInt("CannonLoaded", cannonLoaded);
+        tag.putInt("CannonReserve", cannonReserve);
+        tag.putInt("CannonLoadTicks", cannonLoadTicks);
+        tag.putInt("CannonRegenTicks", cannonRegenTicks);
         tag.putInt("MeltdownAge", meltdownAge);
         if (recoveryPosition != null) {
             tag.putDouble("RecoveryX", recoveryPosition.x);
