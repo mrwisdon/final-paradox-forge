@@ -972,6 +972,7 @@ public final class TerrastalkerRoverEntity extends Entity {
                         && !entity.isInvulnerable()
                         && !entity.getTags().contains("detonante")
                         && !entity.getTags().contains("14_acechador_hitbox")
+                        && !(entity instanceof B8DetonatorBombEntity)
                         && isSourceHostile(entity))) {
             Vec3 away = target.position().subtract(position()).multiply(1.0D, 0.0D, 1.0D);
             if (away.lengthSqr() > 0.0001D) {
