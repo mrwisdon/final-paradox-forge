@@ -268,6 +268,14 @@ public final class B8DetonatorBombEntity extends Slime {
                 SoundSource.MASTER, 1.0F, 1.2F);
     }
 
+    /** Cannon splash pops a landed bomb outright instead of dripping damage. */
+    public void shatter() {
+        if (destroyed) return;
+        destroyed = true;
+        if (level() instanceof ServerLevel server) emitDestroyed(server);
+        discard();
+    }
+
     private void explode(ServerLevel server) {
         if (destroyed) return;
         destroyed = true;

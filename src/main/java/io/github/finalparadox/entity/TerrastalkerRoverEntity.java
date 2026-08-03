@@ -1146,6 +1146,15 @@ public final class TerrastalkerRoverEntity extends Entity {
                 victim.hurtMarked = true;
             }
         }
+        // A blast wave shatters landed detonator bombs outright, so splash
+        // clears them instead of drip-damaging through the hurt cooldown.
+        for (B8DetonatorBombEntity bomb : server.getEntitiesOfClass(
+                B8DetonatorBombEntity.class,
+                new AABB(point, point).inflate(CANNON_SPLASH_RADIUS),
+                entity -> entity.isAlive() && entity.hasLanded()
+                        && entity.getBoundingBox().distanceToSqr(point) <= radiusSqr)) {
+            bomb.shatter();
+        }
     }
 
     private static boolean isBreakableMissileBlock(ServerLevel server, BlockPos pos) {
