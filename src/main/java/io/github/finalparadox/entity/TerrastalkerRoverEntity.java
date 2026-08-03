@@ -470,7 +470,6 @@ public final class TerrastalkerRoverEntity extends Entity {
             explodeAndDiscard(server);
             return;
         }
-        if (isImproved()) reduceEnergy(1, false);
         if (getEnergy() <= 0) beginMeltdown(server);
     }
 
