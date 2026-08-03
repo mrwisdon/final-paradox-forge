@@ -167,6 +167,9 @@ public final class B8EncounterController {
     private static final Vec3iOffset MATRIX_CORE = new Vec3iOffset(0, 7, 0);
     private static final Vec3iOffset SPECTATOR_TP = new Vec3iOffset(0, 13, 0);
     private static final Vec3iOffset TP_BACK = new Vec3iOffset(13, 1, 0);
+    /** Victory reward lands in front of the player's post-fight teleport spot;
+     *  the source's fixed -33 offset points into bare terrain on deployed arenas. */
+    private static final Vec3iOffset REWARD_DROP = new Vec3iOffset(14, 2, 0);
     private static final int FORCELOAD_MIN_X = -23;
     private static final int FORCELOAD_MAX_X = 24;
     private static final int FORCELOAD_MIN_Z = -24;
@@ -1981,7 +1984,7 @@ public final class B8EncounterController {
     }
 
     private void spawnReward(ServerLevel server, BlockPos anchor) {
-        BlockPos pos = anchor.offset(-33, 2, 0);
+        BlockPos pos = anchor.offset(REWARD_DROP.x(), REWARD_DROP.y(), REWARD_DROP.z());
         ItemStack stack = new ItemStack(ModItems.ADAPTIVE_DEFENSE_MATRIX.get());
         ItemEntity item = new ItemEntity(server,
                 pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, stack);
