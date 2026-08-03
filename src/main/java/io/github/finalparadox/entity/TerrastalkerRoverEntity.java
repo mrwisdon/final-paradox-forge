@@ -383,8 +383,11 @@ public final class TerrastalkerRoverEntity extends Entity {
 
     private boolean isCabinBlocked(ServerPlayer rider) {
         BlockPos feet = rider.blockPosition();
-        return !level().getBlockState(feet).isAir()
-                || !level().getBlockState(feet.above()).isAir();
+        BlockPos head = feet.above();
+        // Only real collision blocks (walls, floors, the arena pedestal) seal
+        // the cabin; non-solid blocks like grass or flowers pass through.
+        return !level().getBlockState(feet).getCollisionShape(level(), feet).isEmpty()
+                || !level().getBlockState(head).getCollisionShape(level(), head).isEmpty();
     }
 
     private void handleCabinBlocked(ServerPlayer rider) {
