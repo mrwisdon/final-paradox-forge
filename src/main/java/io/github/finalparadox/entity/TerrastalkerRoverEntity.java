@@ -11,6 +11,7 @@ import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
@@ -65,8 +66,10 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int VARIANT_B8 = 1;
     private static final int MELTDOWN_TICKS = 100;
     private static final int FIRE_INTERVAL_TICKS = 3;
-    private static final int MISSILE_COOLDOWN_TICKS = 60;
-    private static final int MISSILE_ENERGY_COST = 5;
+    private static final int MISSILE_MAGAZINE_CAP = 1;
+    private static final int MISSILE_RESERVE_CAP = 6;
+    private static final int MISSILE_LOAD_TICKS = 60;
+    private static final int MISSILE_REGEN_TICKS = 200;
     private static final int MISSILE_MAX_LIFE = 100;
     private static final int MISSILE_BLOCK_LIMIT = 3;
     private static final double MISSILE_SPEED = 1.0D;
@@ -143,7 +146,10 @@ public final class TerrastalkerRoverEntity extends Entity {
     private Vec3 recoveryPosition;
     private final List<RoverBullet> bullets = new ArrayList<>();
     private final List<RoverMissile> missiles = new ArrayList<>();
-    private int missileCooldown;
+    private int missileLoaded = 1;
+    private int missileReserve = MISSILE_RESERVE_CAP;
+    private int missileLoadTicks = MISSILE_LOAD_TICKS;
+    private int missileRegenTicks = MISSILE_REGEN_TICKS;
 
     public TerrastalkerRoverEntity(EntityType<TerrastalkerRoverEntity> type, Level level) {
         super(type, level);
@@ -287,7 +293,7 @@ public final class TerrastalkerRoverEntity extends Entity {
             }
         }
         tickBullets(server);
-        if (missileCooldown > 0) missileCooldown--;
+        tickMissileMagazine();
         tickMissiles(server);
 
         if (isMeltingDown()) {
@@ -319,8 +325,17 @@ public final class TerrastalkerRoverEntity extends Entity {
                 return;
             }
             tickControls(server, rider);
+            MutableComponent missileLine = Component.translatable(
+                    "message.finalparadox.rover.missile.display",
+                    missileLoaded, missileReserve);
+            if (missileLoaded <= 0) {
+                missileLine = missileLine.append(Component.translatable(
+                        "message.finalparadox.rover.missile.reloading"));
+            }
             rider.displayClientMessage(Component.translatable(
-                    "message.finalparadox.defense_matrix.energy", getEnergy()), true);
+                            "message.finalparadox.defense_matrix.energy", getEnergy())
+                    .append(Component.literal("  "))
+                    .append(missileLine), true);
             if (collisionCooldown == 0 && pushHostiles(server, rider)) {
                 collisionCooldown = COLLISION_COOLDOWN_TICKS;
                 reduceEnergy(2, true);
@@ -641,14 +656,9 @@ public final class TerrastalkerRoverEntity extends Entity {
     public void launchMissile(ServerPlayer rider) {
         if (level().isClientSide || !(level() instanceof ServerLevel server)) return;
         if (getFirstPassenger() != rider || isMeltingDown()) return;
-        if (missileCooldown > 0) {
+        if (missileLoaded <= 0) {
             rider.sendSystemMessage(Component.translatable(
                     "message.finalparadox.rover.missile.cooldown"));
-            return;
-        }
-        if (getEnergy() < MISSILE_ENERGY_COST) {
-            rider.sendSystemMessage(Component.translatable(
-                    "message.finalparadox.rover.missile.no_energy"));
             return;
         }
         Vec3 direction = rider.getLookAngle().normalize();
@@ -657,8 +667,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         missiles.add(new RoverMissile(
                 origin, direction.scale(MISSILE_SPEED),
                 aimPoint(rider), rider.getUUID()));
-        missileCooldown = MISSILE_COOLDOWN_TICKS;
-        reduceEnergy(MISSILE_ENERGY_COST, false);
+        missileLoaded = 0;
         server.sendParticles(ParticleTypes.LAVA, origin.x, origin.y, origin.z,
                 4, 0.0D, 0.0D, 0.0D, 0.0D);
         server.playSound(null, BlockPos.containing(origin),
@@ -676,6 +685,29 @@ public final class TerrastalkerRoverEntity extends Entity {
             if (hit.getType() != HitResult.Type.MISS) return hit.getLocation();
         }
         return eye.add(look.scale(MISSILE_AIM_RANGE));
+    }
+
+    /**
+     * Magazine: 1 chambered round + up to 6 reserve. Every 10s the reserve
+     * regains one round (cap 6); with an empty chamber and reserve available,
+     * a 3s small reload chambers one round (front +1, reserve -1).
+     */
+    private void tickMissileMagazine() {
+        if (missileReserve < MISSILE_RESERVE_CAP) {
+            missileRegenTicks--;
+            if (missileRegenTicks <= 0) {
+                missileReserve++;
+                missileRegenTicks = MISSILE_REGEN_TICKS;
+            }
+        }
+        if (missileLoaded <= 0 && missileReserve > 0) {
+            missileLoadTicks--;
+            if (missileLoadTicks <= 0) {
+                missileLoaded = 1;
+                missileReserve--;
+                missileLoadTicks = MISSILE_LOAD_TICKS;
+            }
+        }
     }
 
     private void tickMissiles(ServerLevel server) {
@@ -1224,6 +1256,15 @@ public final class TerrastalkerRoverEntity extends Entity {
         entityData.set(DATA_MELTDOWN, tag.getBoolean("Meltdown"));
         gaitScore = tag.getInt("GaitScore");
         drainTicks = tag.getInt("DrainTicks");
+        missileLoaded = Math.max(0, Math.min(MISSILE_MAGAZINE_CAP,
+                tag.contains("MissileLoaded") ? tag.getInt("MissileLoaded") : 1));
+        missileReserve = Math.max(0, Math.min(MISSILE_RESERVE_CAP,
+                tag.contains("MissileReserve") ? tag.getInt("MissileReserve")
+                        : MISSILE_RESERVE_CAP));
+        missileLoadTicks = tag.contains("MissileLoadTicks")
+                ? tag.getInt("MissileLoadTicks") : MISSILE_LOAD_TICKS;
+        missileRegenTicks = tag.contains("MissileRegenTicks")
+                ? tag.getInt("MissileRegenTicks") : MISSILE_REGEN_TICKS;
         meltdownAge = tag.getInt("MeltdownAge");
         if (tag.contains("RecoveryX")) {
             recoveryPosition = new Vec3(
@@ -1248,6 +1289,10 @@ public final class TerrastalkerRoverEntity extends Entity {
         tag.putBoolean("Meltdown", isMeltingDown());
         tag.putInt("GaitScore", gaitScore);
         tag.putInt("DrainTicks", drainTicks);
+        tag.putInt("MissileLoaded", missileLoaded);
+        tag.putInt("MissileReserve", missileReserve);
+        tag.putInt("MissileLoadTicks", missileLoadTicks);
+        tag.putInt("MissileRegenTicks", missileRegenTicks);
         tag.putInt("MeltdownAge", meltdownAge);
         if (recoveryPosition != null) {
             tag.putDouble("RecoveryX", recoveryPosition.x);
