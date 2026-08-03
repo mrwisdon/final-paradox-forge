@@ -66,7 +66,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int VARIANT_B8 = 1;
     private static final int MELTDOWN_TICKS = 100;
     private static final int FIRE_INTERVAL_TICKS = 3;
-    private static final int MISSILE_MAGAZINE_CAP = 1;
+    private static final int MISSILE_MAGAZINE_CAP = 2;
     private static final int MISSILE_RESERVE_CAP = 6;
     private static final int MISSILE_LOAD_TICKS = 60;
     private static final int MISSILE_REGEN_TICKS = 200;
@@ -146,7 +146,7 @@ public final class TerrastalkerRoverEntity extends Entity {
     private Vec3 recoveryPosition;
     private final List<RoverBullet> bullets = new ArrayList<>();
     private final List<RoverMissile> missiles = new ArrayList<>();
-    private int missileLoaded = 1;
+    private int missileLoaded = MISSILE_MAGAZINE_CAP;
     private int missileReserve = MISSILE_RESERVE_CAP;
     private int missileLoadTicks = MISSILE_LOAD_TICKS;
     private int missileRegenTicks = MISSILE_REGEN_TICKS;
@@ -667,7 +667,7 @@ public final class TerrastalkerRoverEntity extends Entity {
         missiles.add(new RoverMissile(
                 origin, direction.scale(MISSILE_SPEED),
                 aimPoint(rider), rider.getUUID()));
-        missileLoaded = 0;
+        missileLoaded--;
         server.sendParticles(ParticleTypes.LAVA, origin.x, origin.y, origin.z,
                 4, 0.0D, 0.0D, 0.0D, 0.0D);
         server.playSound(null, BlockPos.containing(origin),
@@ -688,9 +688,9 @@ public final class TerrastalkerRoverEntity extends Entity {
     }
 
     /**
-     * Magazine: 1 chambered round + up to 6 reserve. Every 10s the reserve
-     * regains one round (cap 6); with an empty chamber and reserve available,
-     * a 3s small reload chambers one round (front +1, reserve -1).
+     * Magazine: 2 rounds + up to 6 reserve. Every 10s the reserve regains one
+     * round (cap 6); once the magazine is empty and reserve is available, a 3s
+     * reload refills it (front +2, reserve -2, or as many as available).
      */
     private void tickMissileMagazine() {
         if (missileReserve < MISSILE_RESERVE_CAP) {
@@ -703,8 +703,10 @@ public final class TerrastalkerRoverEntity extends Entity {
         if (missileLoaded <= 0 && missileReserve > 0) {
             missileLoadTicks--;
             if (missileLoadTicks <= 0) {
-                missileLoaded = 1;
-                missileReserve--;
+                int take = Math.min(
+                        MISSILE_MAGAZINE_CAP - missileLoaded, missileReserve);
+                missileLoaded += take;
+                missileReserve -= take;
                 missileLoadTicks = MISSILE_LOAD_TICKS;
             }
         }
@@ -1257,7 +1259,8 @@ public final class TerrastalkerRoverEntity extends Entity {
         gaitScore = tag.getInt("GaitScore");
         drainTicks = tag.getInt("DrainTicks");
         missileLoaded = Math.max(0, Math.min(MISSILE_MAGAZINE_CAP,
-                tag.contains("MissileLoaded") ? tag.getInt("MissileLoaded") : 1));
+                tag.contains("MissileLoaded") ? tag.getInt("MissileLoaded")
+                        : MISSILE_MAGAZINE_CAP));
         missileReserve = Math.max(0, Math.min(MISSILE_RESERVE_CAP,
                 tag.contains("MissileReserve") ? tag.getInt("MissileReserve")
                         : MISSILE_RESERVE_CAP));
