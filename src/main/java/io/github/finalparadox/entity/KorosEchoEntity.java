@@ -17,6 +17,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -130,22 +131,23 @@ public final class KorosEchoEntity extends Entity {
         }
         if ("b8".equals(guideMode)) {
             // Source matriz/gen_no_boss: the matrix announces itself when a
-            // player approaches; the Koros line is reserved for the click.
+            // player approaches, then Koros tells him to talk before fighting.
             if (!b8IntroStarted && hasPlayerNear(server, 24.0D)) {
                 b8IntroStarted = true;
                 b8DialogueStart = server.getGameTime();
                 b8DialogueStep = 0;
-                sendB8MatrixLine(server, 0);
+                sendB8IntroLine(server, 0);
             }
             if (b8DialogueStart >= 0L) {
-                // Source timings: lines at +0s, +4s, +4s.
+                // Source timings: matrix lines at +0s, +4s, +4s, then the
+                // Koros dia_ini line at +5s.
                 long elapsed = server.getGameTime() - b8DialogueStart;
-                int step = elapsed >= 160 ? 2 : elapsed >= 80 ? 1 : 0;
+                int step = elapsed >= 260 ? 3 : elapsed >= 160 ? 2 : elapsed >= 80 ? 1 : 0;
                 if (step > b8DialogueStep) {
                     b8DialogueStep = step;
-                    sendB8MatrixLine(server, step);
+                    sendB8IntroLine(server, step);
                 }
-                if (elapsed >= 240) b8DialogueStart = -1L;
+                if (elapsed >= 320) b8DialogueStart = -1L;
             }
         }
     }
@@ -165,8 +167,17 @@ public final class KorosEchoEntity extends Entity {
             return 0;
         }
         if ("b8".equals(guideMode)) {
-            if (!"main".equals(action)) return 0;
-            sendB8KorosLine(player.serverLevel());
+            switch (action) {
+                case "main" -> showB8Main(player);
+                case "b8_d1" -> showB8D1(player);
+                case "b8_d2" -> showB8D2(player);
+                case "b8_start" -> showB8Start(player);
+                case "b8_confirm" -> startB8FromKoros(player);
+                case "b8_missing" -> showB8Missing(player);
+                default -> {
+                    return 0;
+                }
+            }
             return 1;
         }
         switch (action) {
@@ -272,35 +283,132 @@ public final class KorosEchoEntity extends Entity {
         player.level().playSound(null, player.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.MASTER, 1.0F, 2.0F);
     }
 
-    /* ------------------------------ B8 pre-fight intro ------------------------------ */
+    /* ------------------------------ B8 pre-fight Koros ------------------------------ */
 
-    /** Source b8/matriz/gen_no_boss -> dialogos/new_inicio: three matrix lines. */
-    private void sendB8MatrixLine(ServerLevel server, int step) {
-        String messageKey = switch (step) {
-            case 0 -> "luisb1202.functions.bossfight.b8.dialogos.dia_ini.dia_index.dia_node_0.40";
-            case 1 -> "luisb1202.functions.bossfight.b8.dialogos.dia_ini.dia_index.dia_node_1.31";
-            default -> "luisb1202.functions.bossfight.b8.dialogos.dia_ini.dia_index.dia_node_2.49";
-        };
-        Component speaker = Component.translatable(
-                "luisb1202.functions.bossfight.b8.dialogos.dia4.1");
+    private static final String MK = "luisb1202.functions.talentos.minikoros.dialogos.";
+    private static final String ARCO = "luisb1202.functions.carga_lanas.0_intro.elige_tu_destino.msg_arco.";
+
+    /** Source b8/matriz/gen_no_boss -> new_inicio -> dia_ini. */
+    private void sendB8IntroLine(ServerLevel server, int step) {
+        String messageKey;
+        SoundEvent sound;
+        float pitch;
+        boolean korosSpeaker;
+        switch (step) {
+            case 0 -> {
+                messageKey = "luisb1202.functions.bossfight.b8.dialogos.dia_ini.dia_index.dia_node_0.40";
+                korosSpeaker = false;
+                sound = SoundEvents.ENDERMAN_AMBIENT;
+                pitch = 0.0F;
+            }
+            case 1 -> {
+                messageKey = "luisb1202.functions.bossfight.b8.dialogos.dia_ini.dia_index.dia_node_1.31";
+                korosSpeaker = false;
+                sound = SoundEvents.ENDERMAN_AMBIENT;
+                pitch = 0.0F;
+            }
+            case 2 -> {
+                messageKey = "luisb1202.functions.bossfight.b8.dialogos.dia_ini.dia_index.dia_node_2.49";
+                korosSpeaker = false;
+                sound = SoundEvents.ENDERMAN_AMBIENT;
+                pitch = 0.0F;
+            }
+            default -> {
+                messageKey = "luisb1202.functions.bossfight.b8.dialogos.dia_ini.1";
+                korosSpeaker = true;
+                sound = SoundEvents.TRIDENT_RETURN;
+                pitch = 1.7F;
+            }
+        }
+        Component speaker = korosSpeaker
+                ? Component.translatable("luisb1202.functions.afijos.descubrir.hd.3")
+                .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFBBDFF))
+                        .withBold(true).withItalic(true))
+                : Component.translatable("luisb1202.functions.bossfight.b8.dialogos.dia4.1");
         for (ServerPlayer player : server.players()) {
             player.sendSystemMessage(speaker.copy().append(Component.translatable(messageKey)));
-            server.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_AMBIENT,
-                    SoundSource.MASTER, 1.0F, 0.0F);
+            server.playSound(null, player.blockPosition(), sound, SoundSource.MASTER, 1.0F, pitch);
         }
     }
 
-    /** Source dialogos/dia_ini: Koros tells the player to talk to him first. */
-    private void sendB8KorosLine(ServerLevel server) {
-        Component speaker = Component.translatable("luisb1202.functions.afijos.descubrir.hd.3")
-                .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFBBDFF))
-                        .withBold(true).withItalic(true));
-        for (ServerPlayer player : server.players()) {
-            player.sendSystemMessage(speaker.copy().append(Component.translatable(
-                    "luisb1202.functions.bossfight.b8.dialogos.dia_ini.1")));
-            server.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_RETURN,
-                    SoundSource.MASTER, 1.0F, 1.7F);
+    /** Source minikoros/dialogos/b8/ini: guide + start options. */
+    private void showB8Main(ServerPlayer player) {
+        guideHeader(player, MK + "b3.ini.1");
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "b8.ini.1", "b8_d1"));
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "b1.ini.3", "b8_start"));
+        guideFooter(player);
+    }
+
+    /** Source b8/d1: corrupted Megamatrix lore, continue to the guide. */
+    private void showB8D1(ServerPlayer player) {
+        guideHeader(player, MK + "b8.d1.1");
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "b1.d1.2", "b8_d2"));
+        player.sendSystemMessage(button(MK + "10_gris.d1.2", "main"));
+        playGuideSound(player);
+    }
+
+    /** Source b8/d2: the fight guide (full hover book simplified to the key line). */
+    private void showB8D2(ServerPlayer player) {
+        guideHeader(player, MK + "b3.d2.1");
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(Component.translatable(MK + "b8.d2.1"));
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "10_gris.d1.2", "main"));
+        playGuideSound(player);
+    }
+
+    /** Source b8/d3: confirm the challenge. */
+    private void showB8Start(ServerPlayer player) {
+        guideHeader(player, MK + "b1.d3.1");
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(Component.empty()
+                .append(button(ARCO + "3", "b8_confirm"))
+                .append(Component.literal("       "))
+                .append(button(ARCO + "4", "main")));
+        player.sendSystemMessage(Component.empty());
+        playGuideSound(player);
+    }
+
+    /** Source b8/check_players -> b8/ini: all inside, start the encounter. */
+    private void startB8FromKoros(ServerPlayer player) {
+        ServerLevel level = player.serverLevel();
+        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        BlockPos anchor = data.floorAnchor().orElse(null);
+        if (anchor == null || !b8AllPlayersInside(level, anchor)) {
+            showB8Missing(player);
+            return;
         }
+        depart();
+        data.clearKoros();
+        B8EncounterManager.begin(level, anchor);
+    }
+
+    /** Source b8/d4: some player is outside the arena. */
+    private void showB8Missing(ServerPlayer player) {
+        guideHeader(player, MK + "b1.d4.1");
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "10_gris.d1.2", "main"));
+        player.sendSystemMessage(Component.empty());
+        player.level().playSound(null, player.blockPosition(), SoundEvents.ANVIL_LAND,
+                SoundSource.MASTER, 1.0F, 0.0F);
+    }
+
+    private static boolean b8AllPlayersInside(ServerLevel level, BlockPos anchor) {
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.level() != level
+                    || player.getX() < anchor.getX() - 23.0D
+                    || player.getX() > anchor.getX() + 24.0D
+                    || player.getY() < anchor.getY() + 1.0D
+                    || player.getY() > anchor.getY() + 13.0D
+                    || player.getZ() < anchor.getZ() - 24.0D
+                    || player.getZ() > anchor.getZ() + 24.0D) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean hasPlayerNear(ServerLevel server, double radius) {
