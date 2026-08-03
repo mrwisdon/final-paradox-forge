@@ -8,9 +8,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.Packet;
@@ -350,14 +352,103 @@ public final class KorosEchoEntity extends Entity {
         playGuideSound(player);
     }
 
-    /** Source b8/d2: the fight guide (full hover book simplified to the key line). */
+    /** Source b8/d2: the full ability guide with hover details. */
     private void showB8D2(ServerPlayer player) {
         guideHeader(player, MK + "b3.d2.1");
         player.sendSystemMessage(Component.empty());
-        player.sendSystemMessage(Component.translatable(MK + "b8.d2.1"));
+        b8GuideEntry(player, MK + "b8.d2.1",
+                frag(MK + "b8.d2.2", ChatFormatting.AQUA, true), frag(MK + "b8.d2.3"),
+                frag(MK + "b8.d2.4", ChatFormatting.YELLOW), frag(MK + "b8.d2.5"),
+                frag(MK + "b8.d2.6", ChatFormatting.YELLOW), frag(MK + "b8.d2.7"),
+                frag(MK + "b3.d2.19", ChatFormatting.YELLOW), frag(MK + "b8.d2.8"),
+                frag(MK + "b8.d2.9", ChatFormatting.RED), frag(MK + "b8.d2.10"));
+        b8GuideEntry(player, MK + "b8.d2.11",
+                frag(MK + "b8.d2.12", ChatFormatting.RED, true),
+                frag("luisb1202.functions.carga_lanas.0_intro.lobby.ajustes.trigger_index.7",
+                        ChatFormatting.RED),
+                frag(MK + "b8.d2.13"), frag(MK + "b8.d2.14", ChatFormatting.GOLD),
+                frag(MK + "b8.d2.15"), frag(MK + "b8.d2.16", ChatFormatting.YELLOW),
+                frag(MK + "b8.d2.17"), frag(MK + "b8.d2.14", ChatFormatting.GOLD),
+                frag(MK + "b8.d2.18"), frag(MK + "b8.d2.19", ChatFormatting.YELLOW),
+                frag(MK + "b8.d2.20"), frag(MK + "b8.d2.21", ChatFormatting.YELLOW),
+                frag(MK + "b8.d2.22"), frag(MK + "b8.d2.23", ChatFormatting.RED),
+                frag(MK + "b8.d2.24"), frag(MK + "b8.d2.14", ChatFormatting.GOLD),
+                frag(MK + "b8.d2.25"), frag(MK + "b8.d2.26", ChatFormatting.GREEN),
+                frag(MK + "b8.d2.27"));
+        b8GuideEntry(player, MK + "b8.d2.28",
+                frag(MK + "b8.d2.29", ChatFormatting.YELLOW, true), frag(MK + "b8.d2.30"),
+                frag(MK + "b8.d2.31", ChatFormatting.YELLOW), frag(MK + "b8.d2.32"),
+                frag(MK + "b8.d2.33", ChatFormatting.YELLOW), frag(MK + "b8.d2.34"),
+                frag(MK + "b8.d2.35", ChatFormatting.RED), frag(MK + "b8.d2.36"));
+        b8GuideEntry(player, MK + "b8.d2.37",
+                frag(MK + "b8.d2.38", ChatFormatting.YELLOW, true), frag(MK + "b8.d2.39"),
+                frag(MK + "b8.d2.40", ChatFormatting.YELLOW), frag(MK + "b8.d2.41"));
+        b8GuideEntry(player, MK + "b8.d2.42",
+                frag(MK + "b8.d2.43", ChatFormatting.YELLOW, true), frag(MK + "b8.d2.44"),
+                frag(MK + "b8.d2.45", ChatFormatting.YELLOW), frag(MK + "b8.d2.46"),
+                frag(MK + "b8.d2.47", ChatFormatting.YELLOW), frag(MK + "b8.d2.48"),
+                frag(MK + "b8.d2.49", ChatFormatting.YELLOW), frag(MK + "b8.d2.50"));
+        b8GuideEntry(player, MK + "b8.d2.51",
+                frag(MK + "b8.d2.52", ChatFormatting.YELLOW, true), frag(MK + "b8.d2.53"),
+                frag(MK + "b8.d2.54", ChatFormatting.YELLOW), frag(MK + "b8.d2.55"));
+        b8GuideEntry(player, MK + "b8.d2.56",
+                frag(MK + "b8.d2.57", ChatFormatting.YELLOW, true), frag(MK + "b8.d2.58"),
+                frag(MK + "b8.d2.59", ChatFormatting.RED), frag(MK + "b8.d2.60"),
+                frag(MK + "b8.d2.61", ChatFormatting.YELLOW), frag(MK + "b8.d2.62"));
+        b8GuideEntry(player, MK + "b8.d2.63",
+                frag(MK + "b8.d2.64", ChatFormatting.YELLOW, true), frag(MK + "b8.d2.65"),
+                frag(MK + "b8.d2.66", ChatFormatting.GOLD),
+                frag("item.written_book.3.page.1.11"));
+        b8GuideEntry(player, MK + "b8.d2.67",
+                frag(MK + "b8.d2.4", ChatFormatting.YELLOW, true), frag(MK + "b8.d2.68"),
+                frag(MK + "b8.d2.69", ChatFormatting.RED),
+                frag(MK + "b8.d2.70", ChatFormatting.DARK_AQUA), frag(MK + "b8.d2.71"),
+                frag(MK + "b8.d2.72", ChatFormatting.YELLOW), frag(MK + "b8.d2.73"));
+        b8GuideEntry(player, MK + "b8.d2.74",
+                frag(MK + "b8.d2.75", ChatFormatting.AQUA, true), frag(MK + "b8.d2.76"),
+                frag(MK + "b8.d2.4", ChatFormatting.RED), frag(MK + "b8.d2.77"),
+                frag(MK + "b8.d2.78", ChatFormatting.YELLOW),
+                frag(MK + "b8.d2.79", ChatFormatting.GRAY),
+                frag(MK + "b8.d2.80", ChatFormatting.YELLOW),
+                frag("item.written_book.3.page.1.16", ChatFormatting.GRAY),
+                frag(MK + "b8.d2.81", ChatFormatting.YELLOW),
+                frag(MK + "b8.d2.82", ChatFormatting.GRAY),
+                frag(MK + "b8.d2.83", ChatFormatting.YELLOW),
+                frag(MK + "b8.d2.84", ChatFormatting.GRAY));
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(Component.translatable(MK + "b6.d2.40"));
+        player.sendSystemMessage(Component.translatable(MK + "b6.d2.41"));
         player.sendSystemMessage(Component.empty());
         player.sendSystemMessage(button(MK + "10_gris.d1.2", "main"));
         playGuideSound(player);
+    }
+
+    private record B8GuideFragment(String key, ChatFormatting color, boolean bold) {
+    }
+
+    private static B8GuideFragment frag(String key) {
+        return new B8GuideFragment(key, null, false);
+    }
+
+    private static B8GuideFragment frag(String key, ChatFormatting color) {
+        return new B8GuideFragment(key, color, false);
+    }
+
+    private static B8GuideFragment frag(String key, ChatFormatting color, boolean bold) {
+        return new B8GuideFragment(key, color, bold);
+    }
+
+    private void b8GuideEntry(
+            ServerPlayer player, String headingKey, B8GuideFragment... fragments) {
+        MutableComponent hover = Component.empty();
+        for (B8GuideFragment fragment : fragments) {
+            Style style = Style.EMPTY;
+            if (fragment.color() != null) style = style.withColor(fragment.color());
+            if (fragment.bold()) style = style.withBold(true);
+            hover.append(Component.translatable(fragment.key()).withStyle(style));
+        }
+        player.sendSystemMessage(Component.translatable(headingKey).withStyle(
+                Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hover))));
     }
 
     /** Source b8/d3: confirm the challenge. */
