@@ -264,10 +264,31 @@ public final class B8EncounterController {
         }
         if (data.state() >= B8EncounterData.STATE_PHASE_1
                 && data.state() <= B8EncounterData.STATE_PHASE_5) {
+            applyCombatEffects(server);
+        }
+        if (data.state() >= B8EncounterData.STATE_PHASE_1
+                && data.state() <= B8EncounterData.STATE_PHASE_5) {
             runTicks++;
             if (runTicks >= RUN_INTERVAL) {
                 runTicks = 0;
                 runLoop(server, data);
+            }
+        }
+    }
+
+    /**
+     * Source b8/run resistance: during combat every non-spectator player gets
+     * Resistance V and Regeneration V so arena hazards cannot one-shot them.
+     */
+    private void applyCombatEffects(ServerLevel server) {
+        MobEffectInstance resistance = new MobEffectInstance(
+                MobEffects.DAMAGE_RESISTANCE, 40, 4, true, false, false);
+        MobEffectInstance regeneration = new MobEffectInstance(
+                MobEffects.REGENERATION, 40, 4, true, false, false);
+        for (ServerPlayer player : server.players()) {
+            if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
+                player.addEffect(resistance);
+                player.addEffect(regeneration);
             }
         }
     }

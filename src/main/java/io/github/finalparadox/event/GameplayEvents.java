@@ -89,6 +89,7 @@ import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
@@ -255,6 +256,16 @@ public final class GameplayEvents {
         if(player.getMainHandItem().is(ModItems.TYRANNICAL_DECAPITATOR.get()))spawnDecapitatedSkull(player,victim);
         if(player.getMainHandItem().is(ModItems.SOULLESS_EDGE.get())){
             int souls=Math.min(8,player.getPersistentData().getInt(SoullessEdgeItem.SOULS_KEY)+1);player.getPersistentData().putInt(SoullessEdgeItem.SOULS_KEY,souls);player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.finalparadox.soulless_edge.souls",souls),true);
+        }
+    }
+
+    /** B8 boss adds drop no items while the encounter is active. */
+    @SubscribeEvent
+    public static void onLivingDrops(LivingDropsEvent event) {
+        if (!event.getEntity().getTags().contains("b8_add")) return;
+        if (event.getEntity().level() instanceof ServerLevel level
+                && B8EncounterManager.isActive(level)) {
+            event.setCanceled(true);
         }
     }
 
