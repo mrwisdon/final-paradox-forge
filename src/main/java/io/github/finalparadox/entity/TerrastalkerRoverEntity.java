@@ -70,6 +70,8 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int FIRE_INTERVAL_TICKS = 5;
     private static final float BULLET_DAMAGE_B8 = 14.0F;
     private static final float BULLET_DAMAGE_IMPROVED = 18.0F;
+    /** Original B8 cadence: fast enough to plink all matrix fragments. */
+    private static final int ENCOUNTER_FIRE_INTERVAL_TICKS = 3;
     private static final int MISSILE_MAGAZINE_CAP = 2;
     private static final int MISSILE_RESERVE_CAP = 6;
     private static final int MISSILE_LOAD_TICKS = 60;
@@ -348,19 +350,22 @@ public final class TerrastalkerRoverEntity extends Entity {
                 missileLine = missileLine.append(Component.translatable(
                         "message.finalparadox.rover.missile.reloading"));
             }
-            MutableComponent cannonLine = Component.translatable(
-                    "message.finalparadox.rover.cannon.display",
-                    cannonLoaded, cannonReserve);
-            if (cannonLoaded <= 0) {
-                cannonLine = cannonLine.append(Component.translatable(
-                        "message.finalparadox.rover.missile.reloading"));
-            }
-            rider.displayClientMessage(Component.translatable(
+            MutableComponent statusLine = Component.translatable(
                             "message.finalparadox.defense_matrix.energy", getEnergy())
                     .append(Component.literal("  "))
-                    .append(missileLine)
-                    .append(Component.literal("  "))
-                    .append(cannonLine), true);
+                    .append(missileLine);
+            if (!isEncounterMode()) {
+                MutableComponent cannonLine = Component.translatable(
+                        "message.finalparadox.rover.cannon.display",
+                        cannonLoaded, cannonReserve);
+                if (cannonLoaded <= 0) {
+                    cannonLine = cannonLine.append(Component.translatable(
+                            "message.finalparadox.rover.missile.reloading"));
+                }
+                statusLine = statusLine.append(Component.literal("  "))
+                        .append(cannonLine);
+            }
+            rider.displayClientMessage(statusLine, true);
             if (collisionCooldown == 0 && pushHostiles(server, rider)) {
                 collisionCooldown = COLLISION_COOLDOWN_TICKS;
                 reduceEnergy(2, true);
@@ -424,12 +429,14 @@ public final class TerrastalkerRoverEntity extends Entity {
             snapStoppedGait();
         }
 
-        if (firing && cannonLoaded > 0) {
+        boolean encounter = isEncounterMode();
+        int fireInterval = encounter ? ENCOUNTER_FIRE_INTERVAL_TICKS : FIRE_INTERVAL_TICKS;
+        if (firing && (encounter || cannonLoaded > 0)) {
             int fireScore = rider.getPersistentData().getInt(FIRE_SCORE_KEY) + 1;
-            if (fireScore >= FIRE_INTERVAL_TICKS) {
+            if (fireScore >= fireInterval) {
                 rider.getPersistentData().putInt(FIRE_SCORE_KEY, 0);
                 fire(server, rider);
-                cannonLoaded--;
+                if (!encounter) cannonLoaded--;
             } else {
                 rider.getPersistentData().putInt(FIRE_SCORE_KEY, fireScore);
             }

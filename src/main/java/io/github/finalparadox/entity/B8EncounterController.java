@@ -2148,9 +2148,9 @@ public final class B8EncounterController {
                 SoundSource.MASTER, 4.0F, 0.0F);
         server.playSound(null, block, SoundEvents.GILDED_BLACKSTONE_BREAK,
                 SoundSource.MASTER, 4.0F, 1.0F);
-        // The rover autocannon now fires every 5 ticks with 2x damage, so
-        // each matrix hit deals 2 instead of 1 to keep the fight pace.
-        setHealth(data.health() - 2);
+        // In the encounter the rover autocannon fires at the original 3-tick
+        // cadence, so each matrix hit returns to 1 (original fight pace).
+        setHealth(data.health() - 1);
     }
 
     private void performBlock(ServerLevel server, Vec3 bulletPosition) {
