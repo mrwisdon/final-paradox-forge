@@ -6,6 +6,7 @@ import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.B5EncounterManager;
 import io.github.finalparadox.entity.B8EncounterManager;
+import io.github.finalparadox.entity.KorosEchoEntity;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -266,6 +267,11 @@ public final class ArenaCommands {
         }
 
         BlockPos anchor = data.floorAnchor().orElseThrow();
+        data.korosUuid().map(level::getEntity)
+                .filter(KorosEchoEntity.class::isInstance)
+                .map(KorosEchoEntity.class::cast)
+                .ifPresent(KorosEchoEntity::depart);
+        data.clearKoros();
         if (!B8EncounterManager.begin(level, anchor)) {
             source.sendFailure(Component.literal("Could not start the B8 encounter."));
             return 0;

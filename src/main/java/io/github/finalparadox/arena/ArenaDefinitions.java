@@ -73,6 +73,13 @@ public final class ArenaDefinitions {
      */
     public static final BlockPos B5_KOROS_HITBOX_OFFSET = new BlockPos(-30, 1, -5);
 
+    /**
+     * Echo of Koros position relative to the B8 floor anchor. The original
+     * minikoros sits at -3820 80 1407 against the combat diamond center
+     * -3828 78 1412, i.e. offset (+8, +2, -5).
+     */
+    public static final BlockPos B8_KOROS_OFFSET = new BlockPos(8, 2, -5);
+
     private static final Map<String, ArenaDefinition> BY_ID = Map.of(
             B1.id(), B1,
             MARAWTHAR.id(), MARAWTHAR,

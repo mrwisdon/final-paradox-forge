@@ -4,6 +4,7 @@ import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
 import io.github.finalparadox.entity.GariBossEntity;
+import io.github.finalparadox.entity.KorosEchoEntity;
 import io.github.finalparadox.entity.ZombieSupermatrixEntity;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
@@ -44,6 +45,25 @@ public final class ArenaDeploymentManager {
             } else {
                 notifyPlayers(level, Component.literal(
                         "B5 waiting entities restored. Talk to the Echo of Koros to begin the encounter."));
+            }
+            return;
+        }
+        if (data.state() == ArenaDeploymentData.DeploymentState.READY
+                && ArenaDefinitions.B8.id().equals(data.arenaId())
+                && !io.github.finalparadox.entity.B8EncounterManager.isActive(level)
+                && data.activeBossUuid().isEmpty()
+                && data.korosUuid().isEmpty()
+                && data.floorAnchor().isPresent()) {
+            BlockPos anchor = data.floorAnchor().orElseThrow();
+            BlockPos pos = anchor.offset(ArenaDefinitions.B8_KOROS_OFFSET);
+            level.getChunkAt(pos);
+            KorosEchoEntity koros = KorosEchoEntity.createB8(level, anchor);
+            if (koros != null) {
+                koros.moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.0F, 0.0F);
+                if (level.addFreshEntity(koros)) {
+                    data.setKorosUuid(koros.getUUID());
+                    koros.playArrivalEffects();
+                }
             }
             return;
         }

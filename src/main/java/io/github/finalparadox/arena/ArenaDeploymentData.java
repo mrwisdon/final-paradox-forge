@@ -117,6 +117,11 @@ public final class ArenaDeploymentData extends SavedData {
         setDirty();
     }
 
+    public void setKorosUuid(UUID korosUuid) {
+        this.korosUuid = korosUuid;
+        setDirty();
+    }
+
     public DeploymentState state() {
         return state;
     }
