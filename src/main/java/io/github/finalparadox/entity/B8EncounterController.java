@@ -1493,7 +1493,7 @@ public final class B8EncounterController {
                 sniper.getX() + direction.x, sniper.getY() + 1.4D, sniper.getZ() + direction.z,
                 1, 0.0D, 0.0D, 0.0D, 2.0D);
         B8SniperBulletEntity bullet = B8SniperBulletEntity.spawn(
-                server, sniper.position(), direction, data.anchor().getY());
+                server, sniper.position(), direction, data.anchor());
         bullet.addTag("b8_h3_sniper_bala");
         data.addCleanup(bullet.getUUID());
         server.playSound(null, sniper.blockPosition(), SoundEvents.IRON_GOLEM_HURT,

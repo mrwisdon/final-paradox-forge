@@ -1,6 +1,7 @@
 package io.github.finalparadox.entity;
 
 import io.github.finalparadox.registry.ModEntities;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -32,6 +33,8 @@ public final class B8SniperBulletEntity extends Entity {
 
     private Vec3 direction = new Vec3(0.0D, 0.0D, 1.0D);
     private double anchorY;
+    private double anchorX;
+    private double anchorZ;
 
     public B8SniperBulletEntity(EntityType<B8SniperBulletEntity> type, Level level) {
         super(type, level);
@@ -41,11 +44,13 @@ public final class B8SniperBulletEntity extends Entity {
     }
 
     public static B8SniperBulletEntity spawn(
-            ServerLevel level, Vec3 position, Vec3 direction, double anchorY) {
+            ServerLevel level, Vec3 position, Vec3 direction, BlockPos anchor) {
         B8SniperBulletEntity bullet = new B8SniperBulletEntity(ModEntities.B8_SNIPER_BULLET.get(), level);
         bullet.setPos(position);
         bullet.direction = direction.normalize();
-        bullet.anchorY = anchorY;
+        bullet.anchorX = anchor.getX();
+        bullet.anchorY = anchor.getY();
+        bullet.anchorZ = anchor.getZ();
         bullet.entityData.set(DATA_PITCH, 0.0F);
         level.addFreshEntity(bullet);
         return bullet;
@@ -71,8 +76,8 @@ public final class B8SniperBulletEntity extends Entity {
         server.sendParticles(ParticleTypes.FLAME,
                 getX(), getY() + 1.6D, getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
 
-        double dx = getX();
-        double dz = getZ();
+        double dx = getX() - anchorX;
+        double dz = getZ() - anchorZ;
         double dy = getY() - (anchorY + KILL_CENTER_LOCAL_Y);
         if (dx * dx + dy * dy + dz * dz > KILL_RADIUS * KILL_RADIUS) {
             discard();
@@ -108,6 +113,8 @@ public final class B8SniperBulletEntity extends Entity {
     protected void readAdditionalSaveData(CompoundTag tag) {
         direction = new Vec3(tag.getDouble("DirX"), tag.getDouble("DirY"), tag.getDouble("DirZ"));
         anchorY = tag.getDouble("AnchorY");
+        anchorX = tag.getDouble("AnchorX");
+        anchorZ = tag.getDouble("AnchorZ");
     }
 
     @Override
@@ -116,6 +123,8 @@ public final class B8SniperBulletEntity extends Entity {
         tag.putDouble("DirY", direction.y);
         tag.putDouble("DirZ", direction.z);
         tag.putDouble("AnchorY", anchorY);
+        tag.putDouble("AnchorX", anchorX);
+        tag.putDouble("AnchorZ", anchorZ);
     }
 
     @Override
