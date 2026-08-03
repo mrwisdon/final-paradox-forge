@@ -65,7 +65,12 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int VARIANT_IMPROVED = 0;
     private static final int VARIANT_B8 = 1;
     private static final int MELTDOWN_TICKS = 100;
-    private static final int FIRE_INTERVAL_TICKS = 3;
+    /** 10t cadence with 3x damage: every second round lands inside the
+     *  vanilla 20t hit-invulnerability window, matching the old effective DPS
+     *  while feeling like an autocannon burst. */
+    private static final int FIRE_INTERVAL_TICKS = 10;
+    private static final float BULLET_DAMAGE_B8 = 21.0F;
+    private static final float BULLET_DAMAGE_IMPROVED = 27.0F;
     private static final int MISSILE_MAGAZINE_CAP = 2;
     private static final int MISSILE_RESERVE_CAP = 6;
     private static final int MISSILE_LOAD_TICKS = 60;
@@ -627,7 +632,8 @@ public final class TerrastalkerRoverEntity extends Entity {
                 if (isEncounterMode()) {
                     B8EncounterManager.markRoverHit(target, bullet.shooter, server.getGameTime());
                 }
-                target.hurt(server.damageSources().magic(), isImproved() ? 9.0F : 7.0F);
+                target.hurt(server.damageSources().magic(),
+                        isImproved() ? BULLET_DAMAGE_IMPROVED : BULLET_DAMAGE_B8);
                 emitEnemyImpact(server, next);
                 cannonExplosion(server, next, bullet.shooter, target);
                 server.playSound(null, target.blockPosition(), SoundEvents.SHROOMLIGHT_HIT,
@@ -914,7 +920,7 @@ public final class TerrastalkerRoverEntity extends Entity {
             if (isEncounterMode()) {
                 B8EncounterManager.markRoverHit(victim, shooter, server.getGameTime());
             }
-            float splash = (isImproved() ? 9.0F : 7.0F)
+            float splash = (isImproved() ? BULLET_DAMAGE_IMPROVED : BULLET_DAMAGE_B8)
                     * CANNON_SPLASH_DAMAGE_RATIO;
             victim.hurt(server.damageSources().magic(), splash);
             Vec3 away = victim.position().subtract(point)
