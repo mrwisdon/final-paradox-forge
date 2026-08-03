@@ -135,6 +135,7 @@ public final class B8EncounterController {
     private static final double H3_MARKER_Y_OFFSET = 1.0D;
     private static final int H3_MARKERS = 64;
     private static final double H3_PLAYER_CLEAR = 10.0D;
+    /** Source danom2 fires at 9, and b8/run ticks every 20t: 180t per sniper. */
     private static final int H3_SNIPER_FIRE_INTERVAL = 9;
     private static final double H3_SETUP_TICKS = 20;
     /** Sniper hover height above the walkable floor, per user feedback. */
@@ -178,7 +179,7 @@ public final class B8EncounterController {
     private ServerLevel serverLevel;
     private B8EncounterData data;
     private int runTicks;
-    /** Source h3/sniper/main caps firing at one sniper per tick (limit=1). */
+    /** Source h3/sniper/main caps firing at one sniper per 20t run (limit=1). */
     private boolean sniperFiredThisTick;
     private int lastBossValue = -1;
     private long lastHitTick = Long.MIN_VALUE;
@@ -1128,6 +1129,8 @@ public final class B8EncounterController {
         sniper.setNoGravity(true);
         setAddBasics(sniper, "luisb1202.functions.bossfight.b8.h3.sniper.gen.1",
                 30.0D, 0.0D, "b8_h3_enemigo2");
+        // Source gen sets danom2=7, so the first shot lands after 2 runs (40t).
+        sniper.getPersistentData().putInt(ADD_FIRE_KEY, 7);
         equipAddArmor(sniper, 7693106, 12551739, skullStack(SNIPER_SKULL));
         faceBoss(sniper, data);
         server.addFreshEntity(sniper);
@@ -1263,13 +1266,18 @@ public final class B8EncounterController {
                 }
             }
             if ("b8_h3_enemigo2".equals(type)) {
-                int fire = persistent.getInt(ADD_FIRE_KEY) + 1;
-                if (fire >= H3_SNIPER_FIRE_INTERVAL && !sniperFiredThisTick) {
-                    fire = 0;
-                    sniperFiredThisTick = true;
-                    spawnSniperBullet(server, data, add);
+                // The source fire loop lives in b8/run, which reschedules
+                // itself every 20t. danom2 only advances on those run ticks,
+                // so a sniper fires every 9 runs (180t), one per run at most.
+                if (server.getGameTime() % RUN_INTERVAL == 0) {
+                    int fire = persistent.getInt(ADD_FIRE_KEY) + 1;
+                    if (fire >= H3_SNIPER_FIRE_INTERVAL && !sniperFiredThisTick) {
+                        fire = 0;
+                        sniperFiredThisTick = true;
+                        spawnSniperBullet(server, data, add);
+                    }
+                    persistent.putInt(ADD_FIRE_KEY, fire);
                 }
-                persistent.putInt(ADD_FIRE_KEY, fire);
                 if (server.getGameTime() % 2 == 0) {
                     server.sendParticles(ParticleTypes.LARGE_SMOKE,
                             add.getX(), add.getY(), add.getZ(), 0, 0.0D, -1.0D, 0.0D, 0.22D);
