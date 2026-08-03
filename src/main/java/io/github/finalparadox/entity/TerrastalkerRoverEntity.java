@@ -96,8 +96,8 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int MISSILE_LAUNCH_TICKS = 6;
     private static final float MISSILE_MAX_TURN_DEGREES = 12.0F;
     private static final double JUMP_HEIGHT = 4.0D;
-    private static final double JUMP_RISE_SPEED = 0.4D;
-    private static final double JUMP_FALL_SPEED = 0.2D;
+    private static final double JUMP_RISE_SPEED = 0.8D;
+    private static final double JUMP_FALL_SPEED = 0.5D;
     private static final double JUMP_ENERGY_PERCENT = 0.02D;
     private static final int BULLET_LIFETIME_TICKS = 30;
     private static final int IMPROVED_DRAIN_INTERVAL_TICKS = 19;
