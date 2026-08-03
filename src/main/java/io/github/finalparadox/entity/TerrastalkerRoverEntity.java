@@ -97,15 +97,17 @@ public final class TerrastalkerRoverEntity extends Entity {
     private static final int MISSILE_LAUNCH_TICKS = 6;
     private static final float MISSILE_MAX_TURN_DEGREES = 12.0F;
     /** Defensive grenade ring: 12 grenades pop outward around the rover and
-     *  explode in sequence, clearing a 3-block band around the vehicle. The
-     *  B8 encounter mount keeps the original loadout and has no launcher. */
+     *  explode in sequence 4.5 blocks out, clearing the band around the
+     *  vehicle. The B8 encounter mount keeps the original loadout and has no
+     *  launcher. */
     private static final int GRENADE_COUNT = 12;
-    private static final double GRENADE_RING_RADIUS = 2.5D;
+    private static final double GRENADE_RING_RADIUS = 4.5D;
     private static final double GRENADE_LAUNCH_Y_OFFSET = 1.0D;
-    private static final double GRENADE_SPEED = 0.5D;
+    private static final int GRENADE_FLIGHT_TICKS = 5;
+    private static final double GRENADE_SPEED =
+            GRENADE_RING_RADIUS / GRENADE_FLIGHT_TICKS;
     private static final double GRENADE_UPWARD_SPEED = 0.25D;
     private static final double GRENADE_GRAVITY = 0.02D;
-    private static final int GRENADE_FLIGHT_TICKS = 5;
     private static final int GRENADE_STAGGER_TICKS = 1;
     private static final double GRENADE_BLAST_RADIUS = 3.0D;
     private static final float GRENADE_DAMAGE = 20.0F;
