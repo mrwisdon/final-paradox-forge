@@ -6,9 +6,11 @@ import io.github.finalparadox.arena.MarawTharArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Rotations;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -24,18 +26,26 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeableLeatherItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 /**
  * Server-side Eo'Thar echo used before the Maraw'Thar B9 encounter. It plays
- * the source pre-battle dialogue and exposes the original clickable advice and
- * lore menu, then hands off to the Maraw'Thar boss.
+ * the source pre-battle dialogue, exposes the original clickable advice and
+ * lore menu, then runs a short possession visual over the kneeling Conqueror
+ * corpse before handing off to the Maraw'Thar boss.
  */
 public final class EotharEchoEntity extends Entity {
     private static final DustParticleOptions EOTHAR_DUST =
@@ -52,13 +62,22 @@ public final class EotharEchoEntity extends Entity {
             "b9_dialogo_10", "b9_dialogo_11", "b9_dialogo_12",
             "b9_dialogo_13"
     };
-    private static final int POSSESSION_TICKS = 60;
+    private static final int POSSESSION_TICKS = 140;
+    private static final int POSSESSION_HEAD_CHANGE_TICK = 80;
+    private static final int POSSESSION_SWORD_TICK = 110;
+    private static final int POSSESSION_EXPLOSION_TICK = 120;
+    private static final String CALM_HEAD_TEXTURE =
+            "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjdjMDJiYzVjOTgzYmUwN2QyODVkMDk1ZTg3ZTRhNDExYjk3ZmE0ZmQ1M2FhNjc5NTA2YzhmMzIwMjhmN2FkOCJ9fX0=";
+    private static final String ANGRY_HEAD_TEXTURE =
+            "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDYzZTQzYjdlODgzNjA3OWE2MWRkMzZlZjg3ZjVlZDY3NTkzOGJkMzU4NzEwYWU0MzMwYzU0MTc5YTJlZWFjNCJ9fX0=";
 
     private BlockPos arenaAnchor = BlockPos.ZERO;
     private long dialogueStart = -1L;
     private int dialogueStep;
     private boolean menuReady;
     private int possessionTicks = -1;
+    private UUID entranceStandUuid;
+    private UUID entranceBootsUuid;
 
     public EotharEchoEntity(EntityType<? extends EotharEchoEntity> type, Level level) {
         super(type, level);
@@ -98,6 +117,7 @@ public final class EotharEchoEntity extends Entity {
 
     public void depart() {
         if (level() instanceof ServerLevel server) {
+            removeEntranceVisual(server);
             Vec3 core = visualCore();
             server.sendParticles(ParticleTypes.EXPLOSION, core.x, core.y, core.z, 1, 0, 0, 0, 0);
             server.sendParticles(ParticleTypes.LARGE_SMOKE, core.x, core.y, core.z, 15, 0, 0, 0, 0.2D);
@@ -157,6 +177,8 @@ public final class EotharEchoEntity extends Entity {
             server.playSound(null, arenaAnchor, SoundEvents.END_PORTAL_SPAWN,
                     SoundSource.MASTER, 1.0F, 0.7F);
         }
+        ensureEntranceVisual(server);
+        applyEntrancePose(server, possessionTicks);
         if (possessionTicks % 10 == 0) {
             Vec3 center = Vec3.atCenterOf(arenaAnchor);
             server.sendParticles(ParticleTypes.PORTAL, center.x, center.y + 1.0D, center.z,
@@ -164,21 +186,174 @@ public final class EotharEchoEntity extends Entity {
             server.sendParticles(ParticleTypes.SQUID_INK, center.x, center.y + 1.0D, center.z,
                     6, 0.6D, 0.8D, 0.6D, 0.02D);
         }
-        if (possessionTicks == 40) {
+        if (possessionTicks == POSSESSION_HEAD_CHANGE_TICK) {
+            ArmorStand main = entranceStand(server);
+            if (main != null) {
+                main.setItemSlot(EquipmentSlot.HEAD, texturedHead(ANGRY_HEAD_TEXTURE));
+            }
+        }
+        if (possessionTicks == POSSESSION_SWORD_TICK) {
+            ArmorStand main = entranceStand(server);
+            if (main != null) {
+                main.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
+            }
+            server.playSound(null, arenaAnchor, SoundEvents.TRIDENT_THUNDER,
+                    SoundSource.MASTER, 1.0F, 1.2F);
+        }
+        if (possessionTicks == POSSESSION_EXPLOSION_TICK) {
+            Vec3 center = Vec3.atCenterOf(arenaAnchor);
+            server.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y + 1.0D, center.z,
+                    1, 0.0D, 0.0D, 0.0D, 0.0D);
+            server.sendParticles(ParticleTypes.FLASH, center.x, center.y + 1.0D, center.z,
+                    3, 0.3D, 0.3D, 0.3D, 0.0D);
             server.playSound(null, arenaAnchor, SoundEvents.GENERIC_EXPLODE,
                     SoundSource.MASTER, 1.0F, 0.6F);
-            server.sendParticles(ParticleTypes.EXPLOSION, getX(), getY() + 1.0D, getZ(),
-                    1, 0.0D, 0.0D, 0.0D, 0.0D);
+            server.playSound(null, arenaAnchor, SoundEvents.END_PORTAL_SPAWN,
+                    SoundSource.MASTER, 1.0F, 1.0F);
         }
         if (possessionTicks >= POSSESSION_TICKS) {
             ArenaDeploymentData data = ArenaDeploymentData.get(server);
             if (MarawTharArenaStaging.spawnBoss(server, data, arenaAnchor).isPresent()) {
+                removeEntranceVisual(server);
                 depart();
             } else {
                 possessionTicks = -1;
                 menuReady = true;
             }
         }
+    }
+
+    private void ensureEntranceVisual(ServerLevel server) {
+        if (entranceStand(server) == null) {
+            spawnEntranceStand(server);
+        }
+        if (entranceBoots(server) == null) {
+            spawnEntranceBoots(server);
+        }
+    }
+
+    private ArmorStand entranceStand(ServerLevel server) {
+        if (entranceStandUuid == null) return null;
+        Entity entity = server.getEntity(entranceStandUuid);
+        return entity instanceof ArmorStand stand ? stand : null;
+    }
+
+    private ArmorStand entranceBoots(ServerLevel server) {
+        if (entranceBootsUuid == null) return null;
+        Entity entity = server.getEntity(entranceBootsUuid);
+        return entity instanceof ArmorStand stand ? stand : null;
+    }
+
+    private void spawnEntranceStand(ServerLevel server) {
+        Vec3 position = new Vec3(
+                arenaAnchor.getX() + 7.0D, arenaAnchor.getY() - 0.4D, arenaAnchor.getZ());
+        ArmorStand stand = createEntranceStand(server, position, false, false);
+        stand.setItemSlot(EquipmentSlot.HEAD, texturedHead(CALM_HEAD_TEXTURE));
+        stand.setItemSlot(EquipmentSlot.CHEST, dyed(Items.LEATHER_CHESTPLATE, 2236962));
+        stand.setItemSlot(EquipmentSlot.LEGS, dyed(Items.LEATHER_LEGGINGS, 2236962));
+        entranceStandUuid = stand.getUUID();
+    }
+
+    private void spawnEntranceBoots(ServerLevel server) {
+        Vec3 position = new Vec3(
+                arenaAnchor.getX() + 6.5D, arenaAnchor.getY() - 0.7D, arenaAnchor.getZ());
+        ArmorStand stand = createEntranceStand(server, position, true, true);
+        stand.setItemSlot(EquipmentSlot.FEET, dyed(Items.LEATHER_BOOTS, 16711680));
+        entranceBootsUuid = stand.getUUID();
+    }
+
+    private ArmorStand createEntranceStand(
+            ServerLevel server, Vec3 position, boolean marker, boolean invisible
+    ) {
+        ArmorStand stand = new ArmorStand(server, position.x, position.y, position.z);
+        stand.setNoGravity(true);
+        stand.setSilent(true);
+        stand.setInvulnerable(true);
+        stand.setNoBasePlate(true);
+        stand.setShowArms(true);
+        byte flags = stand.getEntityData().get(ArmorStand.DATA_CLIENT_FLAGS);
+        if (marker) flags = (byte) (flags | 0x10);
+        stand.getEntityData().set(ArmorStand.DATA_CLIENT_FLAGS, flags);
+        stand.setInvisible(invisible);
+        stand.setYRot(90.0F);
+        stand.setYHeadRot(90.0F);
+        stand.addTag("finalparadox_marawthar_entrance");
+        server.addFreshEntity(stand);
+        return stand;
+    }
+
+    private void applyEntrancePose(ServerLevel server, int tick) {
+        ArmorStand main = entranceStand(server);
+        if (main == null) return;
+        main.setHeadPose(new Rotations(entranceHead(tick), 0.0F, 0.0F));
+        main.setRightArmPose(new Rotations(entranceRightArm(tick), 0.0F, 10.0F));
+        main.setLeftArmPose(new Rotations(0.0F, 0.0F, -10.0F));
+        main.setRightLegPose(new Rotations(-40.0F, 0.0F, 0.0F));
+        main.setLeftLegPose(new Rotations(-40.0F, 0.0F, 0.0F));
+        float bodyBob = tick % 30 < 15 ? (tick % 30) * 0.08F : (30 - tick % 30) * 0.08F;
+        main.setBodyPose(new Rotations(bodyBob, 0.0F, 0.0F));
+    }
+
+    private static float entranceHead(float tick) {
+        if (tick < 50) return 30.0F;
+        int lowerStep = (int) (tick - 50) / 2;
+        float[] lower = {21.0F, 19.0F, 17.0F, 15.0F, 10.0F, 0.0F, -15.0F, -30.0F, -35.0F, -38.0F};
+        if (lowerStep < lower.length) return lower[lowerStep];
+        if (tick < 80) {
+            int riseStep = (int) (tick - 70) / 2;
+            float[] rise = {-30.0F, -10.0F, -5.0F, -2.0F};
+            return riseStep < rise.length ? rise[riseStep] : -2.0F;
+        }
+        return -8.0F;
+    }
+
+    private static float entranceRightArm(float tick) {
+        if (tick < 82) return 0.0F;
+        float progress = Math.min(1.0F, (tick - 82.0F) / 8.0F);
+        return -90.0F * progress;
+    }
+
+    private static ItemStack dyed(Item item, int color) {
+        ItemStack stack = new ItemStack(item);
+        if (stack.getItem() instanceof DyeableLeatherItem leather) {
+            leather.setColor(stack, color);
+        }
+        return stack;
+    }
+
+    private static ItemStack texturedHead(String texture) {
+        ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
+        CompoundTag owner = new CompoundTag();
+        owner.putUUID("Id", UUID.randomUUID());
+        CompoundTag properties = new CompoundTag();
+        CompoundTag value = new CompoundTag();
+        value.putString("Value", texture);
+        ListTag textures = new ListTag();
+        textures.add(value);
+        properties.put("textures", textures);
+        owner.put("Properties", properties);
+        stack.getOrCreateTag().put("SkullOwner", owner);
+        return stack;
+    }
+
+    private void removeEntranceVisual(ServerLevel server) {
+        for (UUID uuid : new UUID[]{entranceStandUuid, entranceBootsUuid}) {
+            if (uuid == null) continue;
+            Entity entity = server.getEntity(uuid);
+            if (entity instanceof ArmorStand stand) {
+                stand.discard();
+            }
+        }
+        entranceStandUuid = null;
+        entranceBootsUuid = null;
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (level() instanceof ServerLevel server) {
+            removeEntranceVisual(server);
+        }
+        super.remove(reason);
     }
 
     @Override
@@ -349,6 +524,8 @@ public final class EotharEchoEntity extends Entity {
         if (tag.contains("DialogueStep")) dialogueStep = tag.getInt("DialogueStep");
         if (tag.contains("MenuReady")) menuReady = tag.getBoolean("MenuReady");
         if (tag.contains("PossessionTicks")) possessionTicks = tag.getInt("PossessionTicks");
+        if (tag.hasUUID("EntranceStand")) entranceStandUuid = tag.getUUID("EntranceStand");
+        if (tag.hasUUID("EntranceBoots")) entranceBootsUuid = tag.getUUID("EntranceBoots");
         setInvulnerable(true);
     }
 
@@ -359,6 +536,8 @@ public final class EotharEchoEntity extends Entity {
         tag.putInt("DialogueStep", dialogueStep);
         tag.putBoolean("MenuReady", menuReady);
         tag.putInt("PossessionTicks", possessionTicks);
+        if (entranceStandUuid != null) tag.putUUID("EntranceStand", entranceStandUuid);
+        if (entranceBootsUuid != null) tag.putUUID("EntranceBoots", entranceBootsUuid);
     }
 
     @Override

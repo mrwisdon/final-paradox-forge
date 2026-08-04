@@ -35,9 +35,11 @@ instead.
 - `ArenaDeploymentData` persists `eotharUuid` and `marawTharTriggered`; both
   reset on `begin()` so `deploy marawthar` / `reset marawthar` can retest.
 - `/finalparadox eothar_menu <uuid> <action>` handles the clickable menu.
-- The challenge confirm plays a 60-tick portal/particle possession effect and
-  then calls `MarawTharArenaStaging.spawnBoss`, which records the boss UUID,
-  marks the encounter triggered, and removes the echo.
+- The challenge confirm plays a 140-tick possession sequence. Two armor stands
+  reproduce `gen_conquistador_arrodillado` (kneeling corpse and red boots), the
+  head lowers/rises and the right arm raises while the sword appears, then
+  `MarawTharArenaStaging.spawnBoss` records the boss UUID, marks the encounter
+  triggered, and removes the echo and corpse.
 - `/finalparadox arena start marawthar` remains a debug shortcut; it also
   removes any waiting echo and marks the encounter triggered.
 
@@ -55,5 +57,6 @@ Passed:
 Still requires in-game observation:
 
 - Entering the arena should spawn the echo once, play the pre-battle dialogue,
-  open the menu on right-click, and spawn Maraw'Thar after confirmation.
+  open the menu on right-click, and after confirmation show the kneeling
+  Conqueror corpse animation (head/arm/pose, sword) before Maraw'Thar appears.
 - Reload during the dialogue/menu should resume without a second echo.
