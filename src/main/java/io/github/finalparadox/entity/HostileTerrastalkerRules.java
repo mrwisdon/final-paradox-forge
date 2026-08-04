@@ -6,7 +6,29 @@ public final class HostileTerrastalkerRules {
     }
 
     public static int spawnCountForRound(int round) {
-        return round == 5 ? 2 : 0;
+        return switch (round) {
+            case 3 -> 1;
+            case 4 -> 2;
+            default -> 0;
+        };
+    }
+
+    public static int gunHitCooldownTicks() {
+        return 10;
+    }
+
+    public static boolean canApplyGunHit(long currentTick, long lastHitTick) {
+        return currentTick - lastHitTick >= gunHitCooldownTicks();
+    }
+
+    public static float turnAimToward(float current, float target, float maxStep) {
+        float difference = target - current;
+        while (difference <= -180.0F) difference += 360.0F;
+        while (difference > 180.0F) difference -= 360.0F;
+        float result = current + Math.max(-maxStep, Math.min(maxStep, difference));
+        while (result <= -180.0F) result += 360.0F;
+        while (result > 180.0F) result -= 360.0F;
+        return result;
     }
 
     public static int maxHealth(int activePlayers) {

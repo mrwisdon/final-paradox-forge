@@ -20,6 +20,14 @@ public interface TerrastalkerVisualState {
 
     float getPreviousCabinYaw();
 
+    default float getLegDeployment() {
+        return 1.0F;
+    }
+
+    default float getPreviousLegDeployment() {
+        return getLegDeployment();
+    }
+
     boolean isMeltingDown();
 
     default boolean isHostileVisual() {

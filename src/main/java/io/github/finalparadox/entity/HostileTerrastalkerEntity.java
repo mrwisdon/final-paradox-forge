@@ -48,6 +48,13 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
     private static final double GUN_RANGE = 20.0D;
     private static final int GUN_INTERVAL = 3;
     private static final int GUN_BULLET_LIFE = 35;
+    private static final float TURRET_YAW_STEP = 4.0F;
+    private static final float CANNON_PITCH_STEP = 3.0F;
+    private static final double GUN_SPREAD = 0.025D;
+    private static final double ENTRY_JUMP_VELOCITY = 0.85D;
+    private static final float LEG_DEPLOYMENT_STEP = 0.1F;
+    private static final String LAST_GUN_HIT_TICK_KEY =
+            "finalparadox.hostile_terrastalker_last_gun_hit";
 
     private static final EntityDataAccessor<Integer> DATA_GAIT_FRAME =
             SynchedEntityData.defineId(HostileTerrastalkerEntity.class, EntityDataSerializers.INT);
@@ -67,6 +74,10 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
             SynchedEntityData.defineId(HostileTerrastalkerEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_LANDED =
             SynchedEntityData.defineId(HostileTerrastalkerEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Float> DATA_PREVIOUS_LEG_DEPLOYMENT =
+            SynchedEntityData.defineId(HostileTerrastalkerEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> DATA_LEG_DEPLOYMENT =
+            SynchedEntityData.defineId(HostileTerrastalkerEntity.class, EntityDataSerializers.FLOAT);
 
     private final List<GunBullet> bullets = new ArrayList<>();
     private BlockPos encounterAnchor;
@@ -103,6 +114,8 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
         entity.getAttribute(Attributes.MAX_HEALTH).setBaseValue(maxHealth);
         entity.setHealth((float) maxHealth);
         entity.setPos(position.x, position.y, position.z);
+        entity.setDeltaMovement(0.0D, ENTRY_JUMP_VELOCITY, 0.0D);
+        entity.hasImpulse = true;
         entity.setYRot(level.random.nextFloat() * 360.0F);
         entity.addTag("hostile");
         entity.addTag("14_acechador_core");
@@ -111,6 +124,10 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
         entity.setCustomNameVisible(true);
         entity.updateHealthName();
         level.addFreshEntity(entity);
+        level.playSound(null, entity.blockPosition(), SoundEvents.FIREWORK_ROCKET_LAUNCH,
+                SoundSource.HOSTILE, 1.5F, 0.8F);
+        level.sendParticles(ParticleTypes.CLOUD,
+                entity.getX(), entity.getY(), entity.getZ(), 18, 0.8D, 0.1D, 0.8D, 0.06D);
         return entity;
     }
 
@@ -132,6 +149,8 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
         entityData.define(DATA_CANNON_PITCH, 1.0F);
         entityData.define(DATA_COOLING, false);
         entityData.define(DATA_LANDED, false);
+        entityData.define(DATA_PREVIOUS_LEG_DEPLOYMENT, 0.0F);
+        entityData.define(DATA_LEG_DEPLOYMENT, 0.0F);
     }
 
     @Override
@@ -144,7 +163,14 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
         tickProjectiles(server);
 
         if (!entityData.get(DATA_LANDED)) {
-            if (onGround()) land(server);
+            if (onGround() && getDeltaMovement().y <= 0.0D) land(server);
+            return;
+        }
+
+        float legDeployment = entityData.get(DATA_LEG_DEPLOYMENT);
+        if (legDeployment < 1.0F) {
+            entityData.set(DATA_LEG_DEPLOYMENT,
+                    Math.min(1.0F, legDeployment + LEG_DEPLOYMENT_STEP));
             return;
         }
 
@@ -164,6 +190,7 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
         entityData.set(DATA_PREVIOUS_MOVEMENT_YAW, entityData.get(DATA_MOVEMENT_YAW));
         entityData.set(DATA_PREVIOUS_TURRET_YAW, entityData.get(DATA_TURRET_YAW));
         entityData.set(DATA_PREVIOUS_CANNON_PITCH, entityData.get(DATA_CANNON_PITCH));
+        entityData.set(DATA_PREVIOUS_LEG_DEPLOYMENT, entityData.get(DATA_LEG_DEPLOYMENT));
     }
 
     private void land(ServerLevel server) {
@@ -206,8 +233,10 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
         float yaw = (float) (Mth.atan2(-difference.x, difference.z) * Mth.RAD_TO_DEG);
         float pitch = (float) -Math.toDegrees(Math.atan2(
                 difference.y, Math.sqrt(difference.x * difference.x + difference.z * difference.z)));
-        entityData.set(DATA_TURRET_YAW, yaw);
-        entityData.set(DATA_CANNON_PITCH, Mth.clamp(pitch, -70.0F, 70.0F));
+        entityData.set(DATA_TURRET_YAW, HostileTerrastalkerRules.turnAimToward(
+                getTurretYaw(), yaw, TURRET_YAW_STEP));
+        entityData.set(DATA_CANNON_PITCH, HostileTerrastalkerRules.turnAimToward(
+                getCannonPitch(), Mth.clamp(pitch, -70.0F, 70.0F), CANNON_PITCH_STEP));
     }
 
     private void tickWeapons(ServerLevel server, ServerPlayer target) {
@@ -228,7 +257,7 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
 
         heat += 5;
         if (distanceToSqr(target) <= GUN_RANGE * GUN_RANGE && tickCount % GUN_INTERVAL == 0) {
-            fireGun(server, target);
+            fireGun(server);
         }
         if (heat >= HostileTerrastalkerRules.overheatThreshold(activePlayerCount)) {
             entityData.set(DATA_COOLING, true);
@@ -236,9 +265,13 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
         }
     }
 
-    private void fireGun(ServerLevel server, ServerPlayer target) {
+    private void fireGun(ServerLevel server) {
         Vec3 muzzle = muzzlePosition();
-        Vec3 direction = target.getEyePosition().subtract(muzzle).normalize();
+        Vec3 aimedDirection = Vec3.directionFromRotation(getCannonPitch(), getTurretYaw());
+        Vec3 direction = aimedDirection.add(
+                random.nextGaussian() * GUN_SPREAD,
+                random.nextGaussian() * GUN_SPREAD,
+                random.nextGaussian() * GUN_SPREAD).normalize();
         bullets.add(new GunBullet(muzzle, direction));
         server.playSound(null, blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST,
                 SoundSource.HOSTILE, 0.7F, 1.8F);
@@ -273,6 +306,13 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
     }
 
     private void applyGunHit(ServerLevel server, ServerPlayer player) {
+        CompoundTag playerData = player.getPersistentData();
+        long now = server.getGameTime();
+        if (playerData.contains(LAST_GUN_HIT_TICK_KEY)
+                && !HostileTerrastalkerRules.canApplyGunHit(
+                now, playerData.getLong(LAST_GUN_HIT_TICK_KEY))) return;
+        playerData.putLong(LAST_GUN_HIT_TICK_KEY, now);
+
         boolean ridingTerrastalker = player.getVehicle() instanceof TerrastalkerRoverEntity;
         int roverDamage = HostileTerrastalkerRules.roverEnergyDamage(ridingTerrastalker);
         if (roverDamage > 0 && player.getVehicle() instanceof TerrastalkerRoverEntity rover) {
@@ -406,6 +446,10 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
         entityData.set(DATA_PREVIOUS_TURRET_YAW, tag.getFloat("TurretYaw"));
         entityData.set(DATA_CANNON_PITCH, tag.getFloat("CannonPitch"));
         entityData.set(DATA_PREVIOUS_CANNON_PITCH, tag.getFloat("CannonPitch"));
+        float legDeployment = tag.contains("LegDeployment")
+                ? tag.getFloat("LegDeployment") : (tag.getBoolean("Landed") ? 1.0F : 0.0F);
+        entityData.set(DATA_LEG_DEPLOYMENT, legDeployment);
+        entityData.set(DATA_PREVIOUS_LEG_DEPLOYMENT, legDeployment);
         if (tag.contains("Anchor")) encounterAnchor = BlockPos.of(tag.getLong("Anchor"));
         setCustomNameVisible(true);
         updateHealthName();
@@ -429,6 +473,7 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
         tag.putFloat("MovementYaw", getMovementYaw());
         tag.putFloat("TurretYaw", getTurretYaw());
         tag.putFloat("CannonPitch", getCannonPitch());
+        tag.putFloat("LegDeployment", getLegDeployment());
         if (encounterAnchor != null) tag.putLong("Anchor", encounterAnchor.asLong());
         ListTag bulletTags = new ListTag();
         for (GunBullet bullet : bullets) bulletTags.add(bullet.save());
@@ -449,6 +494,10 @@ public final class HostileTerrastalkerEntity extends Monster implements Terrasta
     @Override public float getPreviousCannonPitch() { return entityData.get(DATA_PREVIOUS_CANNON_PITCH); }
     @Override public float getCabinYaw() { return getMovementYaw(); }
     @Override public float getPreviousCabinYaw() { return getPreviousMovementYaw(); }
+    @Override public float getLegDeployment() { return entityData.get(DATA_LEG_DEPLOYMENT); }
+    @Override public float getPreviousLegDeployment() {
+        return entityData.get(DATA_PREVIOUS_LEG_DEPLOYMENT);
+    }
     @Override public boolean isMeltingDown() { return entityData.get(DATA_COOLING); }
     @Override public boolean isHostileVisual() { return true; }
     @Override public int sourceVisibleParts() { return SOURCE_VISIBLE_PARTS; }

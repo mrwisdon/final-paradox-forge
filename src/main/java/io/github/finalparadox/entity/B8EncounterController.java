@@ -1747,7 +1747,7 @@ public final class B8EncounterController {
                         schedule(server, data, now, TIMER_H4_INI2, 60);
                     }
                     case 3 -> acechadorRound(server, data, "ronda3");
-                    case 5 -> acechadorRound(server, data, "ronda5");
+                    case 4 -> acechadorRound(server, data, "ronda5");
                     case 7 -> {
                         schedule(server, data, now, TIMER_H4_INI, 1);
                         schedule(server, data, now, TIMER_H4_INI2, 120);

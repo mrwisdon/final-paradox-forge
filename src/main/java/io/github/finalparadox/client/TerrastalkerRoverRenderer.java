@@ -165,10 +165,16 @@ public final class TerrastalkerRoverRenderer<E extends Entity & TerrastalkerVisu
                 entity, ignored -> new GaitTransition(frame, renderTick));
         transition.advance(frame, renderTick);
         float gaitBlend = transition.blend(renderTick);
+        float legDeployment = Mth.lerp(partialTick,
+                entity.getPreviousLegDeployment(), entity.getLegDeployment());
         for (int legIndex = 0; legIndex < LEG_FRAMES[frame].length; legIndex++) {
             LegPose leg = LegPose.interpolateSpatial(
                     LEG_FRAMES[transition.fromFrame][legIndex],
                     LEG_FRAMES[transition.toFrame][legIndex], gaitBlend);
+            if (legDeployment < 1.0F) {
+                leg = LegPose.interpolateSpatial(
+                        LegPose.raised(leg.angle), leg, legDeployment);
+            }
             float yaw = movementYaw + leg.angle;
 
             Vec3 upperOffset = rotateLocal(
