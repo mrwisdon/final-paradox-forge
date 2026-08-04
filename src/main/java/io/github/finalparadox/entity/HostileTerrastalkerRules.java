@@ -6,11 +6,7 @@ public final class HostileTerrastalkerRules {
     }
 
     public static int spawnCountForRound(int round) {
-        return switch (round) {
-            case 3 -> 1;
-            case 5 -> 2;
-            default -> 0;
-        };
+        return round == 5 ? 2 : 0;
     }
 
     public static int maxHealth(int activePlayers) {

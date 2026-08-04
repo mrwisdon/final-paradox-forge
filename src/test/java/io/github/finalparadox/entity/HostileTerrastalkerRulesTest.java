@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class HostileTerrastalkerRulesTest {
     @Test
-    void phaseFiveRoundThreeSpawnsOneTerrastalker() {
-        assertEquals(1, HostileTerrastalkerRules.spawnCountForRound(3));
+    void phaseFiveRoundThreeDoesNotSpawnTerrastalkers() {
+        assertEquals(0, HostileTerrastalkerRules.spawnCountForRound(3));
     }
 
     @Test
