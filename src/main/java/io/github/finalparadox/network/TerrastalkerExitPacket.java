@@ -7,11 +7,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-/** One client-side Shift press while riding a Terrastalker rover. */
-public final class TerrastalkerDismountPacket {
+/** One press of the dedicated Terrastalker dismount key. */
+public final class TerrastalkerExitPacket {
     private final int roverEntityId;
 
-    public TerrastalkerDismountPacket(int roverEntityId) {
+    public TerrastalkerExitPacket(int roverEntityId) {
         this.roverEntityId = roverEntityId;
     }
 
@@ -19,16 +19,16 @@ public final class TerrastalkerDismountPacket {
         return roverEntityId;
     }
 
-    public static void encode(TerrastalkerDismountPacket packet, FriendlyByteBuf buffer) {
+    public static void encode(TerrastalkerExitPacket packet, FriendlyByteBuf buffer) {
         buffer.writeVarInt(packet.roverEntityId);
     }
 
-    public static TerrastalkerDismountPacket decode(FriendlyByteBuf buffer) {
-        return new TerrastalkerDismountPacket(buffer.readVarInt());
+    public static TerrastalkerExitPacket decode(FriendlyByteBuf buffer) {
+        return new TerrastalkerExitPacket(buffer.readVarInt());
     }
 
     public static void handle(
-            TerrastalkerDismountPacket packet,
+            TerrastalkerExitPacket packet,
             Supplier<NetworkEvent.Context> contextSupplier
     ) {
         NetworkEvent.Context context = contextSupplier.get();
@@ -36,7 +36,7 @@ public final class TerrastalkerDismountPacket {
         if (player != null) {
             TerrastalkerRoverEntity rover = TerrastalkerRoverEntity.resolveDismountTarget(
                     player, packet.roverEntityId);
-            if (rover != null) rover.onDismountAttempt(player);
+            if (rover != null) rover.onDismountKey(player);
         }
         context.setPacketHandled(true);
     }

@@ -4,10 +4,11 @@ import io.github.finalparadox.FinalParadox;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "6";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.ChannelBuilder
             .named(ResourceLocation.fromNamespaceAndPath(FinalParadox.MOD_ID, "main"))
@@ -55,5 +56,28 @@ public final class ModNetwork {
                 .decoder(TerrastalkerGrenadePacket::decode)
                 .consumerMainThread(TerrastalkerGrenadePacket::handle)
                 .add();
+        CHANNEL.messageBuilder(TerrastalkerExitPacket.class, 6,
+                        NetworkDirection.PLAY_TO_SERVER)
+                .encoder(TerrastalkerExitPacket::encode)
+                .decoder(TerrastalkerExitPacket::decode)
+                .consumerMainThread(TerrastalkerExitPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(TerrastalkerDismountAckPacket.class, 7,
+                        NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(TerrastalkerDismountAckPacket::encode)
+                .decoder(TerrastalkerDismountAckPacket::decode)
+                .consumerMainThread(TerrastalkerDismountAckPacket::handle)
+                .add();
+    }
+
+    public static void sendDismountAck(
+            net.minecraft.server.level.ServerPlayer player,
+            int roverEntityId
+    ) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new TerrastalkerDismountAckPacket(
+                        roverEntityId,
+                        player.getX(), player.getY(), player.getZ(),
+                        player.getYRot(), player.getXRot()));
     }
 }

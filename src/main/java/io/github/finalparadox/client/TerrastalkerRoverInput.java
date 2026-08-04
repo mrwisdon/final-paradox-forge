@@ -4,6 +4,7 @@ import io.github.finalparadox.FinalParadox;
 import io.github.finalparadox.entity.TerrastalkerRoverEntity;
 import io.github.finalparadox.network.ModNetwork;
 import io.github.finalparadox.network.TerrastalkerDismountPacket;
+import io.github.finalparadox.network.TerrastalkerExitPacket;
 import io.github.finalparadox.network.TerrastalkerFireInputPacket;
 import io.github.finalparadox.network.TerrastalkerGrenadePacket;
 import io.github.finalparadox.network.TerrastalkerJumpPacket;
@@ -18,7 +19,10 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FinalParadox.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE,
         value = Dist.CLIENT)
 public final class TerrastalkerRoverInput {
-    private static boolean wasShiftDown;
+    private static final TerrastalkerDismountInputState DISMOUNT_INPUT =
+            new TerrastalkerDismountInputState();
+    private static final TerrastalkerRoverTrackingState ROVER_TRACKING =
+            new TerrastalkerRoverTrackingState();
     private static boolean wasAttackDown;
     private static boolean wasJumpDown;
     private static boolean wasUseDown;
@@ -40,9 +44,22 @@ public final class TerrastalkerRoverInput {
         boolean shiftDown = minecraft.options.keyShift.isDown();
         TerrastalkerRoverEntity rover = minecraft.player.getVehicle()
                 instanceof TerrastalkerRoverEntity mountedRover ? mountedRover : null;
+        ROVER_TRACKING.observe(rover == null
+                ? TerrastalkerRoverTrackingState.NO_ROVER : rover.getId());
         boolean controlsActive = minecraft.screen == null && rover != null;
-        if (controlsActive && shiftDown && !wasShiftDown) {
-            ModNetwork.CHANNEL.sendToServer(new TerrastalkerDismountPacket());
+        if (DISMOUNT_INPUT.tick(
+                shiftDown, rover != null, minecraft.screen != null)) {
+            ModNetwork.CHANNEL.sendToServer(new TerrastalkerDismountPacket(
+                    ROVER_TRACKING.lastKnownRoverId()));
+        }
+        while (TerrastalkerKeyMappings.DISMOUNT.consumeClick()) {
+            // Send even if the client has temporarily lost its vehicle link;
+            // the server validates the actual mount and can recover a
+            // client/server passenger desync with this dedicated key.
+            if (minecraft.screen == null) {
+                ModNetwork.CHANNEL.sendToServer(new TerrastalkerExitPacket(
+                        ROVER_TRACKING.lastKnownRoverId()));
+            }
         }
         boolean attackDown = minecraft.options.keyAttack.isDown();
         if (controlsActive && attackDown && !wasAttackDown) {
@@ -68,18 +85,22 @@ public final class TerrastalkerRoverInput {
             controlledRoverId = -1;
             sentFireInput = false;
         }
-        wasShiftDown = shiftDown;
         wasAttackDown = attackDown;
         wasJumpDown = jumpDown;
         wasUseDown = useDown;
     }
 
     private static void resetLocalState() {
-        wasShiftDown = false;
+        DISMOUNT_INPUT.reset();
+        ROVER_TRACKING.reset();
         wasAttackDown = false;
         wasJumpDown = false;
         wasUseDown = false;
         sentFireInput = false;
         controlledRoverId = -1;
+    }
+
+    static void onDismountConfirmed() {
+        resetLocalState();
     }
 }

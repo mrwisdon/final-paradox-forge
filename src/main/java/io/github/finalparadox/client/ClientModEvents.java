@@ -25,6 +25,7 @@ public final class ClientModEvents {
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
+        event.register(TerrastalkerKeyMappings.DISMOUNT);
         event.register(NightfallKeyMappings.COMBO);
         event.register(NightfallKeyMappings.RIFT);
         event.register(NightfallKeyMappings.LASER);

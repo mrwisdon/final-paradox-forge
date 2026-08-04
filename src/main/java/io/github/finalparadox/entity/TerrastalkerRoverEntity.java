@@ -1,10 +1,12 @@
 package io.github.finalparadox.entity;
 
+import com.mojang.logging.LogUtils;
 import io.github.finalparadox.FinalParadox;
 import io.github.finalparadox.item.AdaptiveDefenseMatrixItem;
 import io.github.finalparadox.network.TerrastalkerGrenadePacket;
 import io.github.finalparadox.network.TerrastalkerJumpPacket;
 import io.github.finalparadox.network.TerrastalkerMissilePacket;
+import io.github.finalparadox.network.ModNetwork;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -46,6 +48,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 import org.joml.Vector3f;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -59,6 +62,7 @@ import java.util.UUID;
  * source construction but keep their different energy and damage rules.
  */
 public final class TerrastalkerRoverEntity extends Entity {
+    private static final Logger LOGGER = LogUtils.getLogger();
     public static final int B8_MAX_ENERGY = 100;
     public static final int IMPROVED_MAX_ENERGY = 25;
     public static final int IMPROVED_COOLDOWN_TICKS = 20 * 180;
@@ -1434,7 +1438,8 @@ public final class TerrastalkerRoverEntity extends Entity {
     }
 
     public boolean shouldCancelDismount(Player player) {
-        return !allowDismount;
+        return TerrastalkerDismountRules.shouldCancel(
+                player.isAlive(), player.isRemoved(), allowDismount);
     }
 
     public void onDismountAttempt(ServerPlayer player) {
@@ -1460,7 +1465,70 @@ public final class TerrastalkerRoverEntity extends Entity {
         previousDismountAttempt = now;
     }
 
+    public void onDismountKey(ServerPlayer player) {
+        if (!TerrastalkerDismountRules.shouldExit(
+                B8EncounterManager.inCombat(player.serverLevel()))) {
+            previousDismountAttempt = Long.MIN_VALUE;
+            level().playSound(null, player.blockPosition(), SoundEvents.ANVIL_LAND,
+                    SoundSource.MASTER, 2.0F, 2.0F);
+            player.displayClientMessage(Component.translatable(
+                    "message.finalparadox.rover.no_dismount"), true);
+            return;
+        }
+        forceDismount(player);
+    }
+
+    public boolean canRecoverDismount(ServerPlayer player) {
+        boolean ownedAndNearby = player.getUUID().equals(ownerId)
+                && player.distanceToSqr(this) <= 64.0D;
+        return TerrastalkerExitTargetRules.canRecover(
+                player.getVehicle() == this,
+                getPassengers().contains(player),
+                ownedAndNearby);
+    }
+
+    public static TerrastalkerRoverEntity resolveDismountTarget(
+            ServerPlayer player, int rememberedRoverId) {
+        Entity currentVehicle = player.getVehicle();
+        if (currentVehicle instanceof TerrastalkerRoverEntity current) {
+            LOGGER.info("Terrastalker dismount request from {} resolved current rover {}",
+                    player.getGameProfile().getName(), current.getId());
+            return current;
+        }
+        if (currentVehicle != null) {
+            LOGGER.warn("Rejected Terrastalker dismount request from {}: riding entity {}",
+                    player.getGameProfile().getName(), currentVehicle.getId());
+            return null;
+        }
+        Entity remembered = rememberedRoverId < 0
+                ? null : player.serverLevel().getEntity(rememberedRoverId);
+        if (remembered instanceof TerrastalkerRoverEntity rover
+                && rover.canRecoverDismount(player)) {
+            LOGGER.info("Terrastalker dismount request from {} recovered rover {}",
+                    player.getGameProfile().getName(), rover.getId());
+            return rover;
+        }
+        LOGGER.warn("Rejected Terrastalker dismount request from {}: remembered rover {} unavailable",
+                player.getGameProfile().getName(), rememberedRoverId);
+        return null;
+    }
+
+    public void confirmClientDismount(Player player) {
+        allowDismount = true;
+        try {
+            if (player.getVehicle() == this) player.stopRiding();
+        } finally {
+            allowDismount = false;
+        }
+        if (TerrastalkerExitTargetRules.shouldRemoveStalePassenger(
+                player.getVehicle() == this, getPassengers().contains(player))) {
+            removePassenger(player);
+        }
+    }
+
     private void forceDismount(ServerPlayer player) {
+        boolean vehicleBefore = player.getVehicle() == this;
+        boolean passengerBefore = getPassengers().contains(player);
         previousDismountAttempt = Long.MIN_VALUE;
         clearFireInput();
         setFiring(false);
@@ -1474,14 +1542,19 @@ public final class TerrastalkerRoverEntity extends Entity {
             allowDismount = false;
         }
         if (player.getVehicle() == this) {
-            // The mount event can silently swallow the dismount; remove the
-            // passenger directly as a fallback.
+            // Retry through the supported entity API. Directly calling
+            // removePassenger while the player still points at this vehicle
+            // throws in vanilla 1.20.1.
             allowDismount = true;
             try {
-                removePassenger(player);
+                ejectPassengers();
             } finally {
                 allowDismount = false;
             }
+        }
+        if (TerrastalkerExitTargetRules.shouldRemoveStalePassenger(
+                player.getVehicle() == this, getPassengers().contains(player))) {
+            removePassenger(player);
         }
         // Place the rider behind the rover on the ground instead of leaving
         // them standing in the cabin (vanilla keeps the riding position).
@@ -1501,9 +1574,13 @@ public final class TerrastalkerRoverEntity extends Entity {
             }
             player.teleportTo(server, x, ground.getY() + 1.0D, z,
                     player.getYRot(), player.getXRot());
+            ModNetwork.sendDismountAck(player, getId());
         }
         level().playSound(null, blockPosition(), SoundEvents.ARMOR_EQUIP_NETHERITE,
                 SoundSource.MASTER, 2.0F, 0.0F);
+        LOGGER.info("Terrastalker {} dismount for {}: vehicle {} -> {}, passenger {} -> {}",
+                getId(), player.getGameProfile().getName(), vehicleBefore,
+                player.getVehicle() == this, passengerBefore, getPassengers().contains(player));
     }
 
     public void prepareOwnerDisconnect(ServerPlayer player) {

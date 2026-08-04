@@ -54,6 +54,7 @@ import io.github.finalparadox.entity.TerrastalkerRoverEntity;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -165,6 +166,12 @@ public final class GameplayEvents {
             return;
         }
         event.setCanceled(true);
+        if (player instanceof ServerPlayer serverPlayer) {
+            // Vanilla has already started the local dismount gesture. Re-send
+            // the authoritative passenger list so the client cannot remain on
+            // foot while the server still treats it as this rover's rider.
+            serverPlayer.connection.send(new ClientboundSetPassengersPacket(rover));
+        }
     }
 
     @SubscribeEvent
