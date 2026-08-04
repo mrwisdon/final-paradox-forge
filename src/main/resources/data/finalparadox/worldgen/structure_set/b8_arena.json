@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "finalparadox:b8_arena",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 840215739,
+    "spacing": 160,
+    "separation": 80
+  }
+}

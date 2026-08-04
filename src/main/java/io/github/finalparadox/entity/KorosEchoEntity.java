@@ -134,7 +134,8 @@ public final class KorosEchoEntity extends Entity {
         if ("b8".equals(guideMode)) {
             // Source matriz/gen_no_boss: the matrix announces itself when a
             // player approaches, then Koros tells him to talk before fighting.
-            if (!b8IntroStarted && hasPlayerNear(server, 24.0D)) {
+            ArenaDeploymentData data = ArenaDeploymentData.get(server);
+            if (!b8IntroStarted && !data.b8Triggered() && hasPlayerNear(server, 24.0D)) {
                 b8IntroStarted = true;
                 b8DialogueStart = server.getGameTime();
                 b8DialogueStep = 0;
@@ -554,6 +555,9 @@ public final class KorosEchoEntity extends Entity {
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.contains("ArenaAnchor")) arenaAnchor = BlockPos.of(tag.getLong("ArenaAnchor"));
         if (tag.contains("GuideMode")) guideMode = tag.getString("GuideMode");
+        if (tag.contains("B8IntroStarted")) b8IntroStarted = tag.getBoolean("B8IntroStarted");
+        if (tag.contains("B8DialogueStart")) b8DialogueStart = tag.getLong("B8DialogueStart");
+        if (tag.contains("B8DialogueStep")) b8DialogueStep = tag.getInt("B8DialogueStep");
         setInvulnerable(true);
     }
 
@@ -561,6 +565,9 @@ public final class KorosEchoEntity extends Entity {
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putLong("ArenaAnchor", arenaAnchor.asLong());
         tag.putString("GuideMode", guideMode);
+        tag.putBoolean("B8IntroStarted", b8IntroStarted);
+        tag.putLong("B8DialogueStart", b8DialogueStart);
+        tag.putInt("B8DialogueStep", b8DialogueStep);
     }
 
     @Override

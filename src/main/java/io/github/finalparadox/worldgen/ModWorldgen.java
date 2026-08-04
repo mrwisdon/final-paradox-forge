@@ -22,6 +22,14 @@ public final class ModWorldgen {
             STRUCTURE_PIECES.register("marawthar_arena",
                     () -> (StructurePieceType.StructureTemplateType) MarawTharArenaPiece::new);
 
+    public static final RegistryObject<StructureType<B8ArenaStructure>> B8_ARENA =
+            STRUCTURE_TYPES.register("b8_arena",
+                    () -> () -> B8ArenaStructure.CODEC);
+
+    public static final RegistryObject<StructurePieceType> B8_ARENA_PIECE =
+            STRUCTURE_PIECES.register("b8_arena",
+                    () -> (StructurePieceType.StructureTemplateType) B8ArenaPiece::new);
+
     private ModWorldgen() {
     }
 

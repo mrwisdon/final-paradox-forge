@@ -51,6 +51,7 @@ public final class ArenaDeploymentManager {
         if (data.state() == ArenaDeploymentData.DeploymentState.READY
                 && ArenaDefinitions.B8.id().equals(data.arenaId())
                 && !io.github.finalparadox.entity.B8EncounterManager.isActive(level)
+                && !data.b8Triggered()
                 && data.activeBossUuid().isEmpty()
                 && data.korosUuid().isEmpty()
                 && data.floorAnchor().isPresent()) {

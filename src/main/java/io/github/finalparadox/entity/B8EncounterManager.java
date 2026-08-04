@@ -1,5 +1,6 @@
 package io.github.finalparadox.entity;
 
+import io.github.finalparadox.arena.ArenaDeploymentData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -44,6 +45,7 @@ public final class B8EncounterManager {
         CONTROLLERS.put(key(level), controller);
         data.setAnchor(anchor);
         controller.prepare(level, data);
+        ArenaDeploymentData.get(level).setB8Triggered(true);
         return true;
     }
 

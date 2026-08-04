@@ -21,6 +21,7 @@ public final class ArenaDeploymentData extends SavedData {
     private UUID stagedKoyoUuid;
     private UUID stagedGariUuid;
     private UUID korosUuid;
+    private boolean b8Triggered;
 
     public static ArenaDeploymentData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(ArenaDeploymentData::load, ArenaDeploymentData::new, DATA_NAME);
@@ -42,6 +43,7 @@ public final class ArenaDeploymentData extends SavedData {
         if (tag.hasUUID("StagedKoyo")) data.stagedKoyoUuid = tag.getUUID("StagedKoyo");
         if (tag.hasUUID("StagedGari")) data.stagedGariUuid = tag.getUUID("StagedGari");
         if (tag.hasUUID("Koros")) data.korosUuid = tag.getUUID("Koros");
+        data.b8Triggered = tag.getBoolean("B8Triggered");
         return data;
     }
 
@@ -56,6 +58,7 @@ public final class ArenaDeploymentData extends SavedData {
         if (stagedKoyoUuid != null) tag.putUUID("StagedKoyo", stagedKoyoUuid);
         if (stagedGariUuid != null) tag.putUUID("StagedGari", stagedGariUuid);
         if (korosUuid != null) tag.putUUID("Koros", korosUuid);
+        tag.putBoolean("B8Triggered", b8Triggered);
         return tag;
     }
 
@@ -69,6 +72,26 @@ public final class ArenaDeploymentData extends SavedData {
         stagedKoyoUuid = null;
         stagedGariUuid = null;
         korosUuid = null;
+        b8Triggered = false;
+        setDirty();
+    }
+
+    /**
+     * Records an arena that was placed by the world generator instead of by a
+     * manual deployment. The structure blocks already exist, so the deployment
+     * is immediately READY and no tile placement runs.
+     */
+    public void adoptWorldgen(ArenaDefinition definition, BlockPos anchor) {
+        state = DeploymentState.READY;
+        arenaId = definition.id();
+        floorAnchor = anchor.immutable();
+        nextTile = definition.tileCount();
+        error = "";
+        activeBossUuid = null;
+        stagedKoyoUuid = null;
+        stagedGariUuid = null;
+        korosUuid = null;
+        b8Triggered = false;
         setDirty();
     }
 
@@ -122,6 +145,12 @@ public final class ArenaDeploymentData extends SavedData {
         setDirty();
     }
 
+    public void setB8Triggered(boolean b8Triggered) {
+        if (this.b8Triggered == b8Triggered) return;
+        this.b8Triggered = b8Triggered;
+        setDirty();
+    }
+
     public DeploymentState state() {
         return state;
     }
@@ -156,6 +185,10 @@ public final class ArenaDeploymentData extends SavedData {
 
     public Optional<UUID> korosUuid() {
         return Optional.ofNullable(korosUuid);
+    }
+
+    public boolean b8Triggered() {
+        return b8Triggered;
     }
 
     public enum DeploymentState {

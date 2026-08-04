@@ -137,8 +137,10 @@ public final class ArenaCommands {
         int total = ArenaDefinitions.find(data.arenaId()).map(ArenaDefinition::tileCount).orElse(0);
         String anchor = data.floorAnchor().map(ArenaDeploymentManager::format).orElse("unknown");
         String detail = data.state() == ArenaDeploymentData.DeploymentState.ERROR ? "; error=" + data.error() : "";
+        String b8State = ArenaDefinitions.B8.id().equals(data.arenaId())
+                ? ", b8Triggered=" + data.b8Triggered() : "";
         source.sendSuccess(() -> Component.literal("Arena " + data.arenaId() + ": " + data.state().name().toLowerCase()
-                + ", tiles=" + data.nextTile() + "/" + total + ", floor anchor=" + anchor + detail), false);
+                + ", tiles=" + data.nextTile() + "/" + total + ", floor anchor=" + anchor + detail + b8State), false);
         return 1;
     }
 
