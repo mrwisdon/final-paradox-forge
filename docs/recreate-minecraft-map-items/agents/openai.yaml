@@ -1,0 +1,4 @@
+interface:
+  display_name: "Minecraft 地图内容复刻"
+  short_description: "将地图数据包中的物品、技能与竞技场忠实移植到 Forge 模组"
+  default_prompt: "使用 $recreate-minecraft-map-items 分析地图数据包、资源包和汉化包，并将指定物品、技能或竞技场忠实复刻为 Forge 模组内容。"
