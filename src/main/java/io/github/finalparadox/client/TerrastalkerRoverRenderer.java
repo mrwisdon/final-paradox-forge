@@ -2,7 +2,7 @@ package io.github.finalparadox.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import io.github.finalparadox.entity.TerrastalkerRoverEntity;
+import io.github.finalparadox.entity.TerrastalkerVisualState;
 import net.minecraft.client.model.ArmorStandModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -19,6 +19,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -37,11 +38,26 @@ import java.util.WeakHashMap;
  * head/right-arm matrices directly, avoiding unstable interpolation state on
  * non-ticked proxy entities.
  */
-public final class TerrastalkerRoverRenderer extends EntityRenderer<TerrastalkerRoverEntity> {
-    private static final CabinPart[] CABIN = {
+public final class TerrastalkerRoverRenderer<E extends Entity & TerrastalkerVisualState>
+        extends EntityRenderer<E> {
+    private static final CabinPart[] FRIENDLY_CABIN = {
             new CabinPart(0.0D, 0.7D, 0.35D, 0.0F, 45.0F),
             new CabinPart(0.0D, 0.35D, 0.5D, 0.0F, 90.0F),
             new CabinPart(-0.5D, 0.35D, 0.0D, 90.0F, 90.0F),
+            new CabinPart(0.5D, 0.35D, 0.0D, 270.0F, 90.0F),
+            new CabinPart(0.0D, 0.0D, 0.35D, 0.0F, 135.0F),
+            new CabinPart(-0.35D, 0.0D, 0.0D, 90.0F, 135.0F),
+            new CabinPart(0.0D, 0.0D, -0.35D, 180.0F, 135.0F),
+            new CabinPart(0.35D, 0.0D, 0.0D, 270.0F, 135.0F)
+    };
+    private static final CabinPart[] HOSTILE_CABIN = {
+            new CabinPart(0.0D, 0.7D, 0.35D, 0.0F, 45.0F),
+            new CabinPart(-0.35D, 0.7D, 0.0D, 90.0F, 45.0F),
+            new CabinPart(0.0D, 0.7D, -0.35D, 180.0F, 45.0F),
+            new CabinPart(0.35D, 0.7D, 0.0D, 270.0F, 45.0F),
+            new CabinPart(0.0D, 0.35D, 0.5D, 0.0F, 90.0F),
+            new CabinPart(-0.5D, 0.35D, 0.0D, 90.0F, 90.0F),
+            new CabinPart(0.0D, 0.35D, -0.5D, 180.0F, 90.0F),
             new CabinPart(0.5D, 0.35D, 0.0D, 270.0F, 90.0F),
             new CabinPart(0.0D, 0.0D, 0.35D, 0.0F, 135.0F),
             new CabinPart(-0.35D, 0.0D, 0.0D, 90.0F, 135.0F),
@@ -75,7 +91,6 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
 
     private static final int CANNON_PARTS = 2;
     private static final int LEG_PARTS = 8;
-    private static final int MODEL_PARTS = CABIN.length + CANNON_PARTS + LEG_PARTS;
     private static final float SOURCE_ARMOR_STAND_LERP_TICKS = 3.0F;
     private static final float CONTINUOUS_RENDER_GAP_TICKS = 1.5F;
     private static final double[] CANNON_FORWARD = {1.29D, 0.86D};
@@ -84,19 +99,14 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
     private static final ItemStack CANNON = new ItemStack(Items.NETHERITE_BLOCK);
     private static final ItemStack UPPER_SHIELD = makeShield(false);
     private static final ItemStack FOOT_SHIELD = makeShield(true);
-
-    static {
-        if (MODEL_PARTS != TerrastalkerRoverEntity.SOURCE_VISIBLE_PARTS) {
-            throw new IllegalStateException("Terrastalker source part count mismatch: " + MODEL_PARTS);
-        }
-    }
+    private static final ItemStack HOSTILE_FOOT_SHIELD = makeShield(true, 14);
 
     private final EntityRenderDispatcher dispatcher;
     private final ItemRenderer itemRenderer;
     private final ArmorStandModel armorStandModel;
     private Level cachedLevel;
     private ArmorStand nameStand;
-    private final Map<TerrastalkerRoverEntity, GaitTransition> gaitTransitions =
+    private final Map<E, GaitTransition> gaitTransitions =
             new WeakHashMap<>();
 
     public TerrastalkerRoverRenderer(EntityRendererProvider.Context context) {
@@ -108,13 +118,13 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
     }
 
     @Override
-    public ResourceLocation getTextureLocation(TerrastalkerRoverEntity entity) {
+    public ResourceLocation getTextureLocation(E entity) {
         return InventoryMenu.BLOCK_ATLAS;
     }
 
     @Override
     public void render(
-            TerrastalkerRoverEntity entity,
+            E entity,
             float entityYaw,
             float partialTick,
             PoseStack pose,
@@ -132,7 +142,8 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
         float turretYaw = Mth.rotLerp(
                 partialTick, entity.getPreviousTurretYaw(), entity.getTurretYaw());
 
-        for (CabinPart part : CABIN) {
+        CabinPart[] cabin = entity.isHostileVisual() ? HOSTILE_CABIN : FRIENDLY_CABIN;
+        for (CabinPart part : cabin) {
             Vec3 offset = rotateLocal(part.x, part.y, part.z, cabinYaw);
             float yaw = cabinYaw + part.localYaw;
             renderHeadItem(entity, SLAB, offset, yaw, part.headPitch, false,
@@ -166,22 +177,23 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
                     partIndex++, pose, buffers, packedLight);
 
             Vec3 footOffset = rotateLocal(leg.footX, leg.footY, leg.footZ, yaw);
-            renderLegShield(entity, FOOT_SHIELD, footOffset, yaw, leg.footRoll,
+            renderLegShield(entity, entity.isHostileVisual() ? HOSTILE_FOOT_SHIELD : FOOT_SHIELD,
+                    footOffset, yaw, leg.footRoll,
                     partIndex++, pose, buffers, packedLight);
         }
 
-        if (partIndex != TerrastalkerRoverEntity.SOURCE_VISIBLE_PARTS) {
+        if (partIndex != entity.sourceVisibleParts()) {
             throw new IllegalStateException("Rendered Terrastalker part count: " + partIndex);
         }
 
-        if (entity.getFirstPassenger() == null) {
+        if (entity.showMountHint() && entity.getFirstPassenger() == null) {
             renderMountHint(entity, cabinYaw, partialTick, pose, buffers, packedLight);
         }
         super.render(entity, entityYaw, partialTick, pose, buffers, packedLight);
     }
 
     private void renderMountHint(
-            TerrastalkerRoverEntity entity,
+            E entity,
             float cabinYaw,
             float partialTick,
             PoseStack pose,
@@ -233,9 +245,9 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
         stand.setNoBasePlate(false);
     }
 
-    private static void prepareForRender(
+    private void prepareForRender(
             ArmorStand stand,
-            TerrastalkerRoverEntity owner,
+            E owner,
             Vec3 offset,
             float yaw
     ) {
@@ -268,7 +280,7 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
 
     /** Replays the vanilla 1.20.1 armor-stand HEAD item transform chain. */
     private void renderHeadItem(
-            TerrastalkerRoverEntity owner,
+            E owner,
             ItemStack item,
             Vec3 offset,
             float yaw,
@@ -320,7 +332,7 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
      * can diverge before the rover is mounted.
      */
     private void renderLegShield(
-            TerrastalkerRoverEntity owner,
+            E owner,
             ItemStack shield,
             Vec3 offset,
             float yaw,
@@ -372,6 +384,10 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
     }
 
     private static ItemStack makeShield(boolean foot) {
+        return makeShield(foot, 11);
+    }
+
+    private static ItemStack makeShield(boolean foot, int footColor) {
         ItemStack stack = new ItemStack(Items.SHIELD);
         CompoundTag blockEntity = new CompoundTag();
         blockEntity.putInt("Base", 8);
@@ -380,7 +396,7 @@ public final class TerrastalkerRoverRenderer extends EntityRenderer<Terrastalker
         addPattern(patterns, 8, "gru");
         addPattern(patterns, 8, "gra");
         addPattern(patterns, 8, "ss");
-        if (foot) addPattern(patterns, 11, "gra");
+        if (foot) addPattern(patterns, footColor, "gra");
         blockEntity.put("Patterns", patterns);
         stack.getOrCreateTag().put("BlockEntityTag", blockEntity);
         return stack;

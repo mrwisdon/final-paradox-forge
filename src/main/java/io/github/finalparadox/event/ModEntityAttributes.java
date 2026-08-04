@@ -10,6 +10,7 @@ import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
 import io.github.finalparadox.entity.GariBossEntity;
 import io.github.finalparadox.entity.B8DetonatorBombEntity;
+import io.github.finalparadox.entity.HostileTerrastalkerEntity;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -26,5 +27,6 @@ public final class ModEntityAttributes {
         event.put(ModEntities.KOYOMI.get(), KoyomiBossEntity.createAttributes().build());
         event.put(ModEntities.GARI.get(), GariBossEntity.createAttributes().build());
         event.put(ModEntities.B8_DETONATOR_BOMB.get(), B8DetonatorBombEntity.createAttributes().build());
+        event.put(ModEntities.HOSTILE_TERRASTALKER.get(), HostileTerrastalkerEntity.createAttributes().build());
     }
 }

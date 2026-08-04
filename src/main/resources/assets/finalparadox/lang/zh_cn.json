@@ -1488,7 +1488,7 @@
   "luisb1202.functions.bossfight.b8.h3.tnt.gen.1": "§e炸弹人 §c[⌚]",
   "luisb1202.functions.bossfight.b8.h3.golem.gen.1": "§e§l疯狂傀儡 §6[🪓]",
   "luisb1202.functions.bossfight.b8.fase.5.ronda3.1": "§c§l<§c!§c§l> §c矩阵新生成了一个大地漫游器！",
-  "luisb1202.functions.bossfight.b8.fase.5.ronda5.1": "§c§l<§c!§c§l> §c矩阵新生成了一个大地漫游器！",
+  "luisb1202.functions.bossfight.b8.fase.5.ronda5.1": "§c§l<§c!§c§l> §c矩阵新生成了多个大地漫游器！",
   "luisb1202.functions.bossfight.b8.fase.1.comenzar.1": "§c☠",
   "luisb1202.functions.bossfight.b8.fase.2.ini.1": "§a阶段 2",
   "luisb1202.functions.bossfight.b8.fase.3.ini.1": "§a阶段 3",
@@ -1534,5 +1534,7 @@
   "message.finalparadox.koros.guide.ability.hallucinatory_poison.solo.detail": "§6§l致幻龙毒§r §7（单人游戏版）§r\n\n加里赫兹会让你感染紫色龙毒并留下毒液池。你需要踩在毒液池中以将池子颜色反转（绿色或紫色）。之后就会马上出现11个加里赫兹的复制体。绿色龙毒会让你看见5/11的复制体带有粒子标记，而紫色龙毒会让你看到另外5/11的不同标记。只有1/11的复制体没有任何标记，那个就是本体，你必须攻击他。击中了错误的复制体会对每个人都造成致命伤害。如果你没有在75秒内找到本体，你会开始受到周期性伤害。\n\n§b§l提示：§r\n\n1º 用毒液池改变龙毒颜色，以找到真正的本体。",
   "message.finalparadox.koros.guide.ability.hallucinatory_poison.multi.detail": "§6§l致幻龙毒§r §7（多人游戏版）§r\n\n加里赫兹会让半数玩家感染绿色龙毒，剩下的一半人会感染紫色龙毒。之后就会马上出现11个加里赫兹的复制体。感染绿色龙毒的玩家会看见5/11的复制体带有粒子标记，而感染紫色龙毒的玩家会看到另外5/11的不同标记。只有1/11的复制体§c没有§r任何标记，那个就是本体，你必须攻击他。击中了错误的复制体会对每个人都造成致命伤害。如果你没有在75秒内找到本体，你会开始受到周期性伤害。\n\n§b§l提示：§r\n\n1º 在这个阶段中，玩家之间的交流就是制胜法宝。",
   "message.finalparadox.koros.guide.ability.tridentstorm": "   §e▶ §r三叉戟风暴 （§l！§r 危险）",
-  "message.finalparadox.koros.guide.ability.tridentstorm.detail": "§6§l三叉戟风暴§r\n\n只有感染了紫色龙毒的玩家才能看见整个房间都被白色区域覆盖 这些白色区域预示着即将到来的三叉戟密集火力。\n如果被三叉戟多次击中，会受到§c更多的伤害§f。\n\n§b§l提示：§r\n\n1º 如果你感染了紫色龙毒，请将感染了绿色龙毒的玩家\n带到安全的区域。"
+  "message.finalparadox.koros.guide.ability.tridentstorm.detail": "§6§l三叉戟风暴§r\n\n只有感染了紫色龙毒的玩家才能看见整个房间都被白色区域覆盖 这些白色区域预示着即将到来的三叉戟密集火力。\n如果被三叉戟多次击中，会受到§c更多的伤害§f。\n\n§b§l提示：§r\n\n1º 如果你感染了紫色龙毒，请将感染了绿色龙毒的玩家\n带到安全的区域。",
+  "entity.finalparadox.hostile_terrastalker": "§c§l大地漫游器",
+  "luisb1202.functions.carga_lanas.14_verde.el_acechador.msg.1": "§c§l<§c!§c§l> §c大地漫游器机炮已过热，正在冷却！"
 }

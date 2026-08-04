@@ -44,6 +44,7 @@ public final class B8EncounterData extends SavedData {
     private int healthTotal = 250;
     private boolean vulnerable;
     private int addCount;
+    private int hostileTerrastalkerKills;
     private UUID matrixUuid;
     private final Set<UUID> participants = new HashSet<>();
     private final Set<UUID> spectators = new HashSet<>();
@@ -106,6 +107,7 @@ public final class B8EncounterData extends SavedData {
         data.healthTotal = Math.max(1, tag.getInt("HealthTotal"));
         data.vulnerable = tag.getBoolean("Vulnerable");
         data.addCount = tag.getInt("AddCount");
+        data.hostileTerrastalkerKills = tag.getInt("HostileTerrastalkerKills");
         if (tag.hasUUID("Matrix")) data.matrixUuid = tag.getUUID("Matrix");
         data.ruleImmediateRespawn = tag.getBoolean("RuleImmediateRespawn");
         data.ruleMobGriefing = tag.getBoolean("RuleMobGriefing");
@@ -199,6 +201,7 @@ public final class B8EncounterData extends SavedData {
         tag.putInt("HealthTotal", healthTotal);
         tag.putBoolean("Vulnerable", vulnerable);
         tag.putInt("AddCount", addCount);
+        tag.putInt("HostileTerrastalkerKills", hostileTerrastalkerKills);
         if (matrixUuid != null) tag.putUUID("Matrix", matrixUuid);
         tag.putBoolean("RuleImmediateRespawn", ruleImmediateRespawn);
         tag.putBoolean("RuleMobGriefing", ruleMobGriefing);
@@ -500,6 +503,23 @@ public final class B8EncounterData extends SavedData {
     public void setAddCount(int addCount) {
         this.addCount = addCount;
         setDirty();
+    }
+
+    public int hostileTerrastalkerKills() {
+        return hostileTerrastalkerKills;
+    }
+
+    public int incrementHostileTerrastalkerKills() {
+        hostileTerrastalkerKills++;
+        setDirty();
+        return hostileTerrastalkerKills;
+    }
+
+    public void resetHostileTerrastalkerKills() {
+        if (hostileTerrastalkerKills != 0) {
+            hostileTerrastalkerKills = 0;
+            setDirty();
+        }
     }
 
     public UUID matrixUuid() {

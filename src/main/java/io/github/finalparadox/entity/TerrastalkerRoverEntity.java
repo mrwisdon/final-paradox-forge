@@ -61,7 +61,7 @@ import java.util.UUID;
  * Terrastalker (`el_montura`). The B8 and improved-item variants share the
  * source construction but keep their different energy and damage rules.
  */
-public final class TerrastalkerRoverEntity extends Entity {
+public final class TerrastalkerRoverEntity extends Entity implements TerrastalkerVisualState {
     private static final Logger LOGGER = LogUtils.getLogger();
     public static final int B8_MAX_ENERGY = 100;
     public static final int IMPROVED_MAX_ENERGY = 25;
