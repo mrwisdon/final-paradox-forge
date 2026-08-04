@@ -167,6 +167,12 @@ public final class B8EncounterManager {
         if (controller != null) controller.onModuleLanded(level, module);
     }
 
+    public static void onHostileTerrastalkerDeath(
+            ServerLevel level, HostileTerrastalkerEntity terrastalker) {
+        B8EncounterController controller = requireController(level);
+        if (controller != null) controller.onHostileTerrastalkerDeath(level, terrastalker);
+    }
+
     /** Sniper bullet tick: returns true when the bullet exploded and was discarded. */
     public static boolean onSniperBulletTick(ServerLevel level, B8SniperBulletEntity bullet) {
         B8EncounterController controller = requireController(level);

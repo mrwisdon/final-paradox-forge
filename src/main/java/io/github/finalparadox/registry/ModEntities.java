@@ -14,6 +14,7 @@ import io.github.finalparadox.entity.TeslaCoreEntity;
 import io.github.finalparadox.entity.FrostStormEntity;
 import io.github.finalparadox.entity.PicomerangEntity;
 import io.github.finalparadox.entity.TerrastalkerRoverEntity;
+import io.github.finalparadox.entity.HostileTerrastalkerEntity;
 import io.github.finalparadox.entity.ZombieSupermatrixEntity;
 import io.github.finalparadox.entity.B8H2ModuleEntity;
 import io.github.finalparadox.entity.B8SniperBulletEntity;
@@ -183,6 +184,14 @@ public final class ModEntities {
     public static final RegistryObject<EntityType<ProfaneTechniqueEntity>> PROFANE_TECHNIQUE=REGISTER.register("profane_technique",()->EntityType.Builder.<ProfaneTechniqueEntity>of(ProfaneTechniqueEntity::new,MobCategory.MISC).sized(.1F,.1F).clientTrackingRange(64).updateInterval(1).build("profane_technique"));
     public static final RegistryObject<EntityType<OmegaTechniqueEntity>> OMEGA_TECHNIQUE=REGISTER.register("omega_technique",()->EntityType.Builder.<OmegaTechniqueEntity>of(OmegaTechniqueEntity::new,MobCategory.MISC).sized(.1F,.1F).clientTrackingRange(64).updateInterval(1).build("omega_technique"));
     public static final RegistryObject<EntityType<TerrastalkerRoverEntity>> TERRASTALKER_ROVER=REGISTER.register("terrastalker_rover",()->EntityType.Builder.<TerrastalkerRoverEntity>of(TerrastalkerRoverEntity::new,MobCategory.MISC).sized(.6F,.8F).clientTrackingRange(64).updateInterval(1).build("terrastalker_rover"));
+    public static final RegistryObject<EntityType<HostileTerrastalkerEntity>> HOSTILE_TERRASTALKER = REGISTER.register(
+            "hostile_terrastalker",
+            () -> EntityType.Builder.<HostileTerrastalkerEntity>of(
+                            HostileTerrastalkerEntity::new, MobCategory.MONSTER)
+                    .sized(2.8F, 1.8F)
+                    .clientTrackingRange(96)
+                    .updateInterval(1)
+                    .build("hostile_terrastalker"));
     public static final RegistryObject<EntityType<ZombieSupermatrixEntity>> ZOMBIE_SUPERMATRIX = REGISTER.register(
             "zombie_supermatrix", () -> EntityType.Builder
                     .<ZombieSupermatrixEntity>of(ZombieSupermatrixEntity::new, MobCategory.MISC)

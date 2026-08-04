@@ -202,6 +202,7 @@ public final class B8EncounterController {
         data.setHealthTotal(INITIAL_HEALTH);
         data.setVulnerable(false);
         data.setAddCount(0);
+        data.resetHostileTerrastalkerKills();
         data.setMatrixUuid(null);
         data.clearTimers();
         data.clearCleanup();
@@ -1614,7 +1615,8 @@ public final class B8EncounterController {
                         || candidate.getTags().contains("b8_h3_sniper_bala")
                         || candidate.getTags().contains("b8_h3_detonator_bomb")
                         || candidate.getTags().contains("b8_h3_crushing_wave")
-                        || candidate.getTags().contains("b8_h3_crushing_cast")))) {
+                        || candidate.getTags().contains("b8_h3_crushing_cast")
+                        || candidate.getTags().contains("b8_hostile_terrastalker")))) {
             entity.discard();
         }
         data.setAddCount(0);
@@ -1744,8 +1746,8 @@ public final class B8EncounterController {
                         spawnAddWave(server, data, "sniper");
                         schedule(server, data, now, TIMER_H4_INI2, 60);
                     }
-                    case 3, 4 -> acechadorRound(server, data, "ronda3");
-                    case 5, 6 -> acechadorRound(server, data, "ronda5");
+                    case 3 -> acechadorRound(server, data, "ronda3");
+                    case 5 -> acechadorRound(server, data, "ronda5");
                     case 7 -> {
                         schedule(server, data, now, TIMER_H4_INI, 1);
                         schedule(server, data, now, TIMER_H4_INI2, 120);
@@ -1770,13 +1772,32 @@ public final class B8EncounterController {
     }
 
     private void acechadorRound(ServerLevel server, B8EncounterData data, String keySuffix) {
-        // The hostile acechador is deferred; the source round plays a sound and
-        // a tellraw message. Spawn the acechador here once implemented.
         String key = "luisb1202.functions.bossfight.b8.fase.5.ronda" + keySuffix + ".1";
         for (ServerPlayer player : server.players()) {
             server.playSound(null, player.blockPosition(), SoundEvents.EVOKER_PREPARE_ATTACK,
                     SoundSource.MASTER, 6.0F, 1.4F);
             player.sendSystemMessage(Component.translatable(key));
+        }
+        int spawnCount = HostileTerrastalkerRules.spawnCountForRound(data.ronda());
+        BlockPos center = data.anchor();
+        if (center == null || spawnCount == 0) return;
+        int startIndex = server.random.nextInt(17);
+        for (int index = 0; index < spawnCount; index++) {
+            int pointIndex = (startIndex + index * 8) % 17;
+            Vec3 position;
+            if (pointIndex == 16) {
+                position = new Vec3(center.getX() + 0.5D, center.getY() + 21.0D,
+                        center.getZ() + 0.5D);
+            } else {
+                double angle = Math.toRadians(pointIndex * 22.5D);
+                position = new Vec3(
+                        center.getX() + 0.5D - Math.sin(angle) * 10.0D,
+                        center.getY() + 21.0D,
+                        center.getZ() + 0.5D + Math.cos(angle) * 10.0D);
+            }
+            HostileTerrastalkerEntity terrastalker = HostileTerrastalkerEntity.spawn(
+                    server, position, center, nonSpectatorCount(server));
+            data.addCleanup(terrastalker.getUUID());
         }
     }
 
@@ -1785,8 +1806,15 @@ public final class B8EncounterController {
         if (center == null) return false;
         net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(
                 center.offset(-40, -10, -40), center.offset(40, 30, 40));
-        return !server.getEntitiesOfClass(Entity.class, box,
-                entity -> entity.isAlive() && entity.getTags().contains("14_acechador_core")).isEmpty();
+        return !server.getEntitiesOfClass(HostileTerrastalkerEntity.class, box,
+                Entity::isAlive).isEmpty();
+    }
+
+    public void onHostileTerrastalkerDeath(
+            ServerLevel server, HostileTerrastalkerEntity terrastalker) {
+        if (!data.active() || data.fase() != 5) return;
+        int defeated = data.incrementHostileTerrastalkerKills();
+        if (defeated >= 2 && data.health() > 30) setHealth(30);
     }
 
     /* ------------------------------ M6 defeat flow ------------------------------ */
