@@ -43,7 +43,8 @@ import net.minecraftforge.network.NetworkHooks;
  * rotating TNT and its countdown.
  */
 public final class B8DetonatorBombEntity extends Slime {
-    public static final int FUSE_TICKS = 100;
+    /** 3-second fuse; the countdown only starts once the bomb has landed. */
+    public static final int FUSE_TICKS = 60;
     public static final double BLAST_RADIUS = 25.0D;
     /** Throw origin above the dying skeleton's feet: its TNT head height. */
     public static final double THROW_HEIGHT = 1.7D;
@@ -176,12 +177,11 @@ public final class B8DetonatorBombEntity extends Slime {
             }
         } else {
             setDeltaMovement(Vec3.ZERO);
+            int fuse = getFuseTicks() + 1;
+            entityData.set(DATA_FUSE, fuse);
+            tickFlash(server, fuse);
+            if (fuse >= FUSE_TICKS) explode(server);
         }
-
-        int fuse = getFuseTicks() + 1;
-        entityData.set(DATA_FUSE, fuse);
-        tickFlash(server, fuse);
-        if (fuse >= FUSE_TICKS) explode(server);
     }
 
     /**
@@ -345,15 +345,12 @@ public final class B8DetonatorBombEntity extends Slime {
         return entityData.get(DATA_RED_FLASH);
     }
 
-    /** The source starts with a red "3" for ten ticks before its first update to four. */
+    /** Landed bombs count 3, 2, 1 over the three-second fuse. */
     public int getCountdownNumber() {
         int fuse = getFuseTicks();
-        if (fuse < 10) return 3;
-        if (fuse <= 20) return 4;
-        if (fuse <= 40) return 3;
-        if (fuse <= 60) return 2;
-        if (fuse <= 80) return 1;
-        return 0;
+        if (fuse < 20) return 3;
+        if (fuse < 40) return 2;
+        return 1;
     }
 
     @Override
