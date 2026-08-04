@@ -25,6 +25,11 @@
     separation 80)
   - `tags/worldgen/biome/has_structure/b8_arena.json`
 
+`worldgen/structure/b8.json` registers `finalparadox:b8` as an alias entry
+using the same `finalparadox:b8_arena` structure type and biome tag. Both
+`/locate structure finalparadox:b8` and
+`/locate structure finalparadox:b8_arena` resolve to a B8 placement.
+
 ## Chunk-load adoption
 
 `ArenaDeploymentEvents.onChunkLoad` scans `ChunkAccess.getAllStarts()` on the
@@ -64,7 +69,9 @@ worldgen adoption: adoption only happens when the record is IDLE.
 Passed:
 
 - `gradlew.bat build` succeeds (compileJava, processResources, reobfJar).
-- All three new JSON resources parse and are picked up by `processResources`.
+- A test server resolved both `/locate structure finalparadox:b8` and
+  `/locate structure finalparadox:b8_arena` to a B8 placement.
+- All new worldgen JSON resources parse and are picked up by `processResources`.
 
 Still requires in-game observation:
 
