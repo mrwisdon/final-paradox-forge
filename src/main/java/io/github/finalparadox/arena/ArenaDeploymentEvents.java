@@ -24,12 +24,20 @@ public final class ArenaDeploymentEvents {
         ArenaDeploymentData data = ArenaDeploymentData.get(level);
         if (data.state() != ArenaDeploymentData.DeploymentState.IDLE) return;
         for (StructureStart start : event.getChunk().getAllStarts().values()) {
-            if (!start.isValid() || start.getStructure().type() != ModWorldgen.B8_ARENA.get()) continue;
+            if (!start.isValid()) continue;
             BoundingBox box = start.getBoundingBox();
-            // minimumCorner = floorAnchor + (-23, -9, -24), so reverse it.
-            BlockPos anchor = new BlockPos(box.minX() + 23, box.minY() + 9, box.minZ() + 24);
-            data.adoptWorldgen(ArenaDefinitions.B8, anchor);
-            return;
+            if (start.getStructure().type() == ModWorldgen.B8_ARENA.get()) {
+                // minimumCorner = floorAnchor + (-23, -9, -24), so reverse it.
+                BlockPos anchor = new BlockPos(box.minX() + 23, box.minY() + 9, box.minZ() + 24);
+                data.adoptWorldgen(ArenaDefinitions.B8, anchor);
+                return;
+            }
+            if (start.getStructure().type() == ModWorldgen.MARAWTHAR_ARENA.get()) {
+                // minimumCorner = floorAnchor + (-64, -5, -64), so reverse it.
+                BlockPos anchor = new BlockPos(box.minX() + 64, box.minY() + 5, box.minZ() + 64);
+                data.adoptWorldgen(ArenaDefinitions.MARAWTHAR, anchor);
+                return;
+            }
         }
     }
 

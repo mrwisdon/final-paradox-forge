@@ -29,6 +29,9 @@ instead.
 - `ArenaDeploymentManager.tick` spawns the echo when the Maraw'Thar arena is
   READY, not triggered, has no living boss, and a player enters the 18-block
   range. The echo despawns if nobody stays within 30 blocks.
+- `ArenaDeploymentEvents.onChunkLoad` adopts a naturally generated
+  `finalparadox:marawthar_arena` start as READY, so the same echo and
+  boss flow runs for world-generated arenas, not only manual deploy.
 - `ArenaDeploymentData` persists `eotharUuid` and `marawTharTriggered`; both
   reset on `begin()` so `deploy marawthar` / `reset marawthar` can retest.
 - `/finalparadox eothar_menu <uuid> <action>` handles the clickable menu.
@@ -45,6 +48,9 @@ Passed:
 - `gradlew.bat build` succeeds.
 - Dedicated server smoke test summons `finalparadox:eothar_echo` and ticks it
   without errors.
+- Dedicated server force-loaded a naturally generated `finalparadox:marawthar_arena`
+  start; `/finalparadox arena status` became `marawthar: ready, tiles=18/18`
+  with `marawTharTriggered=false`.
 
 Still requires in-game observation:
 
