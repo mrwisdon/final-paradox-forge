@@ -80,6 +80,9 @@ public final class ArenaCommands {
             if (existing == ArenaDefinitions.B5 && !B5EncounterManager.isActive(level)) {
                 B5ArenaStaging.cleanupWaiting(level, data);
             }
+            if (existing == ArenaDefinitions.MARAWTHAR) {
+                MarawTharArenaStaging.cleanupWaiting(level, data);
+            }
         });
         if (ArenaDefinitions.find(data.arenaId()).flatMap(existing -> ArenaDeploymentManager.findActiveBoss(level, data, existing)).isPresent()) {
             source.sendFailure(Component.literal("The recorded arena still has a living boss. Defeat or remove it first."));
@@ -112,6 +115,9 @@ public final class ArenaCommands {
         if (definition == ArenaDefinitions.B5 && !B5EncounterManager.isActive(level)) {
             B5ArenaStaging.cleanupWaiting(level, data);
         }
+        if (definition == ArenaDefinitions.MARAWTHAR) {
+            MarawTharArenaStaging.cleanupWaiting(level, data);
+        }
         if (ArenaDeploymentManager.findActiveBoss(level, data, definition).isPresent()) {
             source.sendFailure(Component.literal("The " + definition.id().toUpperCase()
                     + " arena still has a living boss. Defeat or remove it first."));
@@ -139,8 +145,10 @@ public final class ArenaCommands {
         String detail = data.state() == ArenaDeploymentData.DeploymentState.ERROR ? "; error=" + data.error() : "";
         String b8State = ArenaDefinitions.B8.id().equals(data.arenaId())
                 ? ", b8Triggered=" + data.b8Triggered() : "";
+        String marawState = ArenaDefinitions.MARAWTHAR.id().equals(data.arenaId())
+                ? ", marawTharTriggered=" + data.marawTharTriggered() : "";
         source.sendSuccess(() -> Component.literal("Arena " + data.arenaId() + ": " + data.state().name().toLowerCase()
-                + ", tiles=" + data.nextTile() + "/" + total + ", floor anchor=" + anchor + detail + b8State), false);
+                + ", tiles=" + data.nextTile() + "/" + total + ", floor anchor=" + anchor + detail + b8State + marawState), false);
         return 1;
     }
 
@@ -192,6 +200,8 @@ public final class ArenaCommands {
             return 0;
         }
 
+        MarawTharArenaStaging.cleanupWaiting(level, data);
+
         BlockPos spawn = definition.bossSpawnBlock(data.floorAnchor().orElseThrow());
         MarawTharBossEntity boss = ModEntities.MARAWTHAR.get().create(level);
         if (boss == null) {
@@ -204,6 +214,7 @@ public final class ArenaCommands {
             return 0;
         }
         data.setActiveBossUuid(boss.getUUID());
+        data.setMarawTharTriggered(true);
         source.sendSuccess(() -> Component.literal("Maraw‘Thar created at logical anchor "
                 + ArenaDeploymentManager.format(spawn) + "."), true);
         return 1;

@@ -2,6 +2,7 @@ package io.github.finalparadox.arena;
 
 import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.MarawTharBossEntity;
+import io.github.finalparadox.entity.EotharEchoEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
 import io.github.finalparadox.entity.GariBossEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
@@ -68,6 +69,35 @@ public final class ArenaDeploymentManager {
             }
             return;
         }
+        if (data.state() == ArenaDeploymentData.DeploymentState.READY
+                && ArenaDefinitions.MARAWTHAR.id().equals(data.arenaId())) {
+            if (data.marawTharTriggered() || data.activeBossUuid().isPresent()) return;
+            Optional<BlockPos> anchorResult = data.floorAnchor();
+            if (anchorResult.isEmpty()) return;
+            BlockPos anchor = anchorResult.get();
+            data.eotharUuid().ifPresent(uuid -> {
+                Entity existing = level.getEntity(uuid);
+                if (!(existing instanceof EotharEchoEntity echo) || !echo.isAlive()) {
+                    data.clearEothar();
+                }
+            });
+            if (data.eotharUuid().isPresent()) {
+                Entity existing = level.getEntity(data.eotharUuid().orElseThrow());
+                if (existing instanceof EotharEchoEntity echo
+                        && !MarawTharArenaStaging.anyPlayerNear(level, anchor, 30.0D)) {
+                    echo.depart();
+                    data.clearEothar();
+                }
+                return;
+            }
+            if (MarawTharArenaStaging.anyPlayerNear(level, anchor, 18.0D)) {
+                MarawTharArenaStaging.spawnEothar(level, data, anchor).ifPresent(echo ->
+                        notifyPlayers(level, Component.literal(
+                                "Eothar's echo stirs at the Maraw'Thar arena.")));
+            }
+            return;
+        }
+
         if (data.state() != ArenaDeploymentData.DeploymentState.DEPLOYING) return;
 
         Optional<ArenaDefinition> definitionResult = ArenaDefinitions.find(data.arenaId());

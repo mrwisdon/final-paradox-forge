@@ -80,6 +80,9 @@ public final class ArenaDefinitions {
      */
     public static final BlockPos B8_KOROS_OFFSET = new BlockPos(8, 2, -5);
 
+    /** Eothar echo position relative to the MarawThar floor anchor. */
+    public static final BlockPos MARAWTHAR_EOTHAR_OFFSET = new BlockPos(0, 2, 5);
+
     private static final Map<String, ArenaDefinition> BY_ID = Map.of(
             B1.id(), B1,
             MARAWTHAR.id(), MARAWTHAR,

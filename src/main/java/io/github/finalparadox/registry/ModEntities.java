@@ -52,6 +52,7 @@ import io.github.finalparadox.entity.NightfallLaserEntity;
 import io.github.finalparadox.entity.NightfallChainBladeEntity;
 import io.github.finalparadox.entity.AtacromGauntletEntity;
 import io.github.finalparadox.entity.MarawTharBossEntity;
+import io.github.finalparadox.entity.EotharEchoEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -249,6 +250,11 @@ public final class ModEntities {
             "gari", () -> EntityType.Builder
                     .<GariBossEntity>of(GariBossEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.95F).clientTrackingRange(96).updateInterval(1).build("gari"));
+    public static final RegistryObject<EntityType<EotharEchoEntity>> EOTHAR_ECHO = REGISTER.register(
+            "eothar_echo", () -> EntityType.Builder
+                    .<EotharEchoEntity>of(EotharEchoEntity::new, MobCategory.MISC)
+                    .sized(0.6F, 1.95F).fireImmune().clientTrackingRange(96).updateInterval(10)
+                    .build("eothar_echo"));
     public static final RegistryObject<EntityType<KorosEchoEntity>> KOROS_ECHO = REGISTER.register(
             "koros_echo", () -> EntityType.Builder
                     .<KorosEchoEntity>of(KorosEchoEntity::new, MobCategory.MISC)

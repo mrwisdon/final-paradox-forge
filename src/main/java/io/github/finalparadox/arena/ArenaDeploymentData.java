@@ -21,6 +21,8 @@ public final class ArenaDeploymentData extends SavedData {
     private UUID stagedKoyoUuid;
     private UUID stagedGariUuid;
     private UUID korosUuid;
+    private UUID eotharUuid;
+    private boolean marawTharTriggered;
     private boolean b8Triggered;
 
     public static ArenaDeploymentData get(ServerLevel level) {
@@ -43,6 +45,8 @@ public final class ArenaDeploymentData extends SavedData {
         if (tag.hasUUID("StagedKoyo")) data.stagedKoyoUuid = tag.getUUID("StagedKoyo");
         if (tag.hasUUID("StagedGari")) data.stagedGariUuid = tag.getUUID("StagedGari");
         if (tag.hasUUID("Koros")) data.korosUuid = tag.getUUID("Koros");
+        if (tag.hasUUID("Eothar")) data.eotharUuid = tag.getUUID("Eothar");
+        data.marawTharTriggered = tag.getBoolean("MarawTharTriggered");
         data.b8Triggered = tag.getBoolean("B8Triggered");
         return data;
     }
@@ -58,6 +62,8 @@ public final class ArenaDeploymentData extends SavedData {
         if (stagedKoyoUuid != null) tag.putUUID("StagedKoyo", stagedKoyoUuid);
         if (stagedGariUuid != null) tag.putUUID("StagedGari", stagedGariUuid);
         if (korosUuid != null) tag.putUUID("Koros", korosUuid);
+        if (eotharUuid != null) tag.putUUID("Eothar", eotharUuid);
+        tag.putBoolean("MarawTharTriggered", marawTharTriggered);
         tag.putBoolean("B8Triggered", b8Triggered);
         return tag;
     }
@@ -72,6 +78,8 @@ public final class ArenaDeploymentData extends SavedData {
         stagedKoyoUuid = null;
         stagedGariUuid = null;
         korosUuid = null;
+        eotharUuid = null;
+        marawTharTriggered = false;
         b8Triggered = false;
         setDirty();
     }
@@ -91,6 +99,8 @@ public final class ArenaDeploymentData extends SavedData {
         stagedKoyoUuid = null;
         stagedGariUuid = null;
         korosUuid = null;
+        eotharUuid = null;
+        marawTharTriggered = false;
         b8Triggered = false;
         setDirty();
     }
@@ -151,6 +161,23 @@ public final class ArenaDeploymentData extends SavedData {
         setDirty();
     }
 
+    public void setEotharUuid(UUID eotharUuid) {
+        this.eotharUuid = eotharUuid;
+        setDirty();
+    }
+
+    public void clearEothar() {
+        if (eotharUuid == null) return;
+        eotharUuid = null;
+        setDirty();
+    }
+
+    public void setMarawTharTriggered(boolean marawTharTriggered) {
+        if (this.marawTharTriggered == marawTharTriggered) return;
+        this.marawTharTriggered = marawTharTriggered;
+        setDirty();
+    }
+
     public DeploymentState state() {
         return state;
     }
@@ -185,6 +212,14 @@ public final class ArenaDeploymentData extends SavedData {
 
     public Optional<UUID> korosUuid() {
         return Optional.ofNullable(korosUuid);
+    }
+
+    public Optional<UUID> eotharUuid() {
+        return Optional.ofNullable(eotharUuid);
+    }
+
+    public boolean marawTharTriggered() {
+        return marawTharTriggered;
     }
 
     public boolean b8Triggered() {
