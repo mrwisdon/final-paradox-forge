@@ -27,7 +27,7 @@ public final class ArenaDefinitions {
             3,
             2,
             3,
-            new Vec3i(0, 4, 0));
+            new Vec3i(0, 1, 0));
 
     public static final ArenaDefinition B5 = new ArenaDefinition(
             "b5",

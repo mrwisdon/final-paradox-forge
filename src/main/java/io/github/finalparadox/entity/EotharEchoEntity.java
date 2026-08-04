@@ -195,7 +195,7 @@ public final class EotharEchoEntity extends Entity {
         if (possessionTicks == POSSESSION_SWORD_TICK) {
             ArmorStand main = entranceStand(server);
             if (main != null) {
-                main.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.NIGHTFALL.get()));
+                main.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
             }
             server.playSound(null, arenaAnchor, SoundEvents.TRIDENT_THUNDER,
                     SoundSource.MASTER, 1.0F, 1.2F);
@@ -246,7 +246,7 @@ public final class EotharEchoEntity extends Entity {
 
     private void spawnEntranceStand(ServerLevel server) {
         Vec3 position = new Vec3(
-                arenaAnchor.getX() + 7.0D, arenaAnchor.getY() + 2.6D, arenaAnchor.getZ());
+                arenaAnchor.getX() + 7.0D, arenaAnchor.getY() - 0.4D, arenaAnchor.getZ());
         ArmorStand stand = createEntranceStand(server, position, false, false);
         stand.setItemSlot(EquipmentSlot.HEAD, texturedHead(CALM_HEAD_TEXTURE));
         stand.setItemSlot(EquipmentSlot.CHEST, dyed(Items.LEATHER_CHESTPLATE, 2236962));
@@ -256,7 +256,7 @@ public final class EotharEchoEntity extends Entity {
 
     private void spawnEntranceBoots(ServerLevel server) {
         Vec3 position = new Vec3(
-                arenaAnchor.getX() + 6.5D, arenaAnchor.getY() + 2.3D, arenaAnchor.getZ());
+                arenaAnchor.getX() + 6.5D, arenaAnchor.getY() - 0.7D, arenaAnchor.getZ());
         ArmorStand stand = createEntranceStand(server, position, true, true);
         stand.setItemSlot(EquipmentSlot.FEET, dyed(Items.LEATHER_BOOTS, 16711680));
         entranceBootsUuid = stand.getUUID();

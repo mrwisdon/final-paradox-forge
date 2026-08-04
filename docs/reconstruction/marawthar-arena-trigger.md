@@ -37,10 +37,9 @@ instead.
 - `/finalparadox eothar_menu <uuid> <action>` handles the clickable menu.
 - The challenge confirm plays a 140-tick possession sequence. Two armor stands
   reproduce `gen_conquistador_arrodillado` (kneeling corpse and red boots), the
-  head lowers/rises and the right arm raises while the Nightfall sword appears,
-  then `MarawTharArenaStaging.spawnBoss` records the boss UUID, marks the
-  encounter triggered, and removes the echo and corpse. The corpse visual and
-  the boss spawn are three blocks above the original anchor height.
+  head lowers/rises and the right arm raises while the sword appears, then
+  `MarawTharArenaStaging.spawnBoss` records the boss UUID, marks the encounter
+  triggered, and removes the echo and corpse.
 - `/finalparadox arena start marawthar` remains a debug shortcut; it also
   removes any waiting echo and marks the encounter triggered.
 
