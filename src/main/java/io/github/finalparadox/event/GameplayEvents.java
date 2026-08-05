@@ -15,6 +15,7 @@ import io.github.finalparadox.item.TyrannicalDecapitatorItem;
 import io.github.finalparadox.entity.WindTornadoEntity;
 import io.github.finalparadox.entity.B5EncounterManager;
 import io.github.finalparadox.entity.B8EncounterManager;
+import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.BladeRingEntity;
 import io.github.finalparadox.entity.TeslaCoreEntity;
 import io.github.finalparadox.entity.FrostStormEntity;
@@ -251,6 +252,7 @@ public final class GameplayEvents {
         if(event.getEntity() instanceof ServerPlayer deadPlayer){
             B5EncounterManager.onPlayerDeath(deadPlayer);
             B8EncounterManager.onPlayerDeath(deadPlayer);
+            MarawTharBossEntity.onPlayerDeath(deadPlayer);
         }
         if(!(event.getSource().getEntity() instanceof ServerPlayer player))return;
         ServerLevel level=player.serverLevel();LivingEntity victim=event.getEntity();

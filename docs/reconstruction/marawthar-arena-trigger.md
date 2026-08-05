@@ -44,6 +44,11 @@ instead.
   arena floor.
 - `/finalparadox arena start marawthar` remains a debug shortcut; it also
   removes any waiting echo and marks the encounter triggered.
+- Player death during the fight switches the victim to spectator. When every
+  online player is a spectator, the encounter plays the original defeat title,
+  sound and two defeat dialogue lines at 2s/4s, then restarts after 5s: players
+  return to the arena entrance in adventure with resistance/heal, the old boss
+  and its visuals are discarded, and a fresh Maraw'Thar is staged.
 
 ## Verification
 
@@ -62,3 +67,5 @@ Still requires in-game observation:
   open the menu on right-click, and after confirmation show the kneeling
   Conqueror corpse animation (head/arm/pose, sword) before Maraw'Thar appears.
 - Reload during the dialogue/menu should resume without a second echo.
+- All players dying should show the defeat sequence and restart the fight after
+  5s without duplicate bosses or stray arena entities.
