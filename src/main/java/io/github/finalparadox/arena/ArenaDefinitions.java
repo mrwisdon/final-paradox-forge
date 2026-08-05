@@ -19,6 +19,17 @@ public final class ArenaDefinitions {
             3,
             new Vec3i(0, 1, 0));
 
+    public static final ArenaDefinition B2 = new ArenaDefinition(
+            "b2",
+            "arenas/b2",
+            new Vec3i(94, 17, 100),
+            new BlockPos(-53, -5, -52),
+            48,
+            2,
+            1,
+            3,
+            new Vec3i(0, 0, 0));
+
     public static final ArenaDefinition MARAWTHAR = new ArenaDefinition(
             "marawthar",
             "arenas/b9_core",
@@ -88,14 +99,22 @@ public final class ArenaDefinitions {
      */
     public static final BlockPos B1_KOROS_OFFSET = new BlockPos(-24, -1, -8);
 
+    /**
+     * Echo of Koros position relative to the B2 floor anchor. The original
+     * minikoros trigger sits at -1509 52 2291 against the encounter anchor
+     * -1505 53.5 2305, i.e. offset (-4, -1, -14).
+     */
+    public static final BlockPos B2_KOROS_OFFSET = new BlockPos(-4, -1, -14);
+
     /** Eothar echo position relative to the MarawThar floor anchor. */
     public static final BlockPos MARAWTHAR_EOTHAR_OFFSET = new BlockPos(0, 2, 5);
 
     /** All arenas that can exist in one dimension at the same time. */
-    public static final List<ArenaDefinition> ALL = List.of(B1, MARAWTHAR, B5, B8);
+    public static final List<ArenaDefinition> ALL = List.of(B1, B2, MARAWTHAR, B5, B8);
 
     private static final Map<String, ArenaDefinition> BY_ID = Map.of(
             B1.id(), B1,
+            B2.id(), B2,
             MARAWTHAR.id(), MARAWTHAR,
             "b9", MARAWTHAR,
             B5.id(), B5,

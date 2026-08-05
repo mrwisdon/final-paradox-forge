@@ -3,6 +3,7 @@ package io.github.finalparadox.entity;
 import io.github.finalparadox.arena.ArenaDefinitions;
 import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.B1ArenaStaging;
+import io.github.finalparadox.arena.B2ArenaStaging;
 import io.github.finalparadox.arena.B5ArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
@@ -78,6 +79,13 @@ public final class KorosEchoEntity extends Entity {
     public static KorosEchoEntity createB1(ServerLevel level, BlockPos arenaAnchor) {
         KorosEchoEntity echo = create(level, arenaAnchor);
         if (echo != null) echo.guideMode = "b1";
+        return echo;
+    }
+
+    @Nullable
+    public static KorosEchoEntity createB2(ServerLevel level, BlockPos arenaAnchor) {
+        KorosEchoEntity echo = create(level, arenaAnchor);
+        if (echo != null) echo.guideMode = "b2";
         return echo;
     }
 
@@ -192,6 +200,7 @@ public final class KorosEchoEntity extends Entity {
             return 1;
         }
         boolean b1 = "b1".equals(guideMode);
+        boolean b2 = "b2".equals(guideMode);
         switch (action) {
             case "main" -> showMain(player);
             case "briefing" -> showBriefing(player);
@@ -202,7 +211,12 @@ public final class KorosEchoEntity extends Entity {
                     showPlayersMissing(player);
                     return 0;
                 }
+                if (b2 && !B2ArenaStaging.allPlayersInside(player.serverLevel(), arenaAnchor)) {
+                    showPlayersMissing(player);
+                    return 0;
+                }
                 if (b1 ? !B1ArenaStaging.beginEncounter(player)
+                        : b2 ? !B2ArenaStaging.beginEncounter(player)
                         : !B5ArenaStaging.beginEncounter(player)) {
                     player.sendSystemMessage(Component.translatable("message.finalparadox.koros.interaction.unavailable"));
                     return 0;
@@ -231,6 +245,14 @@ public final class KorosEchoEntity extends Entity {
                     && ArenaDefinitions.B1.id().equals(data.arenaId())
                     && (data.activeBossUuid().isEmpty()
                             || B1ArenaStaging.hasWaitingBoss(player.serverLevel(), data))
+                    && data.floorAnchor().map(arenaAnchor::equals).orElse(false)
+                    && data.korosUuid().map(getUUID()::equals).orElse(false);
+        }
+        if ("b2".equals(guideMode)) {
+            return data.state() == ArenaDeploymentData.DeploymentState.READY
+                    && ArenaDefinitions.B2.id().equals(data.arenaId())
+                    && (data.activeBossUuid().isEmpty()
+                            || B2ArenaStaging.hasWaitingBoss(player.serverLevel(), data))
                     && data.floorAnchor().map(arenaAnchor::equals).orElse(false)
                     && data.korosUuid().map(getUUID()::equals).orElse(false);
         }

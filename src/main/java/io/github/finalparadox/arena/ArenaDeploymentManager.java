@@ -6,6 +6,7 @@ import io.github.finalparadox.entity.EotharEchoEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
 import io.github.finalparadox.entity.GariBossEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
+import io.github.finalparadox.entity.TharKrooBossEntity;
 import io.github.finalparadox.entity.ZombieSupermatrixEntity;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
@@ -99,6 +100,12 @@ public final class ArenaDeploymentManager {
 
         data.advance(definition);
         if (data.state() == ArenaDeploymentData.DeploymentState.READY) {
+            if (definition == ArenaDefinitions.B2
+                    && B2ArenaStaging.spawn(level, data, anchorResult.get()).isEmpty()) {
+                data.fail("Could not create the staged B2 boss and Echo of Koros");
+                notifyPlayers(level, Component.literal("B2 arena deployment failed while creating its waiting entities."));
+                return;
+            }
             if (definition == ArenaDefinitions.B5
                     && B5ArenaStaging.spawn(level, data, anchorResult.get()).isEmpty()) {
                 data.fail("Could not create the staged B5 bosses and Echo of Koros");
@@ -106,6 +113,7 @@ public final class ArenaDeploymentManager {
                 return;
             }
             String nextStep = definition == ArenaDefinitions.B5 || definition == ArenaDefinitions.B1
+                    || definition == ArenaDefinitions.B2
                     ? " Talk to the Echo of Koros to begin the encounter."
                     : " Run /finalparadox arena start " + definition.id() + " when ready.";
             notifyPlayers(level, Component.literal(definition.id().toUpperCase()
@@ -160,6 +168,36 @@ public final class ArenaDeploymentManager {
             }
             stage.ifPresent(existing -> {
                 if (B1ArenaStaging.anyPlayerInside(level, anchor)
+                        && existing.boss().isWaiting()
+                        && !existing.boss().preBattleDialoguePlayed()) {
+                    existing.boss().startPreBattleDialogue();
+                }
+            });
+            return;
+        }
+        if (definition == ArenaDefinitions.B2
+                && data.floorAnchor().isPresent()) {
+            data.activeBossUuid().ifPresent(uuid -> {
+                Entity existing = level.getEntity(uuid);
+                if (!(existing instanceof TharKrooBossEntity boss) || !boss.isAlive()) {
+                    data.clearActiveBoss();
+                }
+            });
+            data.korosUuid().ifPresent(uuid -> {
+                Entity existing = level.getEntity(uuid);
+                if (!(existing instanceof KorosEchoEntity echo) || !echo.isAlive()) {
+                    data.clearKoros();
+                }
+            });
+            BlockPos anchor = data.floorAnchor().orElseThrow();
+            Optional<B2ArenaStaging.Stage> stage = B2ArenaStaging.find(level, data);
+            if (stage.isEmpty()
+                    && (data.activeBossUuid().isEmpty()
+                            || B2ArenaStaging.hasWaitingBoss(level, data))) {
+                stage = B2ArenaStaging.spawn(level, data, anchor);
+            }
+            stage.ifPresent(existing -> {
+                if (B2ArenaStaging.anyPlayerInside(level, anchor)
                         && existing.boss().isWaiting()
                         && !existing.boss().preBattleDialoguePlayed()) {
                     existing.boss().startPreBattleDialogue();
@@ -278,6 +316,11 @@ public final class ArenaDeploymentManager {
                     level.getEntities(ModEntities.ZOMBIE_SUPERMATRIX.get(), arenaBounds, ZombieSupermatrixEntity::isAlive);
             if (matrices.isEmpty()) return Optional.empty();
             boss = matrices.get(0);
+        } else if (definition.id().equals(ArenaDefinitions.B2.id())) {
+            List<TharKrooBossEntity> bosses =
+                    level.getEntities(ModEntities.THAR_KROO.get(), arenaBounds, TharKrooBossEntity::isAlive);
+            if (bosses.isEmpty()) return Optional.empty();
+            boss = bosses.get(0);
         } else {
             List<ApigloBossEntity> bosses =
                     level.getEntities(ModEntities.APIGLO.get(), arenaBounds, ApigloBossEntity::isAlive);
@@ -296,6 +339,9 @@ public final class ArenaDeploymentManager {
         }
         if (definition.id().equals(ArenaDefinitions.B8.id())) {
             return entity instanceof ZombieSupermatrixEntity;
+        }
+        if (definition.id().equals(ArenaDefinitions.B2.id())) {
+            return entity instanceof TharKrooBossEntity;
         }
         return entity instanceof ApigloBossEntity;
     }

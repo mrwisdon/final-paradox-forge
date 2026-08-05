@@ -592,6 +592,8 @@
   "subtitle.finalparadox.thar_kroo.victory": "§f§l塔尔·克罗将他的馈赠托付给了你。",
   "title.finalparadox.thar_kroo.defeat": "§4§l失败",
   "subtitle.finalparadox.thar_kroo.defeat": "§c塔尔·克罗的试炼已经结束。",
+  "dialogue.finalparadox.thar_kroo.defeat.1": "§4§o§l<塔尔·克罗>§c 科洛斯……我们又失败了。宇宙注定要灭亡……因为我。",
+  "dialogue.finalparadox.thar_kroo.defeat.2": "对不起，我的创造者。",
   "dialogue.finalparadox.thar_kroo.intro.1": "§4§o§l<塔尔·克罗>§c 你终于到了。",
   "dialogue.finalparadox.thar_kroo.intro.2": "§4§o§l<塔尔·克罗>§c 我已经等了很长时间了。",
   "dialogue.finalparadox.thar_kroo.intro.3": "§4§o§l<塔尔·克罗>§c 现在你将知道真相……",

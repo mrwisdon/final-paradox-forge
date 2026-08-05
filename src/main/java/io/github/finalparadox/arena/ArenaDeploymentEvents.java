@@ -30,6 +30,12 @@ public final class ArenaDeploymentEvents {
                 adoptIfIdle(level, ArenaDefinitions.B1, anchor);
                 return;
             }
+            if (start.getStructure().type() == ModWorldgen.B2_ARENA.get()) {
+                // minimumCorner = floorAnchor + (-53, -5, -52), so reverse it.
+                BlockPos anchor = new BlockPos(box.minX() + 53, box.minY() + 5, box.minZ() + 52);
+                adoptIfIdle(level, ArenaDefinitions.B2, anchor);
+                return;
+            }
             if (start.getStructure().type() == ModWorldgen.B8_ARENA.get()) {
                 // minimumCorner = floorAnchor + (-23, -9, -24), so reverse it.
                 BlockPos anchor = new BlockPos(box.minX() + 23, box.minY() + 9, box.minZ() + 24);

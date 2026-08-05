@@ -34,6 +34,11 @@ public final class ArenaCommands {
                                 .then(Commands.argument("anchor", BlockPosArgument.blockPos())
                                         .executes(context -> deploy(context, ArenaDefinitions.B1,
                                                 BlockPosArgument.getBlockPos(context, "anchor")))))
+                        .then(Commands.literal("b2")
+                                .executes(context -> deploy(context, ArenaDefinitions.B2, defaultAnchor(context.getSource())))
+                                .then(Commands.argument("anchor", BlockPosArgument.blockPos())
+                                        .executes(context -> deploy(context, ArenaDefinitions.B2,
+                                                BlockPosArgument.getBlockPos(context, "anchor")))))
                         .then(Commands.literal("marawthar")
                                 .executes(context -> deploy(context, ArenaDefinitions.MARAWTHAR, defaultAnchor(context.getSource())))
                                 .then(Commands.argument("anchor", BlockPosArgument.blockPos())
@@ -52,12 +57,14 @@ public final class ArenaCommands {
                 .then(Commands.literal("status").executes(ArenaCommands::status))
                 .then(Commands.literal("reset")
                         .then(Commands.literal("b1").executes(context -> reset(context, ArenaDefinitions.B1)))
+                        .then(Commands.literal("b2").executes(context -> reset(context, ArenaDefinitions.B2)))
                         .then(Commands.literal("marawthar")
                                 .executes(context -> reset(context, ArenaDefinitions.MARAWTHAR)))
                         .then(Commands.literal("b5").executes(context -> reset(context, ArenaDefinitions.B5)))
                         .then(Commands.literal("b8").executes(context -> reset(context, ArenaDefinitions.B8))))
                 .then(Commands.literal("start")
                         .then(Commands.literal("b1").executes(ArenaCommands::startB1))
+                        .then(Commands.literal("b2").executes(ArenaCommands::startB2))
                         .then(Commands.literal("marawthar").executes(ArenaCommands::startMarawThar))
                         .then(Commands.literal("b5").executes(ArenaCommands::startB5))
                         .then(Commands.literal("b8").executes(ArenaCommands::startB8)));
@@ -87,6 +94,9 @@ public final class ArenaCommands {
         }
         if (definition == ArenaDefinitions.B1) {
             B1ArenaStaging.cleanupWaiting(level, data);
+        }
+        if (definition == ArenaDefinitions.B2) {
+            B2ArenaStaging.cleanupWaiting(level, data);
         }
         if (definition == ArenaDefinitions.B5 && !B5EncounterManager.isActive(level)) {
             B5ArenaStaging.cleanupWaiting(level, data);
@@ -129,6 +139,8 @@ public final class ArenaCommands {
             B5EncounterManager.reset(level);
         } else if (definition == ArenaDefinitions.B1) {
             B1ArenaStaging.cleanupWaiting(level, data);
+        } else if (definition == ArenaDefinitions.B2) {
+            B2ArenaStaging.cleanupWaiting(level, data);
         } else if (definition == ArenaDefinitions.MARAWTHAR) {
             MarawTharArenaStaging.cleanupWaiting(level, data);
         }
@@ -216,6 +228,49 @@ public final class ArenaCommands {
         }
         source.sendSuccess(() -> Component.literal("Apiglo created for B1 at logical anchor "
                 + ArenaDeploymentManager.format(spawn) + "."), true);
+        return 1;
+    }
+
+    private static int startB2(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        ServerLevel level = source.getLevel();
+        ArenaDefinition definition = ArenaDefinitions.B2;
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
+        if (data.state() != ArenaDeploymentData.DeploymentState.READY
+                || !matchesRecordedDefinition(data, definition)
+                || data.floorAnchor().isEmpty()) {
+            source.sendFailure(Component.literal("B2 arena is not ready. Deploy it first and check arena status."));
+            return 0;
+        }
+        if (ArenaDeploymentManager.findActiveBoss(level, data, definition).isPresent()
+                && !B2ArenaStaging.hasWaitingBoss(level, data)) {
+            source.sendFailure(Component.literal("The Thar Kroo encounter is already active."));
+            return 0;
+        }
+        BlockPos anchor = data.floorAnchor().orElseThrow();
+        if (B2ArenaStaging.find(level, data).isEmpty()) {
+            boolean activeEncounter = data.activeBossUuid().isPresent()
+                    && !B2ArenaStaging.hasWaitingBoss(level, data);
+            if (activeEncounter || B2ArenaStaging.spawn(level, data, anchor).isEmpty()) {
+                source.sendFailure(Component.literal("Could not restore the staged B2 entities."));
+                return 0;
+            }
+        }
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.literal("A player must start B2 so the arena admission check can run."));
+            return 0;
+        }
+        if (!B2ArenaStaging.allPlayersInside(level, anchor)) {
+            source.sendFailure(Component.literal("All players must be within the B2 fight arena."));
+            return 0;
+        }
+        if (!B2ArenaStaging.beginEncounter(player)) {
+            source.sendFailure(Component.literal("Could not start the staged B2 encounter."));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("B2 encounter started at floor anchor "
+                + ArenaDeploymentManager.format(anchor) + "."), true);
         return 1;
     }
 

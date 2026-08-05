@@ -592,6 +592,8 @@
   "subtitle.finalparadox.thar_kroo.victory": "§f§lThar Kroo has entrusted you with his gift.",
   "title.finalparadox.thar_kroo.defeat": "§4§lDefeat",
   "subtitle.finalparadox.thar_kroo.defeat": "§cThar Kroo's trial has ended.",
+  "dialogue.finalparadox.thar_kroo.defeat.1": "§4§o§l<Thar Kroo>§c Koros... we have failed again. The universe is doomed... because of me.",
+  "dialogue.finalparadox.thar_kroo.defeat.2": "I'm sorry, my creator.",
   "dialogue.finalparadox.thar_kroo.intro.1": "§4§o§l<Thar Kroo>§c You have finally arrived.",
   "dialogue.finalparadox.thar_kroo.intro.2": "§4§o§l<Thar Kroo>§c I've been waiting for a long time.",
   "dialogue.finalparadox.thar_kroo.intro.3": "§4§o§l<Thar Kroo>§c And now you shall know the truth...",

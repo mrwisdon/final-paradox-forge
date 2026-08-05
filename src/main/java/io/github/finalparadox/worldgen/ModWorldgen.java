@@ -46,6 +46,14 @@ public final class ModWorldgen {
             STRUCTURE_PIECES.register("b1_arena",
                     () -> (StructurePieceType.StructureTemplateType) B1ArenaPiece::new);
 
+    public static final RegistryObject<StructureType<B2ArenaStructure>> B2_ARENA =
+            STRUCTURE_TYPES.register("b2_arena",
+                    () -> () -> B2ArenaStructure.CODEC);
+
+    public static final RegistryObject<StructurePieceType> B2_ARENA_PIECE =
+            STRUCTURE_PIECES.register("b2_arena",
+                    () -> (StructurePieceType.StructureTemplateType) B2ArenaPiece::new);
+
     private ModWorldgen() {
     }
 

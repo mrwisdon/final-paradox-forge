@@ -1,0 +1,18 @@
+{
+  "structures": [
+    {
+      "structure": "finalparadox:b2",
+      "weight": 1
+    },
+    {
+      "structure": "finalparadox:b2_arena",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 1123581321,
+    "spacing": 320,
+    "separation": 96
+  }
+}
