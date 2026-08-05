@@ -142,18 +142,15 @@ public final class ArenaDeploymentManager {
                     data.clearActiveBoss();
                 }
             });
+            data.korosUuid().ifPresent(uuid -> {
+                Entity existing = level.getEntity(uuid);
+                if (!(existing instanceof KorosEchoEntity echo) || !echo.isAlive()) {
+                    data.clearKoros();
+                }
+            });
             if (data.activeBossUuid().isPresent() || data.korosUuid().isPresent()) return;
             BlockPos anchor = data.floorAnchor().orElseThrow();
-            BlockPos pos = anchor.offset(ArenaDefinitions.B1_KOROS_OFFSET);
-            level.getChunkAt(pos);
-            KorosEchoEntity koros = KorosEchoEntity.createB1(level, anchor);
-            if (koros != null) {
-                koros.moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.0F, 0.0F);
-                if (level.addFreshEntity(koros)) {
-                    data.setKorosUuid(koros.getUUID());
-                    koros.playArrivalEffects();
-                }
-            }
+            B1ArenaStaging.spawn(level, data, anchor);
             return;
         }
         if (definition == ArenaDefinitions.B8

@@ -2,33 +2,58 @@ package io.github.finalparadox.arena;
 
 import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
-import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 
 import java.util.Optional;
+import java.util.UUID;
 
-/** Creates the B1 Echo of Koros and starts the Apiglo encounter from it. */
+/**
+ * Creates the B1 entrance: a waiting, AI-disabled Apiglo plus the Echo of
+ * Koros. Koros starts the Apiglo entrance sequence once everyone is inside.
+ */
 public final class B1ArenaStaging {
     private B1ArenaStaging() {
     }
 
-    public static Optional<KorosEchoEntity> spawnEcho(
+    public static Optional<Stage> spawn(
             ServerLevel level,
             ArenaDeploymentData data,
             BlockPos anchor
     ) {
-        if (data.activeBossUuid().isPresent()) return Optional.empty();
-        BlockPos position = anchor.offset(ArenaDefinitions.B1_KOROS_OFFSET);
-        level.getChunkAt(position);
+        cleanupWaiting(level, data);
+
+        BlockPos bossSpawn = ArenaDefinitions.B1.bossSpawnBlock(anchor);
+        level.getChunkAt(bossSpawn);
+        ApigloBossEntity boss = ApigloBossEntity.createPrepared(level, bossSpawn);
         KorosEchoEntity koros = KorosEchoEntity.createB1(level, anchor);
-        if (koros == null) return Optional.empty();
-        koros.moveTo(position.getX(), position.getY(), position.getZ(), 0.0F, 0.0F);
-        if (!level.addFreshEntity(koros)) return Optional.empty();
+        if (boss == null || koros == null) {
+            if (boss != null) boss.discard();
+            if (koros != null) koros.discard();
+            return Optional.empty();
+        }
+
+        BlockPos korosPos = anchor.offset(ArenaDefinitions.B1_KOROS_OFFSET);
+        koros.moveTo(korosPos.getX(), korosPos.getY(), korosPos.getZ(), 0.0F, 0.0F);
+        if (!level.addFreshEntity(boss)) return Optional.empty();
+        if (!level.addFreshEntity(koros)) {
+            boss.discard();
+            return Optional.empty();
+        }
+
+        data.setActiveBossUuid(boss.getUUID());
         data.setKorosUuid(koros.getUUID());
         koros.playArrivalEffects();
-        return Optional.of(koros);
+        return Optional.of(new Stage(boss, koros));
+    }
+
+    public static Optional<Stage> find(ServerLevel level, ArenaDeploymentData data) {
+        ApigloBossEntity boss = entity(level, data.activeBossUuid(), ApigloBossEntity.class);
+        KorosEchoEntity koros = entity(level, data.korosUuid(), KorosEchoEntity.class);
+        if (boss == null || koros == null || !boss.isWaiting()) return Optional.empty();
+        return Optional.of(new Stage(boss, koros));
     }
 
     public static boolean beginEncounter(ServerPlayer initiator) {
@@ -36,22 +61,21 @@ public final class B1ArenaStaging {
         ArenaDeploymentData data = ArenaDeploymentData.get(level, ArenaDefinitions.B1);
         if (data.state() != ArenaDeploymentData.DeploymentState.READY
                 || !ArenaDefinitions.B1.id().equals(data.arenaId())
-                || data.floorAnchor().isEmpty()
-                || data.activeBossUuid().isPresent()) {
+                || data.floorAnchor().isEmpty()) {
             return false;
         }
         BlockPos anchor = data.floorAnchor().orElseThrow();
-        if (!allPlayersInside(level, anchor)) return false;
+        Optional<Stage> result = find(level, data);
+        if (result.isEmpty()) {
+            if (data.activeBossUuid().isPresent()) return false;
+            result = spawn(level, data, anchor);
+        }
+        if (result.isEmpty() || !allPlayersInside(level, anchor)) return false;
 
-        cleanupWaiting(level, data);
-        BlockPos spawn = ArenaDefinitions.B1.bossSpawnBlock(anchor);
-        level.getChunkAt(spawn);
-        ApigloBossEntity boss = ModEntities.APIGLO.get().create(level);
-        if (boss == null) return false;
-        boss.moveTo(spawn.getX(), spawn.getY(), spawn.getZ(), 90.0F, 0.0F);
-        if (!level.addFreshEntity(boss)) return false;
-        data.setActiveBossUuid(boss.getUUID());
-        return true;
+        Stage stage = result.get();
+        stage.koros().depart();
+        data.clearKoros();
+        return stage.boss().beginEncounter();
     }
 
     public static boolean allPlayersInside(ServerLevel level, BlockPos anchor) {
@@ -75,5 +99,28 @@ public final class B1ArenaStaging {
                 .map(KorosEchoEntity.class::cast)
                 .ifPresent(KorosEchoEntity::depart);
         data.clearKoros();
+
+        Optional<UUID> bossUuid = data.activeBossUuid();
+        if (bossUuid.isEmpty()) return;
+        Entity existing = level.getEntity(bossUuid.get());
+        if (existing instanceof ApigloBossEntity boss && boss.isWaiting()) {
+            boss.discard();
+            data.clearActiveBoss();
+        } else if (existing == null || !existing.isAlive()) {
+            data.clearActiveBoss();
+        }
+    }
+
+    private static <T extends Entity> T entity(
+            ServerLevel level,
+            Optional<UUID> uuid,
+            Class<T> type
+    ) {
+        if (uuid.isEmpty()) return null;
+        Entity entity = level.getEntity(uuid.get());
+        return type.isInstance(entity) && entity.isAlive() ? type.cast(entity) : null;
+    }
+
+    public record Stage(ApigloBossEntity boss, KorosEchoEntity koros) {
     }
 }

@@ -18,6 +18,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public final class ArenaCommands {
     private ArenaCommands() {
@@ -182,23 +183,35 @@ public final class ArenaCommands {
             return 0;
         }
         if (ArenaDeploymentManager.findActiveBoss(level, data, definition).isPresent()) {
-            source.sendFailure(Component.literal("A living Apiglo already exists in the recorded B1 arena."));
-            return 0;
+            Optional<ApigloBossEntity> waiting = data.activeBossUuid().map(level::getEntity)
+                    .filter(ApigloBossEntity.class::isInstance)
+                    .map(ApigloBossEntity.class::cast)
+                    .filter(ApigloBossEntity::isAlive)
+                    .filter(ApigloBossEntity::isWaiting);
+            if (waiting.isEmpty()) {
+                source.sendFailure(Component.literal("A living Apiglo already exists in the recorded B1 arena."));
+                return 0;
+            }
         }
 
         B1ArenaStaging.cleanupWaiting(level, data);
         BlockPos spawn = definition.bossSpawnBlock(data.floorAnchor().orElseThrow());
-        ApigloBossEntity boss = ModEntities.APIGLO.get().create(level);
+        ApigloBossEntity boss = ApigloBossEntity.createPrepared(level, spawn);
         if (boss == null) {
             source.sendFailure(Component.literal("Could not create the Apiglo entity."));
             return 0;
         }
-        boss.moveTo(spawn.getX(), spawn.getY(), spawn.getZ(), 90.0F, 0.0F);
         if (!level.addFreshEntity(boss)) {
             source.sendFailure(Component.literal("Could not add Apiglo to the world."));
             return 0;
         }
         data.setActiveBossUuid(boss.getUUID());
+        if (!boss.beginEncounter()) {
+            boss.discard();
+            data.clearActiveBoss();
+            source.sendFailure(Component.literal("Could not start the Apiglo entrance sequence."));
+            return 0;
+        }
         source.sendSuccess(() -> Component.literal("Apiglo created for B1 at logical anchor "
                 + ArenaDeploymentManager.format(spawn) + "."), true);
         return 1;

@@ -1,5 +1,6 @@
 package io.github.finalparadox.entity;
 
+import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
 import io.github.finalparadox.registry.ModSounds;
 import net.minecraft.ChatFormatting;
@@ -136,6 +137,20 @@ public final class ApigloBossEntity extends Zombie {
         tormentEvent.setVisible(false);
     }
 
+    @Nullable
+    public static ApigloBossEntity createPrepared(ServerLevel level, BlockPos position) {
+        ApigloBossEntity boss = ModEntities.APIGLO.get().create(level);
+        if (boss != null) {
+            boss.moveTo(position.getX(), position.getY(), position.getZ(), 90.0F, 0.0F);
+            boss.initializeEncounter();
+        }
+        return boss;
+    }
+
+    public boolean isWaiting() {
+        return phase == WAITING;
+    }
+
     public static AttributeSupplier.Builder createAttributes() {
         return Zombie.createAttributes()
                 .add(Attributes.MAX_HEALTH, 900.0D)
@@ -229,7 +244,7 @@ public final class ApigloBossEntity extends Zombie {
         return 1;
     }
 
-    private boolean beginEncounter() {
+    public boolean beginEncounter() {
         if (phase != WAITING) return false;
         if (!(level() instanceof ServerLevel server)) return false;
         totalTick = 0;
