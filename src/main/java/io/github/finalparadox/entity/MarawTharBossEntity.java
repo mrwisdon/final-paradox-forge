@@ -4142,7 +4142,7 @@ public final class MarawTharBossEntity extends WitherSkeleton {
 
     public static void onPlayerDeath(ServerPlayer player) {
         if (!(player.level() instanceof ServerLevel server)) return;
-        ArenaDeploymentData data = ArenaDeploymentData.get(server);
+        ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.MARAWTHAR);
         if (!ArenaDefinitions.MARAWTHAR.id().equals(data.arenaId())
                 || !data.marawTharTriggered()) {
             return;
@@ -4236,7 +4236,7 @@ public final class MarawTharBossEntity extends WitherSkeleton {
                     MobEffects.DAMAGE_RESISTANCE, 2020, 1, false, false, false));
             player.addEffect(new MobEffectInstance(MobEffects.HEAL, 20, 10, true, false));
         }
-        ArenaDeploymentData data = ArenaDeploymentData.get(server);
+        ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.MARAWTHAR);
         BlockPos anchor = data.floorAnchor().orElse(
                 BlockPos.containing(encounterCenter).offset(0, -1, 0));
         discard();

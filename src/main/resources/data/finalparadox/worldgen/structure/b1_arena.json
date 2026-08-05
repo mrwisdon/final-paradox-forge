@@ -1,5 +1,5 @@
 {
-  "type": "finalparadox:b5_arena",
+  "type": "finalparadox:b1_arena",
   "biomes": "#finalparadox:has_structure/arena_dimension",
   "step": "surface_structures",
   "spawn_overrides": {},

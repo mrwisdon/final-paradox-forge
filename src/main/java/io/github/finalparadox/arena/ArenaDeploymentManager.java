@@ -31,83 +31,29 @@ public final class ArenaDeploymentManager {
 
     public static void tick(ServerLevel level) {
         if (level.getGameTime() % TICKS_PER_TILE != 0) return;
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
-        if (data.state() == ArenaDeploymentData.DeploymentState.READY
-                && ArenaDefinitions.B5.id().equals(data.arenaId())
-                && !io.github.finalparadox.entity.B5EncounterManager.isActive(level)
-                && data.activeBossUuid().isEmpty()
-                && data.stagedKoyoUuid().isEmpty()
-                && data.stagedGariUuid().isEmpty()
-                && data.korosUuid().isEmpty()
-                && data.floorAnchor().isPresent()) {
-            if (B5ArenaStaging.spawn(level, data, data.floorAnchor().orElseThrow()).isEmpty()) {
-                data.fail("Could not migrate the staged B5 bosses and Echo of Koros");
-                notifyPlayers(level, Component.literal("B5 arena migration failed while creating its waiting entities."));
-            } else {
-                notifyPlayers(level, Component.literal(
-                        "B5 waiting entities restored. Talk to the Echo of Koros to begin the encounter."));
-            }
-            return;
+        for (ArenaDefinition definition : ArenaDefinitions.ALL) {
+            ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
+            tickArena(level, definition, data);
         }
-        if (data.state() == ArenaDeploymentData.DeploymentState.READY
-                && ArenaDefinitions.B8.id().equals(data.arenaId())
-                && !io.github.finalparadox.entity.B8EncounterManager.isActive(level)
-                && !data.b8Triggered()
-                && data.activeBossUuid().isEmpty()
-                && data.korosUuid().isEmpty()
-                && data.floorAnchor().isPresent()) {
-            BlockPos anchor = data.floorAnchor().orElseThrow();
-            BlockPos pos = anchor.offset(ArenaDefinitions.B8_KOROS_OFFSET);
-            level.getChunkAt(pos);
-            KorosEchoEntity koros = KorosEchoEntity.createB8(level, anchor);
-            if (koros != null) {
-                koros.moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.0F, 0.0F);
-                if (level.addFreshEntity(koros)) {
-                    data.setKorosUuid(koros.getUUID());
-                    koros.playArrivalEffects();
-                }
-            }
-            return;
-        }
-        if (data.state() == ArenaDeploymentData.DeploymentState.READY
-                && ArenaDefinitions.MARAWTHAR.id().equals(data.arenaId())) {
-            if (data.marawTharTriggered() || data.activeBossUuid().isPresent()) return;
-            Optional<BlockPos> anchorResult = data.floorAnchor();
-            if (anchorResult.isEmpty()) return;
-            BlockPos anchor = anchorResult.get();
-            data.eotharUuid().ifPresent(uuid -> {
-                Entity existing = level.getEntity(uuid);
-                if (!(existing instanceof EotharEchoEntity echo) || !echo.isAlive()) {
-                    data.clearEothar();
-                }
-            });
-            if (data.eotharUuid().isPresent()) {
-                Entity existing = level.getEntity(data.eotharUuid().orElseThrow());
-                if (existing instanceof EotharEchoEntity echo
-                        && !MarawTharArenaStaging.anyPlayerNear(level, anchor, 30.0D)) {
-                    echo.depart();
-                    data.clearEothar();
-                }
-                return;
-            }
-            if (MarawTharArenaStaging.anyPlayerNear(level, anchor, 18.0D)) {
-                MarawTharArenaStaging.spawnEothar(level, data, anchor).ifPresent(echo ->
-                        notifyPlayers(level, Component.literal(
-                                "Eothar's echo stirs at the Maraw'Thar arena.")));
-            }
-            return;
-        }
+    }
 
+    private static void tickArena(
+            ServerLevel level,
+            ArenaDefinition definition,
+            ArenaDeploymentData data
+    ) {
+        if (data.state() == ArenaDeploymentData.DeploymentState.READY) {
+            tickReadyArena(level, definition, data);
+            return;
+        }
         if (data.state() != ArenaDeploymentData.DeploymentState.DEPLOYING) return;
 
-        Optional<ArenaDefinition> definitionResult = ArenaDefinitions.find(data.arenaId());
         Optional<BlockPos> anchorResult = data.floorAnchor();
-        if (definitionResult.isEmpty() || anchorResult.isEmpty()) {
-            data.fail("Deployment definition or floor anchor is missing");
+        if (anchorResult.isEmpty()) {
+            data.fail("Deployment floor anchor is missing");
             return;
         }
 
-        ArenaDefinition definition = definitionResult.get();
         if (data.nextTile() >= definition.tileCount()) {
             data.fail("Saved tile index is outside the arena definition");
             return;
@@ -159,11 +105,101 @@ public final class ArenaDeploymentManager {
                 notifyPlayers(level, Component.literal("B5 arena deployment failed while creating its waiting entities."));
                 return;
             }
-            String nextStep = definition == ArenaDefinitions.B5
+            String nextStep = definition == ArenaDefinitions.B5 || definition == ArenaDefinitions.B1
                     ? " Talk to the Echo of Koros to begin the encounter."
                     : " Run /finalparadox arena start " + definition.id() + " when ready.";
             notifyPlayers(level, Component.literal(definition.id().toUpperCase()
                     + " arena deployment complete at floor anchor " + format(anchorResult.get()) + "." + nextStep));
+        }
+    }
+
+    private static void tickReadyArena(
+            ServerLevel level,
+            ArenaDefinition definition,
+            ArenaDeploymentData data
+    ) {
+        if (definition == ArenaDefinitions.B5
+                && !io.github.finalparadox.entity.B5EncounterManager.isActive(level)
+                && data.activeBossUuid().isEmpty()
+                && data.stagedKoyoUuid().isEmpty()
+                && data.stagedGariUuid().isEmpty()
+                && data.korosUuid().isEmpty()
+                && data.floorAnchor().isPresent()) {
+            if (B5ArenaStaging.spawn(level, data, data.floorAnchor().orElseThrow()).isEmpty()) {
+                data.fail("Could not migrate the staged B5 bosses and Echo of Koros");
+                notifyPlayers(level, Component.literal("B5 arena migration failed while creating its waiting entities."));
+            } else {
+                notifyPlayers(level, Component.literal(
+                        "B5 waiting entities restored. Talk to the Echo of Koros to begin the encounter."));
+            }
+            return;
+        }
+        if (definition == ArenaDefinitions.B1
+                && data.floorAnchor().isPresent()) {
+            data.activeBossUuid().ifPresent(uuid -> {
+                Entity existing = level.getEntity(uuid);
+                if (!(existing instanceof ApigloBossEntity boss) || !boss.isAlive()) {
+                    data.clearActiveBoss();
+                }
+            });
+            if (data.activeBossUuid().isPresent() || data.korosUuid().isPresent()) return;
+            BlockPos anchor = data.floorAnchor().orElseThrow();
+            BlockPos pos = anchor.offset(ArenaDefinitions.B1_KOROS_OFFSET);
+            level.getChunkAt(pos);
+            KorosEchoEntity koros = KorosEchoEntity.createB1(level, anchor);
+            if (koros != null) {
+                koros.moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.0F, 0.0F);
+                if (level.addFreshEntity(koros)) {
+                    data.setKorosUuid(koros.getUUID());
+                    koros.playArrivalEffects();
+                }
+            }
+            return;
+        }
+        if (definition == ArenaDefinitions.B8
+                && !io.github.finalparadox.entity.B8EncounterManager.isActive(level)
+                && !data.b8Triggered()
+                && data.activeBossUuid().isEmpty()
+                && data.korosUuid().isEmpty()
+                && data.floorAnchor().isPresent()) {
+            BlockPos anchor = data.floorAnchor().orElseThrow();
+            BlockPos pos = anchor.offset(ArenaDefinitions.B8_KOROS_OFFSET);
+            level.getChunkAt(pos);
+            KorosEchoEntity koros = KorosEchoEntity.createB8(level, anchor);
+            if (koros != null) {
+                koros.moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.0F, 0.0F);
+                if (level.addFreshEntity(koros)) {
+                    data.setKorosUuid(koros.getUUID());
+                    koros.playArrivalEffects();
+                }
+            }
+            return;
+        }
+        if (definition == ArenaDefinitions.MARAWTHAR) {
+            if (data.marawTharTriggered() || data.activeBossUuid().isPresent()) return;
+            Optional<BlockPos> anchorResult = data.floorAnchor();
+            if (anchorResult.isEmpty()) return;
+            BlockPos anchor = anchorResult.get();
+            data.eotharUuid().ifPresent(uuid -> {
+                Entity existing = level.getEntity(uuid);
+                if (!(existing instanceof EotharEchoEntity echo) || !echo.isAlive()) {
+                    data.clearEothar();
+                }
+            });
+            if (data.eotharUuid().isPresent()) {
+                Entity existing = level.getEntity(data.eotharUuid().orElseThrow());
+                if (existing instanceof EotharEchoEntity echo
+                        && !MarawTharArenaStaging.anyPlayerNear(level, anchor, 30.0D)) {
+                    echo.depart();
+                    data.clearEothar();
+                }
+                return;
+            }
+            if (MarawTharArenaStaging.anyPlayerNear(level, anchor, 18.0D)) {
+                MarawTharArenaStaging.spawnEothar(level, data, anchor).ifPresent(echo ->
+                        notifyPlayers(level, Component.literal(
+                                "Eothar's echo stirs at the Maraw'Thar arena.")));
+            }
         }
     }
 

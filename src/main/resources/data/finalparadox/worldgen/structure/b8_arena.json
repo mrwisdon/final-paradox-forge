@@ -1,6 +1,6 @@
 {
   "type": "finalparadox:b8_arena",
-  "biomes": "#finalparadox:has_structure/b8_arena",
+  "biomes": "#finalparadox:has_structure/arena_dimension",
   "step": "surface_structures",
   "spawn_overrides": {},
   "terrain_adaptation": "none"

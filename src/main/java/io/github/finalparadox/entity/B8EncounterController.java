@@ -1,6 +1,7 @@
 package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.arena.ArenaDefinitions;
 import io.github.finalparadox.registry.ModItems;
 import io.github.finalparadox.registry.ModSounds;
 import net.minecraft.core.BlockPos;
@@ -393,7 +394,7 @@ public final class B8EncounterController {
         // Source matriz/gen tags the core "boss"; rovers use it to reject dismount.
         matrix.addTag("boss");
         data.setMatrixUuid(matrix.getUUID());
-        ArenaDeploymentData.get(serverLevel).setActiveBossUuid(matrix.getUUID());
+        ArenaDeploymentData.get(serverLevel, ArenaDefinitions.B8).setActiveBossUuid(matrix.getUUID());
     }
 
     private void startPhase1(ServerLevel server, B8EncounterData data) {
@@ -2262,7 +2263,7 @@ public final class B8EncounterController {
         h3Cleanup(server, data);
         forceChunks(server, data, false);
         restoreGameRules(server, data);
-        ArenaDeploymentData.get(server).clearActiveBoss();
+        ArenaDeploymentData.get(server, ArenaDefinitions.B8).clearActiveBoss();
         data.setActive(false);
         data.setState(B8EncounterData.STATE_IDLE);
         data.setMatrixUuid(null);

@@ -3,6 +3,7 @@ package io.github.finalparadox.arena;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -80,8 +81,18 @@ public final class ArenaDefinitions {
      */
     public static final BlockPos B8_KOROS_OFFSET = new BlockPos(8, 2, -5);
 
+    /**
+     * Echo of Koros position relative to the B1 floor anchor. The original
+     * minikoros sits at 1316 66 1529 against the floor anchor 1340 67 1537,
+     * i.e. offset (-24, -1, -8).
+     */
+    public static final BlockPos B1_KOROS_OFFSET = new BlockPos(-24, -1, -8);
+
     /** Eothar echo position relative to the MarawThar floor anchor. */
     public static final BlockPos MARAWTHAR_EOTHAR_OFFSET = new BlockPos(0, 2, 5);
+
+    /** All arenas that can exist in one dimension at the same time. */
+    public static final List<ArenaDefinition> ALL = List.of(B1, MARAWTHAR, B5, B8);
 
     private static final Map<String, ArenaDefinition> BY_ID = Map.of(
             B1.id(), B1,

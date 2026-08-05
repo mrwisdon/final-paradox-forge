@@ -21,29 +21,44 @@ public final class ArenaDeploymentEvents {
     @SubscribeEvent
     public static void onChunkLoad(ChunkEvent.Load event) {
         if (!(event.getLevel() instanceof ServerLevel level)) return;
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
-        if (data.state() != ArenaDeploymentData.DeploymentState.IDLE) return;
         for (StructureStart start : event.getChunk().getAllStarts().values()) {
             if (!start.isValid()) continue;
             BoundingBox box = start.getBoundingBox();
+            if (start.getStructure().type() == ModWorldgen.B1_ARENA.get()) {
+                // minimumCorner = floorAnchor + (-44, -2, -55), so reverse it.
+                BlockPos anchor = new BlockPos(box.minX() + 44, box.minY() + 2, box.minZ() + 55);
+                adoptIfIdle(level, ArenaDefinitions.B1, anchor);
+                return;
+            }
             if (start.getStructure().type() == ModWorldgen.B8_ARENA.get()) {
                 // minimumCorner = floorAnchor + (-23, -9, -24), so reverse it.
                 BlockPos anchor = new BlockPos(box.minX() + 23, box.minY() + 9, box.minZ() + 24);
-                data.adoptWorldgen(ArenaDefinitions.B8, anchor);
+                adoptIfIdle(level, ArenaDefinitions.B8, anchor);
                 return;
             }
             if (start.getStructure().type() == ModWorldgen.B5_ARENA.get()) {
                 // minimumCorner = floorAnchor + (-64, -6, -28), so reverse it.
                 BlockPos anchor = new BlockPos(box.minX() + 64, box.minY() + 6, box.minZ() + 28);
-                data.adoptWorldgen(ArenaDefinitions.B5, anchor);
+                adoptIfIdle(level, ArenaDefinitions.B5, anchor);
                 return;
             }
             if (start.getStructure().type() == ModWorldgen.MARAWTHAR_ARENA.get()) {
                 // minimumCorner = floorAnchor + (-64, -5, -64), so reverse it.
                 BlockPos anchor = new BlockPos(box.minX() + 64, box.minY() + 5, box.minZ() + 64);
-                data.adoptWorldgen(ArenaDefinitions.MARAWTHAR, anchor);
+                adoptIfIdle(level, ArenaDefinitions.MARAWTHAR, anchor);
                 return;
             }
+        }
+    }
+
+    private static void adoptIfIdle(
+            ServerLevel level,
+            ArenaDefinition definition,
+            BlockPos anchor
+    ) {
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
+        if (data.state() == ArenaDeploymentData.DeploymentState.IDLE) {
+            data.adoptWorldgen(definition, anchor);
         }
     }
 

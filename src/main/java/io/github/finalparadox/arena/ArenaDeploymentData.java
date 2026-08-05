@@ -29,6 +29,15 @@ public final class ArenaDeploymentData extends SavedData {
         return level.getDataStorage().computeIfAbsent(ArenaDeploymentData::load, ArenaDeploymentData::new, DATA_NAME);
     }
 
+    public static ArenaDeploymentData get(ServerLevel level, ArenaDefinition definition) {
+        return get(level, definition.id());
+    }
+
+    public static ArenaDeploymentData get(ServerLevel level, String arenaId) {
+        return level.getDataStorage().computeIfAbsent(
+                ArenaDeploymentData::load, ArenaDeploymentData::new, DATA_NAME + "_" + arenaId);
+    }
+
     private static ArenaDeploymentData load(CompoundTag tag) {
         ArenaDeploymentData data = new ArenaDeploymentData();
         try {

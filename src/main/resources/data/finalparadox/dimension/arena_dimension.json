@@ -1,0 +1,31 @@
+{
+  "type": "finalparadox:arena_dimension_type",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "finalparadox:arena_plains",
+      "features": false,
+      "lakes": false,
+      "layers": [
+        {
+          "block": "minecraft:bedrock",
+          "height": 1
+        },
+        {
+          "block": "minecraft:stone",
+          "height": 63
+        },
+        {
+          "block": "minecraft:grass_block",
+          "height": 1
+        }
+      ],
+      "structure_overrides": [
+        "finalparadox:b1_arena",
+        "finalparadox:b5_arena",
+        "finalparadox:b8_arena",
+        "finalparadox:marawthar_arena"
+      ]
+    }
+  }
+}

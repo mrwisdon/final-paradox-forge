@@ -1589,5 +1589,10 @@
   "b9_info_eothar_26": "§b§lEo'Thar Help (! Important)\n\n§fEo'Thar is greatly weakened, but with her last breath she will grant you §c§lStrength IV§f for the entire encounter. §eUse your sword§f to maximize DPS! Bows and other weapons are not as effective.\n",
   "luisb1202.functions.carga_lanas.106_interseccion_4.dialogos.dan_larock.1.4": "§8§o      Please §3§oclick§8§o one of the interactions in the chat.",
   "luisb1202.functions.carga_lanas.0_intro.cinematica_conquistador.ini.1": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-  "luisb1202.functions.carga_lanas.9_gris_claro.atacrom.run_click_aqui.1": "§e§o▶§7§oClick to talk§e§o◀"
+  "luisb1202.functions.carga_lanas.9_gris_claro.atacrom.run_click_aqui.1": "§e§o▶§7§oClick to talk§e§o◀",
+  "item.finalparadox.arena_compass": "Arena Compass",
+  "item.finalparadox.arena_compass.lore": "Right-click to enter the arena dimension; use again to return to the overworld.",
+  "message.finalparadox.arena_compass.enter": "Teleported to the arena dimension.",
+  "message.finalparadox.arena_compass.return": "Returned to the overworld.",
+  "message.finalparadox.arena_compass.missing": "The arena dimension is not available."
 }

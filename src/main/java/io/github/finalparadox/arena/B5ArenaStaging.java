@@ -62,7 +62,7 @@ public final class B5ArenaStaging {
 
     public static boolean beginEncounter(ServerPlayer initiator) {
         ServerLevel level = initiator.serverLevel();
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, ArenaDefinitions.B5);
         if (data.state() != ArenaDeploymentData.DeploymentState.READY
                 || !ArenaDefinitions.B5.id().equals(data.arenaId())
                 || data.floorAnchor().isEmpty()

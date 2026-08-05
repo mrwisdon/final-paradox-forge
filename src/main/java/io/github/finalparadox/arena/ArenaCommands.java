@@ -16,6 +16,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class ArenaCommands {
     private ArenaCommands() {
     }
@@ -70,21 +73,26 @@ public final class ArenaCommands {
     ) {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
 
-        if (data.state() == ArenaDeploymentData.DeploymentState.DEPLOYING) {
-            source.sendFailure(Component.literal("An arena deployment is already running; wait for it or reset its arena id."));
-            return 0;
+        for (ArenaDefinition other : ArenaDefinitions.ALL) {
+            if (ArenaDeploymentData.get(level, other).state()
+                    == ArenaDeploymentData.DeploymentState.DEPLOYING) {
+                source.sendFailure(Component.literal(
+                        "An arena deployment is already running; wait for it or reset that arena."));
+                return 0;
+            }
         }
-        ArenaDefinitions.find(data.arenaId()).ifPresent(existing -> {
-            if (existing == ArenaDefinitions.B5 && !B5EncounterManager.isActive(level)) {
-                B5ArenaStaging.cleanupWaiting(level, data);
-            }
-            if (existing == ArenaDefinitions.MARAWTHAR) {
-                MarawTharArenaStaging.cleanupWaiting(level, data);
-            }
-        });
-        if (ArenaDefinitions.find(data.arenaId()).flatMap(existing -> ArenaDeploymentManager.findActiveBoss(level, data, existing)).isPresent()) {
+        if (definition == ArenaDefinitions.B1) {
+            B1ArenaStaging.cleanupWaiting(level, data);
+        }
+        if (definition == ArenaDefinitions.B5 && !B5EncounterManager.isActive(level)) {
+            B5ArenaStaging.cleanupWaiting(level, data);
+        }
+        if (definition == ArenaDefinitions.MARAWTHAR) {
+            MarawTharArenaStaging.cleanupWaiting(level, data);
+        }
+        if (ArenaDeploymentManager.findActiveBoss(level, data, definition).isPresent()) {
             source.sendFailure(Component.literal("The recorded arena still has a living boss. Defeat or remove it first."));
             return 0;
         }
@@ -106,8 +114,8 @@ public final class ArenaCommands {
     private static int reset(CommandContext<CommandSourceStack> context, ArenaDefinition definition) {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
-        if (!matchesRecordedDefinition(data, definition) || data.floorAnchor().isEmpty()) {
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
+        if (data.state() == ArenaDeploymentData.DeploymentState.IDLE || data.floorAnchor().isEmpty()) {
             source.sendFailure(Component.literal("No recorded " + definition.id().toUpperCase()
                     + " arena exists in this dimension."));
             return 0;
@@ -117,6 +125,8 @@ public final class ArenaCommands {
                 B5ArenaStaging.cleanupWaiting(level, data);
             }
             B5EncounterManager.reset(level);
+        } else if (definition == ArenaDefinitions.B1) {
+            B1ArenaStaging.cleanupWaiting(level, data);
         } else if (definition == ArenaDefinitions.MARAWTHAR) {
             MarawTharArenaStaging.cleanupWaiting(level, data);
         }
@@ -136,20 +146,28 @@ public final class ArenaCommands {
 
     private static int status(CommandContext<CommandSourceStack> context) {
         CommandSourceStack source = context.getSource();
-        ArenaDeploymentData data = ArenaDeploymentData.get(source.getLevel());
-        if (data.state() == ArenaDeploymentData.DeploymentState.IDLE) {
+        ServerLevel level = source.getLevel();
+        List<String> lines = new ArrayList<>();
+        for (ArenaDefinition definition : ArenaDefinitions.ALL) {
+            ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
+            if (data.state() == ArenaDeploymentData.DeploymentState.IDLE) continue;
+            int total = definition.tileCount();
+            String anchor = data.floorAnchor().map(ArenaDeploymentManager::format).orElse("unknown");
+            String detail = data.state() == ArenaDeploymentData.DeploymentState.ERROR
+                    ? "; error=" + data.error() : "";
+            String b8State = ArenaDefinitions.B8.id().equals(definition.id())
+                    ? ", b8Triggered=" + data.b8Triggered() : "";
+            String marawState = ArenaDefinitions.MARAWTHAR.id().equals(definition.id())
+                    ? ", marawTharTriggered=" + data.marawTharTriggered() : "";
+            lines.add("Arena " + data.arenaId() + ": " + data.state().name().toLowerCase()
+                    + ", tiles=" + data.nextTile() + "/" + total
+                    + ", floor anchor=" + anchor + detail + b8State + marawState);
+        }
+        if (lines.isEmpty()) {
             source.sendSuccess(() -> Component.literal("No arena is recorded in this dimension."), false);
             return 1;
         }
-        int total = ArenaDefinitions.find(data.arenaId()).map(ArenaDefinition::tileCount).orElse(0);
-        String anchor = data.floorAnchor().map(ArenaDeploymentManager::format).orElse("unknown");
-        String detail = data.state() == ArenaDeploymentData.DeploymentState.ERROR ? "; error=" + data.error() : "";
-        String b8State = ArenaDefinitions.B8.id().equals(data.arenaId())
-                ? ", b8Triggered=" + data.b8Triggered() : "";
-        String marawState = ArenaDefinitions.MARAWTHAR.id().equals(data.arenaId())
-                ? ", marawTharTriggered=" + data.marawTharTriggered() : "";
-        source.sendSuccess(() -> Component.literal("Arena " + data.arenaId() + ": " + data.state().name().toLowerCase()
-                + ", tiles=" + data.nextTile() + "/" + total + ", floor anchor=" + anchor + detail + b8State + marawState), false);
+        source.sendSuccess(() -> Component.literal(String.join("\n", lines)), false);
         return 1;
     }
 
@@ -157,7 +175,7 @@ public final class ArenaCommands {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
         ArenaDefinition definition = ArenaDefinitions.B1;
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
         if (data.state() != ArenaDeploymentData.DeploymentState.READY || !data.arenaId().equals(definition.id())
                 || data.floorAnchor().isEmpty()) {
             source.sendFailure(Component.literal("B1 is not ready. Deploy it first and check arena status."));
@@ -168,6 +186,7 @@ public final class ArenaCommands {
             return 0;
         }
 
+        B1ArenaStaging.cleanupWaiting(level, data);
         BlockPos spawn = definition.bossSpawnBlock(data.floorAnchor().orElseThrow());
         ApigloBossEntity boss = ModEntities.APIGLO.get().create(level);
         if (boss == null) {
@@ -189,7 +208,7 @@ public final class ArenaCommands {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
         ArenaDefinition definition = ArenaDefinitions.MARAWTHAR;
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
         if (data.state() != ArenaDeploymentData.DeploymentState.READY
                 || !matchesRecordedDefinition(data, definition)
                 || data.floorAnchor().isEmpty()) {
@@ -225,7 +244,7 @@ public final class ArenaCommands {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
         ArenaDefinition definition = ArenaDefinitions.B5;
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
         if (data.state() != ArenaDeploymentData.DeploymentState.READY
                 || !matchesRecordedDefinition(data, definition)
                 || data.floorAnchor().isEmpty()) {
@@ -264,7 +283,7 @@ public final class ArenaCommands {
         CommandSourceStack source = context.getSource();
         ServerLevel level = source.getLevel();
         ArenaDefinition definition = ArenaDefinitions.B8;
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
         if (data.state() != ArenaDeploymentData.DeploymentState.READY
                 || !matchesRecordedDefinition(data, definition)
                 || data.floorAnchor().isEmpty()) {

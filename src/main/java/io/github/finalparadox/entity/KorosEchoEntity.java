@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDefinitions;
 import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.arena.B1ArenaStaging;
 import io.github.finalparadox.arena.B5ArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
@@ -73,6 +74,13 @@ public final class KorosEchoEntity extends Entity {
         return echo;
     }
 
+    @Nullable
+    public static KorosEchoEntity createB1(ServerLevel level, BlockPos arenaAnchor) {
+        KorosEchoEntity echo = create(level, arenaAnchor);
+        if (echo != null) echo.guideMode = "b1";
+        return echo;
+    }
+
     public BlockPos arenaAnchor() {
         return arenaAnchor;
     }
@@ -116,8 +124,8 @@ public final class KorosEchoEntity extends Entity {
                 player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1, true, false));
             }
         }
-        if (!"b8".equals(guideMode)) {
-            ArenaDeploymentData data = ArenaDeploymentData.get(server);
+        if ("b5".equals(guideMode)) {
+            ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.B5);
             data.stagedGariUuid().map(server::getEntity)
                     .filter(GariBossEntity.class::isInstance)
                     .map(GariBossEntity.class::cast)
@@ -134,7 +142,7 @@ public final class KorosEchoEntity extends Entity {
         if ("b8".equals(guideMode)) {
             // Source matriz/gen_no_boss: the matrix announces itself when a
             // player approaches, then Koros tells him to talk before fighting.
-            ArenaDeploymentData data = ArenaDeploymentData.get(server);
+            ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.B8);
             if (!b8IntroStarted && !data.b8Triggered() && hasPlayerNear(server, 24.0D)) {
                 b8IntroStarted = true;
                 b8DialogueStart = server.getGameTime();
@@ -183,17 +191,19 @@ public final class KorosEchoEntity extends Entity {
             }
             return 1;
         }
+        boolean b1 = "b1".equals(guideMode);
         switch (action) {
             case "main" -> showMain(player);
             case "briefing" -> showBriefing(player);
             case "mechanics" -> showMechanics(player);
             case "confirm" -> showConfirmation(player);
             case "start" -> {
-                if (!B5ArenaStaging.allPlayersInside(player.serverLevel(), arenaAnchor)) {
+                if (b1 && !B1ArenaStaging.allPlayersInside(player.serverLevel(), arenaAnchor)) {
                     showPlayersMissing(player);
                     return 0;
                 }
-                if (!B5ArenaStaging.beginEncounter(player)) {
+                if (b1 ? !B1ArenaStaging.beginEncounter(player)
+                        : !B5ArenaStaging.beginEncounter(player)) {
                     player.sendSystemMessage(Component.translatable("message.finalparadox.koros.interaction.unavailable"));
                     return 0;
                 }
@@ -208,11 +218,18 @@ public final class KorosEchoEntity extends Entity {
     private boolean canUseGuide(ServerPlayer player) {
         if (player.level() != level() || !player.isAlive()
                 || player.distanceToSqr(this) > 100.0D) return false;
-        ArenaDeploymentData data = ArenaDeploymentData.get(player.serverLevel());
+        ArenaDeploymentData data = ArenaDeploymentData.get(player.serverLevel(), guideMode);
         if ("b8".equals(guideMode)) {
             return data.state() == ArenaDeploymentData.DeploymentState.READY
                     && ArenaDefinitions.B8.id().equals(data.arenaId())
                     && !B8EncounterManager.isActive(player.serverLevel())
+                    && data.floorAnchor().map(arenaAnchor::equals).orElse(false)
+                    && data.korosUuid().map(getUUID()::equals).orElse(false);
+        }
+        if ("b1".equals(guideMode)) {
+            return data.state() == ArenaDeploymentData.DeploymentState.READY
+                    && ArenaDefinitions.B1.id().equals(data.arenaId())
+                    && data.activeBossUuid().isEmpty()
                     && data.floorAnchor().map(arenaAnchor::equals).orElse(false)
                     && data.korosUuid().map(getUUID()::equals).orElse(false);
         }
@@ -467,7 +484,7 @@ public final class KorosEchoEntity extends Entity {
     /** Source b8/check_players -> b8/ini: all inside, start the encounter. */
     private void startB8FromKoros(ServerPlayer player) {
         ServerLevel level = player.serverLevel();
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, ArenaDefinitions.B8);
         BlockPos anchor = data.floorAnchor().orElse(null);
         if (anchor == null || !b8AllPlayersInside(level, anchor)) {
             showB8Missing(player);

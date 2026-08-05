@@ -1,6 +1,7 @@
 package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.arena.ArenaDefinitions;
 import io.github.finalparadox.arena.B5ArenaStaging;
 import io.github.finalparadox.registry.ModSounds;
 import net.minecraft.ChatFormatting;
@@ -2106,7 +2107,7 @@ public final class B5EncounterController {
 
     private void respawn(ServerLevel server, B5EncounterData data) {
         endEncounter(server, data);
-        B5ArenaStaging.spawn(server, ArenaDeploymentData.get(server), data.anchor());
+        B5ArenaStaging.spawn(server, ArenaDeploymentData.get(server, ArenaDefinitions.B5), data.anchor());
         for (ServerPlayer player : server.players()) {
             if (player.isSpectator()) {
                 Vec3 tp = rel(data, -17, 1, 0);

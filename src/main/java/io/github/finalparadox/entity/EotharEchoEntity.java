@@ -212,7 +212,7 @@ public final class EotharEchoEntity extends Entity {
                     SoundSource.MASTER, 1.0F, 1.0F);
         }
         if (possessionTicks >= POSSESSION_TICKS) {
-            ArenaDeploymentData data = ArenaDeploymentData.get(server);
+            ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.MARAWTHAR);
             if (MarawTharArenaStaging.spawnBoss(server, data, arenaAnchor).isPresent()) {
                 removeEntranceVisual(server);
                 depart();
@@ -388,7 +388,7 @@ public final class EotharEchoEntity extends Entity {
                 || !player.isAlive() || player.distanceToSqr(this) > 100.0D) {
             return false;
         }
-        ArenaDeploymentData data = ArenaDeploymentData.get(player.serverLevel());
+        ArenaDeploymentData data = ArenaDeploymentData.get(player.serverLevel(), ArenaDefinitions.MARAWTHAR);
         return data.state() == ArenaDeploymentData.DeploymentState.READY
                 && ArenaDefinitions.MARAWTHAR.id().equals(data.arenaId())
                 && !data.marawTharTriggered()
