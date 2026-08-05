@@ -112,10 +112,12 @@ public final class ArenaCommands {
                     + " arena exists in this dimension."));
             return 0;
         }
-        if (definition == ArenaDefinitions.B5 && !B5EncounterManager.isActive(level)) {
-            B5ArenaStaging.cleanupWaiting(level, data);
-        }
-        if (definition == ArenaDefinitions.MARAWTHAR) {
+        if (definition == ArenaDefinitions.B5) {
+            if (!B5EncounterManager.isActive(level)) {
+                B5ArenaStaging.cleanupWaiting(level, data);
+            }
+            B5EncounterManager.reset(level);
+        } else if (definition == ArenaDefinitions.MARAWTHAR) {
             MarawTharArenaStaging.cleanupWaiting(level, data);
         }
         if (ArenaDeploymentManager.findActiveBoss(level, data, definition).isPresent()) {
@@ -123,7 +125,6 @@ public final class ArenaCommands {
                     + " arena still has a living boss. Defeat or remove it first."));
             return 0;
         }
-        B5EncounterManager.reset(level);
         B8EncounterManager.reset(level);
         BlockPos anchor = data.floorAnchor().orElseThrow();
         data.begin(definition, anchor);
