@@ -94,10 +94,10 @@ public final class ArenaDefinitions {
 
     /**
      * Echo of Koros position relative to the B1 floor anchor. The original
-     * minikoros sits at 1316 66 1529 against the floor anchor 1340 67 1537,
-     * i.e. offset (-24, -1, -8).
+     * minikoros sits at 1316 66 1529 against the floor anchor 1331 64 1526,
+     * i.e. offset (-15, 2, 3).
      */
-    public static final BlockPos B1_KOROS_OFFSET = new BlockPos(-24, -1, -8);
+    public static final BlockPos B1_KOROS_OFFSET = new BlockPos(-15, 2, 3);
 
     /**
      * Echo of Koros position relative to the B2 floor anchor. The original

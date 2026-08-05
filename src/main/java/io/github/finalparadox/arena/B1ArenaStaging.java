@@ -82,9 +82,7 @@ public final class B1ArenaStaging {
         if (result.isEmpty() || !allPlayersInside(level, anchor)) return false;
 
         Stage stage = result.get();
-        if (!stage.boss().preBattleDialoguePlayed()) {
-            return stage.boss().startPreBattleDialogue();
-        }
+        if (!stage.boss().preBattleDialoguePlayed()) return false;
         stage.koros().depart();
         data.clearKoros();
         boolean started = stage.boss().beginEncounter();

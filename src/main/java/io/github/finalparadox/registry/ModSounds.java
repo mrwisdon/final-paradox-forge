@@ -13,6 +13,8 @@ public final class ModSounds {
 
     public static final RegistryObject<SoundEvent> APIGLO_INTRO = register("apiglo_intro");
     public static final RegistryObject<SoundEvent> APIGLO_LOOP = register("apiglo_loop");
+    public static final RegistryObject<SoundEvent> APIGLO_ENTRANCE_INTRO = register("apiglo_entrance_intro");
+    public static final RegistryObject<SoundEvent> APIGLO_ENTRANCE_LOOP = register("apiglo_entrance_loop");
     public static final RegistryObject<SoundEvent> THAR_KROO = register("thar_kroo");
     public static final RegistryObject<SoundEvent> CONQUEROR_SHADOW_INTRO = register("conqueror_shadow_intro");
     public static final RegistryObject<SoundEvent> CONQUEROR_SHADOW_LOOP = register("conqueror_shadow_loop");

@@ -1,5 +1,6 @@
 package io.github.finalparadox.entity;
 
+import io.github.finalparadox.arena.B1ArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
 import io.github.finalparadox.registry.ModSounds;
@@ -87,6 +88,10 @@ public final class ApigloBossEntity extends Zombie {
     private static final int INTRO_END_TICK = 1124;
     private static final int MUSIC_INTRO_TICKS = 62;
     private static final int MUSIC_LOOP_TICKS = 2230;
+    private static final int MUSIC_ENTRANCE_LOOP_TICKS = 2080;
+    private static final int MUSIC_NONE = 0;
+    private static final int MUSIC_ENTRANCE = 1;
+    private static final int MUSIC_BATTLE = 2;
     private static final int[] BUTCHERING_TICKS = {80,120,160,200,240,270,300,330,360,390,410,430,450,470,490,505,520,535,550,565,573,581,589,597,605,613,621,629,637};
     private static final double STAMPEDE_RING_RADIUS = 19.0D;
     private static final double STAMPEDE_CHARGE_STEP = STAMPEDE_RING_RADIUS * 2.0D / 30.0D;
@@ -118,6 +123,7 @@ public final class ApigloBossEntity extends Zombie {
     private int stampedeCasts;
     private int emptyPlayerTicks;
     private int musicTick = -1;
+    private int musicMode = MUSIC_NONE;
     private int pleadTick = -1;
     private boolean initialized;
     private boolean phaseOneButchering;
@@ -159,7 +165,7 @@ public final class ApigloBossEntity extends Zombie {
         phase = PRE_BATTLE;
         phaseTick = -1;
         if (level() instanceof ServerLevel server && musicTick < 0) {
-            startMusic(server);
+            startEntranceMusic(server);
         }
         return true;
     }
@@ -250,7 +256,7 @@ public final class ApigloBossEntity extends Zombie {
                     showGuidePlayersMissing(player);
                     return 0;
                 }
-                return beginEncounter() ? 1 : 0;
+                return B1ArenaStaging.beginEncounter(player) ? 1 : 0;
             }
             default -> {
                 return 0;
@@ -266,7 +272,7 @@ public final class ApigloBossEntity extends Zombie {
         secondTick = 0;
         dialogue.clear();
         playGlobal(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F, 1.2F);
-        if (musicTick < 0) startMusic(server);
+        startBattleMusic(server);
         // The original encounter starts with the Apiglo/Glaivorus exchange, then the countdown.
         // When the pre-battle exchange already played on arena entry, skip straight to the countdown.
         phase = preBattleDialoguePlayed ? COUNTDOWN : INTRO;
@@ -723,15 +729,27 @@ public final class ApigloBossEntity extends Zombie {
         }
     }
 
-    private void startMusic(ServerLevel level) {
+    private void startEntranceMusic(ServerLevel level) {
         musicTick = 0;
+        musicMode = MUSIC_ENTRANCE;
+        playMusicTrack(level, ModSounds.APIGLO_ENTRANCE_INTRO.get());
+    }
+
+    private void startBattleMusic(ServerLevel level) {
+        musicTick = 0;
+        musicMode = MUSIC_BATTLE;
         playMusicTrack(level, ModSounds.APIGLO_INTRO.get());
     }
 
     private void tickMusic(ServerLevel level) {
         if (musicTick < 0) return;
         musicTick++;
-        if (musicTick >= MUSIC_INTRO_TICKS
+        if (musicMode == MUSIC_ENTRANCE) {
+            if (musicTick >= MUSIC_ENTRANCE_LOOP_TICKS
+                    && (musicTick - MUSIC_ENTRANCE_LOOP_TICKS) % MUSIC_ENTRANCE_LOOP_TICKS == 0) {
+                playMusicTrack(level, ModSounds.APIGLO_ENTRANCE_LOOP.get());
+            }
+        } else if (musicTick >= MUSIC_INTRO_TICKS
                 && (musicTick - MUSIC_INTRO_TICKS) % MUSIC_LOOP_TICKS == 0) {
             playMusicTrack(level, ModSounds.APIGLO_LOOP.get());
         }
@@ -740,6 +758,7 @@ public final class ApigloBossEntity extends Zombie {
     private void stopMusic() {
         stopMusicAudio();
         musicTick = -1;
+        musicMode = MUSIC_NONE;
         needsReloadRecovery = false;
     }
 
@@ -754,9 +773,13 @@ public final class ApigloBossEntity extends Zombie {
         if (level().getServer() == null) return;
         ResourceLocation intro = ModSounds.APIGLO_INTRO.get().getLocation();
         ResourceLocation loop = ModSounds.APIGLO_LOOP.get().getLocation();
+        ResourceLocation entranceIntro = ModSounds.APIGLO_ENTRANCE_INTRO.get().getLocation();
+        ResourceLocation entranceLoop = ModSounds.APIGLO_ENTRANCE_LOOP.get().getLocation();
         for (ServerPlayer player : level().getServer().getPlayerList().getPlayers()) {
             player.connection.send(new ClientboundStopSoundPacket(intro, SoundSource.RECORDS));
             player.connection.send(new ClientboundStopSoundPacket(loop, SoundSource.RECORDS));
+            player.connection.send(new ClientboundStopSoundPacket(entranceIntro, SoundSource.RECORDS));
+            player.connection.send(new ClientboundStopSoundPacket(entranceLoop, SoundSource.RECORDS));
         }
     }
 
@@ -865,7 +888,15 @@ public final class ApigloBossEntity extends Zombie {
         fallingSwords = null;
         torment = null;
         tormentEvent.setVisible(false);
-        if (musicTick >= MUSIC_INTRO_TICKS) {
+        if (musicMode == MUSIC_ENTRANCE) {
+            if (musicTick >= MUSIC_ENTRANCE_LOOP_TICKS) {
+                musicTick = MUSIC_ENTRANCE_LOOP_TICKS;
+                playMusicTrack(level, ModSounds.APIGLO_ENTRANCE_LOOP.get());
+            } else if (musicTick >= 0) {
+                musicTick = 0;
+                playMusicTrack(level, ModSounds.APIGLO_ENTRANCE_INTRO.get());
+            }
+        } else if (musicTick >= MUSIC_INTRO_TICKS) {
             // Recovery starts the loop from its beginning, so its clock must restart too.
             // Keeping the old offset would schedule another copy partway through this one.
             musicTick = MUSIC_INTRO_TICKS;
@@ -999,6 +1030,7 @@ public final class ApigloBossEntity extends Zombie {
         tag.putInt("ApigloStampedeCasts", stampedeCasts);
         tag.putInt("ApigloEmptyPlayerTicks", emptyPlayerTicks);
         tag.putInt("ApigloMusic", musicTick);
+        tag.putInt("ApigloMusicMode", musicMode);
         tag.putInt("ApigloPlead", pleadTick);
         tag.putBoolean("ApigloP1Butchering", phaseOneButchering);
         tag.putBoolean("ApigloP2Butchering", phaseTwoButchering);
@@ -1035,6 +1067,7 @@ public final class ApigloBossEntity extends Zombie {
         stampedeCasts = tag.getInt("ApigloStampedeCasts");
         emptyPlayerTicks = tag.getInt("ApigloEmptyPlayerTicks");
         musicTick = tag.contains("ApigloMusic") ? tag.getInt("ApigloMusic") : -1;
+        musicMode = tag.contains("ApigloMusicMode") ? tag.getInt("ApigloMusicMode") : MUSIC_NONE;
         pleadTick = tag.getInt("ApigloPlead");
         phaseOneButchering = tag.getBoolean("ApigloP1Butchering");
         phaseTwoButchering = tag.getBoolean("ApigloP2Butchering");

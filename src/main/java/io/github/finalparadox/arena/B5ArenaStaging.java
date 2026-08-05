@@ -77,11 +77,7 @@ public final class B5ArenaStaging {
         if (!allPlayersInside(level, anchor)) return false;
 
         B5EncounterData encounter = B5EncounterData.get(level);
-        if (!encounter.preBattleDialoguePlayed()) {
-            encounter.startPreBattleDialogue();
-            return true;
-        }
-        if (encounter.preBattleDialogueTicks() >= 0) return true;
+        if (!encounter.preBattleDialoguePlayed() || encounter.preBattleDialogueTicks() >= 0) return false;
 
         Stage stage = result.get();
         hold(stage.koyo(), stage.gari());
