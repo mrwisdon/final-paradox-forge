@@ -39,7 +39,9 @@ instead.
   reproduce `gen_conquistador_arrodillado` (kneeling corpse and red boots), the
   head lowers/rises and the right arm raises while the sword appears, then
   `MarawTharArenaStaging.spawnBoss` records the boss UUID, marks the encounter
-  triggered, and removes the echo and corpse.
+  triggered, and removes the echo and corpse. The corpse visual is raised one
+  block above the original source anchor height so it is not clipped by the
+  arena floor.
 - `/finalparadox arena start marawthar` remains a debug shortcut; it also
   removes any waiting echo and marks the encounter triggered.
 
