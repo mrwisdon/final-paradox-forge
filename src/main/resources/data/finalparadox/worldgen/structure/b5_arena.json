@@ -1,0 +1,7 @@
+{
+  "type": "finalparadox:b5_arena",
+  "biomes": "#finalparadox:has_structure/b5_arena",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "none"
+}

@@ -32,6 +32,12 @@ public final class ArenaDeploymentEvents {
                 data.adoptWorldgen(ArenaDefinitions.B8, anchor);
                 return;
             }
+            if (start.getStructure().type() == ModWorldgen.B5_ARENA.get()) {
+                // minimumCorner = floorAnchor + (-64, -6, -28), so reverse it.
+                BlockPos anchor = new BlockPos(box.minX() + 64, box.minY() + 6, box.minZ() + 28);
+                data.adoptWorldgen(ArenaDefinitions.B5, anchor);
+                return;
+            }
             if (start.getStructure().type() == ModWorldgen.MARAWTHAR_ARENA.get()) {
                 // minimumCorner = floorAnchor + (-64, -5, -64), so reverse it.
                 BlockPos anchor = new BlockPos(box.minX() + 64, box.minY() + 5, box.minZ() + 64);
