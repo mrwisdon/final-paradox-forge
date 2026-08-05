@@ -1,5 +1,7 @@
 package io.github.finalparadox.entity;
 
+import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.arena.B5ArenaStaging;
 import io.github.finalparadox.registry.ModSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -2104,24 +2106,7 @@ public final class B5EncounterController {
 
     private void respawn(ServerLevel server, B5EncounterData data) {
         endEncounter(server, data);
-        KoyomiBossEntity koyo = KoyomiBossEntity.createPrepared(server);
-        GariBossEntity gari = GariBossEntity.createPrepared(server);
-        if (koyo != null) {
-            Vec3 pos = rel(data, -41, 1, 2);
-            koyo.moveTo(pos.x, pos.y, pos.z, -90, 0);
-            koyo.setInvulnerable(true);
-            koyo.setNoAi(true);
-            koyo.setBossBarEnabled(false);
-            server.addFreshEntity(koyo);
-        }
-        if (gari != null) {
-            Vec3 pos = rel(data, -41, 1, -2);
-            gari.moveTo(pos.x, pos.y, pos.z, -90, 0);
-            gari.setInvulnerable(true);
-            gari.setNoAi(true);
-            gari.setBossBarEnabled(false);
-            server.addFreshEntity(gari);
-        }
+        B5ArenaStaging.spawn(server, ArenaDeploymentData.get(server), data.anchor());
         for (ServerPlayer player : server.players()) {
             if (player.isSpectator()) {
                 Vec3 tp = rel(data, -17, 1, 0);
