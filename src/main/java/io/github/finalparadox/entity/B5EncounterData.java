@@ -1,9 +1,11 @@
 package io.github.finalparadox.entity;
 
+import io.github.finalparadox.arena.ArenaEntranceMemory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.UUID;
@@ -95,6 +97,7 @@ public final class B5EncounterData extends SavedData {
     private boolean victoryPlayed;
     private boolean preBattleDialoguePlayed;
     private int preBattleDialogueTicks = -1;
+    private final Set<UUID> preBattleViewers = new HashSet<>();
     private final Set<UUID> deadPlayers = new HashSet<>();
     private final Map<UUID, Integer> h5Hits = new HashMap<>();
     private final Map<UUID, Integer> h3IntermissionHits = new HashMap<>();
@@ -771,10 +774,20 @@ public final class B5EncounterData extends SavedData {
         return preBattleDialoguePlayed;
     }
 
-    public void startPreBattleDialogue() {
+    public Set<UUID> preBattleViewers() {
+        return preBattleViewers;
+    }
+
+    public void startPreBattleDialogue(ServerLevel level) {
         if (preBattleDialoguePlayed) return;
         preBattleDialoguePlayed = true;
-        preBattleDialogueTicks = 0;
+        preBattleViewers.clear();
+        for (ServerPlayer player : level.players()) {
+            if (!player.isSpectator() && ArenaEntranceMemory.markIfFirst(player, "b5")) {
+                preBattleViewers.add(player.getUUID());
+            }
+        }
+        preBattleDialogueTicks = preBattleViewers.isEmpty() ? -1 : 0;
         setDirty();
     }
 

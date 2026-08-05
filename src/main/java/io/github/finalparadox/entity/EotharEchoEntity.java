@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDefinitions;
 import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.arena.ArenaEntranceMemory;
 import io.github.finalparadox.arena.MarawTharArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
@@ -39,6 +40,8 @@ import net.minecraftforge.network.NetworkHooks;
 import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -76,6 +79,7 @@ public final class EotharEchoEntity extends Entity {
     private int dialogueStep;
     private boolean menuReady;
     private int possessionTicks = -1;
+    private final Set<UUID> dialogueViewers = new HashSet<>();
     private UUID entranceStandUuid;
     private UUID entranceBootsUuid;
 
@@ -141,19 +145,35 @@ public final class EotharEchoEntity extends Entity {
             tickPossession(server);
             return;
         }
-        if (dialogueStart < 0) {
-            dialogueStart = server.getGameTime();
-            sendPreBattleLine(server, 0);
-            dialogueStep = 1;
+        if (dialogueStart < 0L) {
+            dialogueViewers.clear();
+            Vec3 center = Vec3.atCenterOf(arenaAnchor);
+            for (ServerPlayer player : server.players()) {
+                if (!player.isSpectator() && player.distanceToSqr(center) <= 100.0D * 100.0D
+                        && ArenaEntranceMemory.markIfFirst(player, "marawthar")) {
+                    dialogueViewers.add(player.getUUID());
+                }
+            }
+            if (dialogueViewers.isEmpty()) {
+                dialogueStart = -2L;
+                menuReady = true;
+            } else {
+                dialogueStart = server.getGameTime();
+                sendPreBattleLine(server, 0);
+                dialogueStep = 1;
+            }
         }
-        long elapsed = server.getGameTime() - dialogueStart;
-        if (dialogueStep < DIALOGUE_TICKS.length
-                && elapsed >= DIALOGUE_TICKS[dialogueStep]) {
-            sendPreBattleLine(server, dialogueStep);
-            dialogueStep++;
-        }
-        if (elapsed >= 1280L) {
-            menuReady = true;
+        if (dialogueStart >= 0L) {
+            long elapsed = server.getGameTime() - dialogueStart;
+            if (dialogueStep < DIALOGUE_TICKS.length
+                    && elapsed >= DIALOGUE_TICKS[dialogueStep]) {
+                sendPreBattleLine(server, dialogueStep);
+                dialogueStep++;
+            }
+            if (elapsed >= 1280L) {
+                menuReady = true;
+                dialogueViewers.clear();
+            }
         }
     }
 
@@ -165,7 +185,9 @@ public final class EotharEchoEntity extends Entity {
                         .withColor(TextColor.fromRgb(0xFF5555)).withBold(true).withItalic(true)))
                 .append(Component.translatable(DIALOGUE_KEYS[index]));
         for (ServerPlayer player : server.players()) {
-            if (!player.isSpectator() && player.distanceToSqr(Vec3.atCenterOf(arenaAnchor)) <= 100.0D * 100.0D) {
+            if (dialogueViewers.contains(player.getUUID())
+                    && !player.isSpectator()
+                    && player.distanceToSqr(Vec3.atCenterOf(arenaAnchor)) <= 100.0D * 100.0D) {
                 player.sendSystemMessage(message);
             }
         }

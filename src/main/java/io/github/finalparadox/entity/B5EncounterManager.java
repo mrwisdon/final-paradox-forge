@@ -64,10 +64,10 @@ public final class B5EncounterManager {
         int ticks = data.preBattleDialogueTicks();
         if (ticks < 0) return;
         if (ticks == 0) {
-            sendDialogue(level, gariLine("luisb1202.functions.bossfight.b5.dialogos.dia16.1"),
+            sendDialogue(level, data, gariLine("luisb1202.functions.bossfight.b5.dialogos.dia16.1"),
                     SoundEvents.PILLAGER_AMBIENT, 1.2F);
         } else if (ticks == 50) {
-            sendDialogue(level, koyoLine("luisb1202.functions.bossfight.b5.dialogos.dia16.2"),
+            sendDialogue(level, data, koyoLine("luisb1202.functions.bossfight.b5.dialogos.dia16.2"),
                     SoundEvents.PILLAGER_AMBIENT, 1.7F);
         }
         if (ticks >= 51) {
@@ -79,11 +79,13 @@ public final class B5EncounterManager {
 
     private static void sendDialogue(
             ServerLevel level,
+            B5EncounterData data,
             Component message,
             SoundEvent sound,
             float pitch
     ) {
         for (ServerPlayer player : level.players()) {
+            if (!data.preBattleViewers().contains(player.getUUID())) continue;
             player.sendSystemMessage(message);
             level.playSound(null, player.blockPosition(), sound, SoundSource.MASTER, 1.0F, pitch);
         }

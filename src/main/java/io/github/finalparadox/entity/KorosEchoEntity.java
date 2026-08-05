@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDefinitions;
 import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.arena.ArenaEntranceMemory;
 import io.github.finalparadox.arena.B1ArenaStaging;
 import io.github.finalparadox.arena.B2ArenaStaging;
 import io.github.finalparadox.arena.B5ArenaStaging;
@@ -38,6 +39,8 @@ import net.minecraftforge.network.NetworkHooks;
 import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -53,6 +56,7 @@ public final class KorosEchoEntity extends Entity {
     private long b8DialogueStart = -1L;
     private int b8DialogueStep;
     private boolean b8IntroStarted;
+    private final Set<UUID> b8EntranceViewers = new HashSet<>();
 
     public KorosEchoEntity(EntityType<? extends KorosEchoEntity> type, Level level) {
         super(type, level);
@@ -151,11 +155,21 @@ public final class KorosEchoEntity extends Entity {
             // Source matriz/gen_no_boss: the matrix announces itself when a
             // player approaches, then Koros tells him to talk before fighting.
             ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.B8);
-            if (!b8IntroStarted && !data.b8Triggered() && hasPlayerNear(server, 24.0D)) {
-                b8IntroStarted = true;
-                b8DialogueStart = server.getGameTime();
-                b8DialogueStep = 0;
-                sendB8IntroLine(server, 0);
+            if (!b8IntroStarted && !data.b8Triggered()) {
+                b8EntranceViewers.clear();
+                for (ServerPlayer player : server.players()) {
+                    if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR
+                            && player.distanceToSqr(this) <= 24.0D * 24.0D
+                            && ArenaEntranceMemory.markIfFirst(player, "b8")) {
+                        b8EntranceViewers.add(player.getUUID());
+                    }
+                }
+                if (!b8EntranceViewers.isEmpty()) {
+                    b8IntroStarted = true;
+                    b8DialogueStart = server.getGameTime();
+                    b8DialogueStep = 0;
+                    sendB8IntroLine(server, 0);
+                }
             }
             if (b8DialogueStart >= 0L) {
                 // Source timings: matrix lines at +0s, +4s, +4s, then the
@@ -166,7 +180,10 @@ public final class KorosEchoEntity extends Entity {
                     b8DialogueStep = step;
                     sendB8IntroLine(server, step);
                 }
-                if (elapsed >= 320) b8DialogueStart = -1L;
+                if (elapsed >= 320) {
+                    b8DialogueStart = -1L;
+                    b8EntranceViewers.clear();
+                }
             }
         }
     }
@@ -530,6 +547,7 @@ public final class KorosEchoEntity extends Entity {
                         .withBold(true).withItalic(true))
                 : Component.translatable("luisb1202.functions.bossfight.b8.dialogos.dia4.1");
         for (ServerPlayer player : server.players()) {
+            if (!b8EntranceViewers.contains(player.getUUID())) continue;
             player.sendSystemMessage(speaker.copy().append(Component.translatable(messageKey)));
             server.playSound(null, player.blockPosition(), sound, SoundSource.MASTER, 1.0F, pitch);
         }

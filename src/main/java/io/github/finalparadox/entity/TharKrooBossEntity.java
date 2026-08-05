@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.ArenaEntranceMemory;
 import io.github.finalparadox.arena.B2ArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
@@ -121,6 +122,7 @@ public final class TharKrooBossEntity extends MagmaCube {
             Component.translatable("entity.finalparadox.thar_kroo.bossbar"),
             BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.PROGRESS);
     private final List<ScheduledLine> dialogue = new ArrayList<>();
+    private final Set<UUID> entranceViewers = new HashSet<>();
     private final List<ShadowOrb> shadowOrbs = new ArrayList<>();
     private final List<FlameChargeState> flameCharges = new ArrayList<>();
     private final List<Vec3> fireFieldDangerPoints = new ArrayList<>();
@@ -212,6 +214,15 @@ public final class TharKrooBossEntity extends MagmaCube {
     public boolean startPreBattleDialogue() {
         if (phase != WAITING || preBattleDialoguePlayed) return false;
         preBattleDialoguePlayed = true;
+        if (!(level() instanceof ServerLevel server)) return true;
+        entranceViewers.clear();
+        for (ServerPlayer player : server.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == server && !player.isSpectator()
+                    && ArenaEntranceMemory.markIfFirst(player, "b2")) {
+                entranceViewers.add(player.getUUID());
+            }
+        }
+        if (entranceViewers.isEmpty()) return true;
         phase = PRE_BATTLE;
         phaseTick = -1;
         totalTick = 0;
@@ -374,6 +385,7 @@ public final class TharKrooBossEntity extends MagmaCube {
         if (phaseTick >= INTRO_END) {
             phase = WAITING;
             phaseTick = 0;
+            entranceViewers.clear();
         }
     }
 
@@ -1442,7 +1454,10 @@ public final class TharKrooBossEntity extends MagmaCube {
     private void broadcast(Component message) {
         if (level().getServer() == null) return;
         for (ServerPlayer player : level().getServer().getPlayerList().getPlayers()) {
-            if (player.level() == level()) player.sendSystemMessage(message);
+            if (player.level() == level()
+                    && (phase != PRE_BATTLE || entranceViewers.contains(player.getUUID()))) {
+                player.sendSystemMessage(message);
+            }
         }
     }
 

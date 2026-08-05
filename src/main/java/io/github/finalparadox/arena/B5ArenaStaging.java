@@ -97,7 +97,7 @@ public final class B5ArenaStaging {
         if (find(level, data).isEmpty()) return;
         B5EncounterData encounter = B5EncounterData.get(level);
         if (!encounter.preBattleDialoguePlayed() && anyPlayerInside(level, anchor)) {
-            encounter.startPreBattleDialogue();
+            encounter.startPreBattleDialogue(level);
         }
     }
 

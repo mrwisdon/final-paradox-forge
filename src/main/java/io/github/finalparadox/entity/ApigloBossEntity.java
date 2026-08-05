@@ -1,6 +1,7 @@
 package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.B1ArenaStaging;
+import io.github.finalparadox.arena.ArenaEntranceMemory;
 import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
 import io.github.finalparadox.registry.ModSounds;
@@ -110,6 +111,7 @@ public final class ApigloBossEntity extends Zombie {
             Component.translatable("entity.finalparadox.apiglo.torment"), BossEvent.BossBarColor.BLUE, BossEvent.BossBarOverlay.PROGRESS);
     private final List<ScheduledLine> dialogue = new ArrayList<>();
     private final List<PortalSpawn> portals = new ArrayList<>();
+    private final Set<UUID> entranceViewers = new HashSet<>();
     private int phase = INTRO;
     private int phaseTick;
     private int totalTick;
@@ -162,11 +164,19 @@ public final class ApigloBossEntity extends Zombie {
     public boolean startPreBattleDialogue() {
         if (phase != WAITING || preBattleDialoguePlayed) return false;
         preBattleDialoguePlayed = true;
+        if (!(level() instanceof ServerLevel server)) return true;
+        entranceViewers.clear();
+        for (ServerPlayer player : server.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == server && !player.isSpectator()
+                    && player.distanceToSqr(anchorX, anchorY, anchorZ) <= 96.0D * 96.0D
+                    && ArenaEntranceMemory.markIfFirst(player, "b1")) {
+                entranceViewers.add(player.getUUID());
+            }
+        }
+        if (entranceViewers.isEmpty()) return true;
         phase = PRE_BATTLE;
         phaseTick = -1;
-        if (level() instanceof ServerLevel server && musicTick < 0) {
-            startEntranceMusic(server);
-        }
+        if (musicTick < 0) startEntranceMusic(server);
         return true;
     }
 
@@ -417,13 +427,16 @@ public final class ApigloBossEntity extends Zombie {
         if (phaseTick >= INTRO_END_TICK) {
             phase = WAITING;
             phaseTick = 0;
+            entranceViewers.clear();
         }
     }
 
     private void tickIntroLines(ServerLevel level) {
         for (int index = 0; index < INTRO_TICKS.length; index++) {
             if (phaseTick != INTRO_TICKS[index]) continue;
-            broadcast(Component.translatable("dialogue.finalparadox.apiglo.intro." + (index + 1)));
+            Component line = Component.translatable("dialogue.finalparadox.apiglo.intro." + (index + 1));
+            if (phase == PRE_BATTLE) broadcastEntrance(line);
+            else broadcast(line);
             playGlobal(INTRO_GLAIVORUS[index] ? SoundEvents.TRIDENT_THROW : SoundEvents.PIGLIN_ANGRY, 1.0F,
                     INTRO_GLAIVORUS[index] ? 1.5F : 1.4F);
         }
@@ -837,6 +850,15 @@ public final class ApigloBossEntity extends Zombie {
     private void broadcast(Component message) {
         for (ServerPlayer player : level().getServer().getPlayerList().getPlayers()) {
             if (player.distanceToSqr(anchorX, anchorY, anchorZ) <= 96.0D * 96.0D) player.sendSystemMessage(message);
+        }
+    }
+
+    private void broadcastEntrance(Component message) {
+        for (ServerPlayer player : level().getServer().getPlayerList().getPlayers()) {
+            if (entranceViewers.contains(player.getUUID())
+                    && player.distanceToSqr(anchorX, anchorY, anchorZ) <= 96.0D * 96.0D) {
+                player.sendSystemMessage(message);
+            }
         }
     }
 
