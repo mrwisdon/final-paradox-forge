@@ -64,12 +64,18 @@ public final class ArenaCompassItem extends Item {
         }
 
         BlockPos spawn = target.getSharedSpawnPos();
+        float yaw = server.getYRot();
+        if (returning && server.getRespawnPosition() != null
+                && Level.OVERWORLD.equals(server.getRespawnDimension())) {
+            spawn = server.getRespawnPosition();
+            yaw = server.getRespawnAngle();
+        }
         int ground = target.getHeight(
                 Heightmap.Types.MOTION_BLOCKING, spawn.getX(), spawn.getZ());
         double x = spawn.getX() + 0.5D;
         double y = Math.max(ground + 1, spawn.getY() + 1);
         double z = spawn.getZ() + 0.5D;
-        server.teleportTo(target, x, y, z, server.getYRot(), server.getXRot());
+        server.teleportTo(target, x, y, z, yaw, server.getXRot());
         target.playSound(null, server.blockPosition(), SoundEvents.ENDERMAN_TELEPORT,
                 SoundSource.PLAYERS, 1.0F, 1.0F);
         server.displayClientMessage(Component.translatable(
