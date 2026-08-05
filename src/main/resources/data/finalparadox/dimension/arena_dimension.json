@@ -21,11 +21,7 @@
         }
       ],
       "structure_overrides": [
-        "finalparadox:b1_arena",
-        "finalparadox:b2_arena",
-        "finalparadox:b5_arena",
-        "finalparadox:b8_arena",
-        "finalparadox:marawthar_arena"
+        "finalparadox:arena_structures"
       ]
     }
   }
