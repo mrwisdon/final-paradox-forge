@@ -56,6 +56,14 @@ public final class B1ArenaStaging {
         return Optional.of(new Stage(boss, koros));
     }
 
+    public static boolean hasWaitingBoss(ServerLevel level, ArenaDeploymentData data) {
+        return data.activeBossUuid().map(level::getEntity)
+                .filter(ApigloBossEntity.class::isInstance)
+                .map(ApigloBossEntity.class::cast)
+                .filter(ApigloBossEntity::isWaiting)
+                .isPresent();
+    }
+
     public static boolean beginEncounter(ServerPlayer initiator) {
         ServerLevel level = initiator.serverLevel();
         ArenaDeploymentData data = ArenaDeploymentData.get(level, ArenaDefinitions.B1);
@@ -73,24 +81,39 @@ public final class B1ArenaStaging {
         if (result.isEmpty() || !allPlayersInside(level, anchor)) return false;
 
         Stage stage = result.get();
+        if (!stage.boss().preBattleDialoguePlayed()) {
+            return stage.boss().startPreBattleDialogue();
+        }
         stage.koros().depart();
         data.clearKoros();
         return stage.boss().beginEncounter();
     }
 
+    public static boolean anyPlayerInside(ServerLevel level, BlockPos anchor) {
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == level && !player.isSpectator() && inside(anchor, player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean allPlayersInside(ServerLevel level, BlockPos anchor) {
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            if (player.level() != level
-                    || player.getX() < anchor.getX() - 31.0D
-                    || player.getX() > anchor.getX() + 13.0D
-                    || player.getY() < anchor.getY() - 2.0D
-                    || player.getY() > anchor.getY() + 18.0D
-                    || player.getZ() < anchor.getZ() - 32.0D
-                    || player.getZ() > anchor.getZ() + 10.0D) {
+            if (player.level() != level || !inside(anchor, player)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private static boolean inside(BlockPos anchor, ServerPlayer player) {
+        return player.getX() >= anchor.getX() - 31.0D
+                && player.getX() <= anchor.getX() + 13.0D
+                && player.getY() >= anchor.getY() - 2.0D
+                && player.getY() <= anchor.getY() + 18.0D
+                && player.getZ() >= anchor.getZ() - 32.0D
+                && player.getZ() <= anchor.getZ() + 10.0D;
     }
 
     public static void cleanupWaiting(ServerLevel level, ArenaDeploymentData data) {

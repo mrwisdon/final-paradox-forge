@@ -81,6 +81,7 @@ public final class ApigloBossEntity extends Zombie {
     private static final int FINALE = 6;
     private static final int COUNTDOWN = 7;
     private static final int WAITING = 8;
+    private static final int PRE_BATTLE = 9;
     private static final int[] INTRO_TICKS = {0, 60, 124, 220, 306, 388, 486, 556, 642, 702, 784, 918, 978, 1038};
     private static final boolean[] INTRO_GLAIVORUS = {false, false, false, false, false, false, false, true, true, true, true, false, false, false};
     private static final int INTRO_END_TICK = 1124;
@@ -123,6 +124,7 @@ public final class ApigloBossEntity extends Zombie {
     private boolean phaseTwoButchering;
     private boolean needsReloadRecovery;
     private boolean victoryHandled;
+    private boolean preBattleDialoguePlayed;
     private double anchorX;
     private double anchorY;
     private double anchorZ;
@@ -149,6 +151,25 @@ public final class ApigloBossEntity extends Zombie {
 
     public boolean isWaiting() {
         return phase == WAITING;
+    }
+
+    public boolean startPreBattleDialogue() {
+        if (phase != WAITING || preBattleDialoguePlayed) return false;
+        preBattleDialoguePlayed = true;
+        phase = PRE_BATTLE;
+        phaseTick = -1;
+        if (level() instanceof ServerLevel server && musicTick < 0) {
+            startMusic(server);
+        }
+        return true;
+    }
+
+    public boolean preBattleDialoguePlayed() {
+        return preBattleDialoguePlayed;
+    }
+
+    public void markPreBattleDialoguePlayed() {
+        preBattleDialoguePlayed = true;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -205,14 +226,8 @@ public final class ApigloBossEntity extends Zombie {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
-        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-        if (level().isClientSide) return InteractionResult.SUCCESS;
-        if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
-        if (phase != WAITING) {
-            serverPlayer.sendSystemMessage(Component.translatable("message.finalparadox.apiglo.interaction.already_started"));
-            return InteractionResult.CONSUME;
-        }
-        showGuideMain(serverPlayer);
+        // B1 uses the proximity-triggered pre-battle dialogue and the Echo of
+        // Koros to start the encounter, so the boss no longer opens a menu on use.
         return InteractionResult.CONSUME;
     }
 
@@ -251,10 +266,10 @@ public final class ApigloBossEntity extends Zombie {
         secondTick = 0;
         dialogue.clear();
         playGlobal(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F, 1.2F);
-        startMusic(server);
+        if (musicTick < 0) startMusic(server);
         // The original encounter starts with the Apiglo/Glaivorus exchange, then the countdown.
-        // Keep the boss invulnerable and its bar hidden until the first combat phase begins.
-        phase = INTRO;
+        // When the pre-battle exchange already played on arena entry, skip straight to the countdown.
+        phase = preBattleDialoguePlayed ? COUNTDOWN : INTRO;
         phaseTick = -1;
         return true;
     }
@@ -377,21 +392,34 @@ public final class ApigloBossEntity extends Zombie {
         tickHazards(level);
 
         if (phase == INTRO) tickIntro(level);
+        else if (phase == PRE_BATTLE) tickPreBattleDialogue(level);
         else if (phase == COUNTDOWN) tickCountdown(level);
         else tickFight(level);
         phaseTick++;
     }
 
     private void tickIntro(ServerLevel level) {
+        tickIntroLines(level);
+        if (phaseTick >= INTRO_END_TICK) {
+            phase = COUNTDOWN;
+            phaseTick = -1;
+        }
+    }
+
+    private void tickPreBattleDialogue(ServerLevel level) {
+        tickIntroLines(level);
+        if (phaseTick >= INTRO_END_TICK) {
+            phase = WAITING;
+            phaseTick = 0;
+        }
+    }
+
+    private void tickIntroLines(ServerLevel level) {
         for (int index = 0; index < INTRO_TICKS.length; index++) {
             if (phaseTick != INTRO_TICKS[index]) continue;
             broadcast(Component.translatable("dialogue.finalparadox.apiglo.intro." + (index + 1)));
             playGlobal(INTRO_GLAIVORUS[index] ? SoundEvents.TRIDENT_THROW : SoundEvents.PIGLIN_ANGRY, 1.0F,
                     INTRO_GLAIVORUS[index] ? 1.5F : 1.4F);
-        }
-        if (phaseTick >= INTRO_END_TICK) {
-            phase = COUNTDOWN;
-            phaseTick = -1;
         }
     }
 
@@ -975,6 +1003,7 @@ public final class ApigloBossEntity extends Zombie {
         tag.putBoolean("ApigloP1Butchering", phaseOneButchering);
         tag.putBoolean("ApigloP2Butchering", phaseTwoButchering);
         tag.putBoolean("ApigloVictoryHandled", victoryHandled);
+        tag.putBoolean("ApigloPreBattleDialoguePlayed", preBattleDialoguePlayed);
         tag.putDouble("ApigloAnchorX", anchorX);
         tag.putDouble("ApigloAnchorY", anchorY);
         tag.putDouble("ApigloAnchorZ", anchorZ);
@@ -1010,6 +1039,7 @@ public final class ApigloBossEntity extends Zombie {
         phaseOneButchering = tag.getBoolean("ApigloP1Butchering");
         phaseTwoButchering = tag.getBoolean("ApigloP2Butchering");
         victoryHandled = tag.getBoolean("ApigloVictoryHandled");
+        preBattleDialoguePlayed = tag.getBoolean("ApigloPreBattleDialoguePlayed");
         anchorX = tag.getDouble("ApigloAnchorX");
         anchorY = tag.getDouble("ApigloAnchorY");
         anchorZ = tag.getDouble("ApigloAnchorZ");
@@ -1019,7 +1049,7 @@ public final class ApigloBossEntity extends Zombie {
             CompoundTag entry = lines.getCompound(index);
             dialogue.add(new ScheduledLine(entry.getInt("Due"), entry.getString("Key"), entry.getInt("Sound")));
         }
-        bossEvent.setVisible(phase != INTRO && phase != COUNTDOWN && phase != WAITING);
+        bossEvent.setVisible(phase != INTRO && phase != COUNTDOWN && phase != WAITING && phase != PRE_BATTLE);
         // Data commands used by legacy map abilities also call Entity#load while this
         // entity is already in the world. Only a real chunk/world load should restart
         // the streamed encounter music.

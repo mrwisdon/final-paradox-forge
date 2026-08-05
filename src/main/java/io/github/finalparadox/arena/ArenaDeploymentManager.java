@@ -148,9 +148,18 @@ public final class ArenaDeploymentManager {
                     data.clearKoros();
                 }
             });
-            if (data.activeBossUuid().isPresent() || data.korosUuid().isPresent()) return;
             BlockPos anchor = data.floorAnchor().orElseThrow();
-            B1ArenaStaging.spawn(level, data, anchor);
+            Optional<B1ArenaStaging.Stage> stage = B1ArenaStaging.find(level, data);
+            if (stage.isEmpty() && data.activeBossUuid().isEmpty()) {
+                stage = B1ArenaStaging.spawn(level, data, anchor);
+            }
+            stage.ifPresent(existing -> {
+                if (B1ArenaStaging.anyPlayerInside(level, anchor)
+                        && existing.boss().isWaiting()
+                        && !existing.boss().preBattleDialoguePlayed()) {
+                    existing.boss().startPreBattleDialogue();
+                }
+            });
             return;
         }
         if (definition == ArenaDefinitions.B8

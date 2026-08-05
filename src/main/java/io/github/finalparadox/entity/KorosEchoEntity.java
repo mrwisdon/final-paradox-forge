@@ -229,7 +229,8 @@ public final class KorosEchoEntity extends Entity {
         if ("b1".equals(guideMode)) {
             return data.state() == ArenaDeploymentData.DeploymentState.READY
                     && ArenaDefinitions.B1.id().equals(data.arenaId())
-                    && data.activeBossUuid().isEmpty()
+                    && (data.activeBossUuid().isEmpty()
+                            || B1ArenaStaging.hasWaitingBoss(player.serverLevel(), data))
                     && data.floorAnchor().map(arenaAnchor::equals).orElse(false)
                     && data.korosUuid().map(getUUID()::equals).orElse(false);
         }

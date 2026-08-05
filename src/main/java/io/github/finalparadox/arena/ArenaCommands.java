@@ -206,6 +206,7 @@ public final class ArenaCommands {
             return 0;
         }
         data.setActiveBossUuid(boss.getUUID());
+        boss.markPreBattleDialoguePlayed();
         if (!boss.beginEncounter()) {
             boss.discard();
             data.clearActiveBoss();
