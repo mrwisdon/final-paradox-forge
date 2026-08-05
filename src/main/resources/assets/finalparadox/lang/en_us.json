@@ -1596,5 +1596,6 @@
   "item.finalparadox.arena_compass.lore": "Right-click to enter the arena dimension; use again to return to the overworld.",
   "message.finalparadox.arena_compass.enter": "Teleported to the arena dimension.",
   "message.finalparadox.arena_compass.return": "Returned to the overworld.",
+  "message.finalparadox.arena_compass.respawn": "Teleported to the current arena's respawn point.",
   "message.finalparadox.arena_compass.missing": "The arena dimension is not available."
 }

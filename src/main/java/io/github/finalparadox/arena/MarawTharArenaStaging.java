@@ -2,6 +2,7 @@ package io.github.finalparadox.arena;
 
 import io.github.finalparadox.entity.EotharEchoEntity;
 import io.github.finalparadox.entity.MarawTharBossEntity;
+import io.github.finalparadox.item.ArenaCompassDestination;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -52,6 +53,7 @@ public final class MarawTharArenaStaging {
         data.setActiveBossUuid(boss.getUUID());
         data.setMarawTharTriggered(true);
         data.clearEothar();
+        ArenaCompassDestination.setForArena(level, ArenaDefinitions.MARAWTHAR, anchor);
         return Optional.of(boss);
     }
 

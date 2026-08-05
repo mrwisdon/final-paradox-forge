@@ -2,6 +2,7 @@ package io.github.finalparadox.arena;
 
 import io.github.finalparadox.entity.KorosEchoEntity;
 import io.github.finalparadox.entity.TharKrooBossEntity;
+import io.github.finalparadox.item.ArenaCompassDestination;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -86,7 +87,9 @@ public final class B2ArenaStaging {
         }
         stage.koros().depart();
         data.clearKoros();
-        return stage.boss().beginEncounter();
+        boolean started = stage.boss().beginEncounter();
+        if (started) ArenaCompassDestination.setForArena(level, ArenaDefinitions.B2, anchor);
+        return started;
     }
 
     public static boolean anyPlayerInside(ServerLevel level, BlockPos anchor) {

@@ -1596,5 +1596,6 @@
   "item.finalparadox.arena_compass.lore": "§9右击§r进入竞技场维度；再次使用返回主世界。",
   "message.finalparadox.arena_compass.enter": "已传送至竞技场维度。",
   "message.finalparadox.arena_compass.return": "已返回主世界。",
+  "message.finalparadox.arena_compass.respawn": "已传送至当前竞技场的复活点。",
   "message.finalparadox.arena_compass.missing": "竞技场维度尚未加载。"
 }

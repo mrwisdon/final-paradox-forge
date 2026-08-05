@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.item.ArenaCompassDestination;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -47,6 +48,7 @@ public final class B8EncounterManager {
         data.setAnchor(anchor);
         controller.prepare(level, data);
         ArenaDeploymentData.get(level, ArenaDefinitions.B8).setB8Triggered(true);
+        ArenaCompassDestination.setForArena(level, ArenaDefinitions.B8, anchor);
         return true;
     }
 

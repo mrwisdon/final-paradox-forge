@@ -5,6 +5,7 @@ import io.github.finalparadox.entity.B5EncounterData;
 import io.github.finalparadox.entity.GariBossEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
+import io.github.finalparadox.item.ArenaCompassDestination;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -87,6 +88,7 @@ public final class B5ArenaStaging {
         stage.koros().depart();
         data.clearKoros();
         B5EncounterManager.beginCountdown(level, anchor, stage.koyo(), stage.gari());
+        ArenaCompassDestination.setForArena(level, ArenaDefinitions.B5, anchor);
         return true;
     }
 

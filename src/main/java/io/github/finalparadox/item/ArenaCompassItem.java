@@ -46,6 +46,23 @@ public final class ArenaCompassItem extends Item {
             return InteractionResultHolder.fail(stack);
         }
 
+        if (!returning && stack.getTag() != null
+                && stack.getTag().contains(ArenaCompassDestination.RESPAWN_TAG)) {
+            int[] destination = stack.getTag().getIntArray(ArenaCompassDestination.RESPAWN_TAG);
+            if (destination.length == 3) {
+                float yaw = stack.getTag().getFloat(ArenaCompassDestination.RESPAWN_YAW_TAG);
+                server.teleportTo(target,
+                        destination[0] + 0.5D, destination[1], destination[2] + 0.5D,
+                        yaw, server.getXRot());
+                target.playSound(null, server.blockPosition(), SoundEvents.ENDERMAN_TELEPORT,
+                        SoundSource.PLAYERS, 1.0F, 1.0F);
+                server.displayClientMessage(Component.translatable(
+                        "message.finalparadox.arena_compass.respawn"), true);
+                server.getCooldowns().addCooldown(this, 40);
+                return InteractionResultHolder.consume(stack);
+            }
+        }
+
         BlockPos spawn = target.getSharedSpawnPos();
         int ground = target.getHeight(
                 Heightmap.Types.MOTION_BLOCKING, spawn.getX(), spawn.getZ());
