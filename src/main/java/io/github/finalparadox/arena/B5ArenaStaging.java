@@ -1,6 +1,7 @@
 package io.github.finalparadox.arena;
 
 import io.github.finalparadox.entity.B5EncounterManager;
+import io.github.finalparadox.entity.B5EncounterData;
 import io.github.finalparadox.entity.GariBossEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
@@ -20,6 +21,7 @@ public final class B5ArenaStaging {
     public static Optional<Stage> spawn(ServerLevel level, ArenaDeploymentData data, BlockPos anchor) {
         if (B5EncounterManager.isActive(level)) return Optional.empty();
         cleanupWaiting(level, data);
+        B5EncounterData.get(level).resetPreBattleDialogue();
 
         KoyomiBossEntity koyo = KoyomiBossEntity.createPrepared(level);
         GariBossEntity gari = GariBossEntity.createPrepared(level);
@@ -73,6 +75,13 @@ public final class B5ArenaStaging {
         BlockPos anchor = data.floorAnchor().orElseThrow();
         if (!allPlayersInside(level, anchor)) return false;
 
+        B5EncounterData encounter = B5EncounterData.get(level);
+        if (!encounter.preBattleDialoguePlayed()) {
+            encounter.startPreBattleDialogue();
+            return true;
+        }
+        if (encounter.preBattleDialogueTicks() >= 0) return true;
+
         Stage stage = result.get();
         hold(stage.koyo(), stage.gari());
         stage.koros().depart();
@@ -81,16 +90,44 @@ public final class B5ArenaStaging {
         return true;
     }
 
+    public static void tryStartPreBattleDialogue(
+            ServerLevel level,
+            ArenaDeploymentData data,
+            BlockPos anchor
+    ) {
+        if (B5EncounterManager.isActive(level)) return;
+        if (find(level, data).isEmpty()) return;
+        B5EncounterData encounter = B5EncounterData.get(level);
+        if (!encounter.preBattleDialoguePlayed() && anyPlayerInside(level, anchor)) {
+            encounter.startPreBattleDialogue();
+        }
+    }
+
+    public static boolean anyPlayerInside(ServerLevel level, BlockPos anchor) {
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == level && !player.isSpectator() && inside(anchor, player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean allPlayersInside(ServerLevel level, BlockPos anchor) {
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            if (player.level() != level
-                    || player.getX() < anchor.getX() - 51.0D || player.getX() > anchor.getX() + 7.0D
-                    || player.getY() < anchor.getY() + 1.0D || player.getY() > anchor.getY() + 11.0D
-                    || player.getZ() < anchor.getZ() - 19.0D || player.getZ() > anchor.getZ() + 19.0D) {
+            if (player.level() != level || !inside(anchor, player)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private static boolean inside(BlockPos anchor, ServerPlayer player) {
+        return player.getX() >= anchor.getX() - 51.0D
+                && player.getX() <= anchor.getX() + 7.0D
+                && player.getY() >= anchor.getY() + 1.0D
+                && player.getY() <= anchor.getY() + 11.0D
+                && player.getZ() >= anchor.getZ() - 19.0D
+                && player.getZ() <= anchor.getZ() + 19.0D;
     }
 
     public static void cleanupWaiting(ServerLevel level, ArenaDeploymentData data) {

@@ -267,14 +267,6 @@ public final class B5EncounterController {
     private void tickCountdown(ServerLevel server, B5EncounterData data) {
         int ticks = data.countdownTicks() + 1;
         data.setCountdownTicks(ticks);
-        if (ticks == 1) {
-            sendDialogueNow(server, dialogueGari("luisb1202.functions.bossfight.b5.dialogos.dia16.1"),
-                    SoundEvents.PILLAGER_AMBIENT, 1.2F);
-        }
-        if (ticks == 50) {
-            sendDialogueNow(server, dialogueKoyo("luisb1202.functions.bossfight.b5.dialogos.dia16.2"),
-                    SoundEvents.PILLAGER_AMBIENT, 1.7F);
-        }
         if (ticks == 60) countdownTitle(server, "luisb1202.functions.bossfight.b1.cuenta_atras.3.1");
         if (ticks == 80) countdownTitle(server, "luisb1202.functions.afijos.detonante.2.1");
         if (ticks == 100) countdownTitle(server, "luisb1202.functions.afijos.detonante.1.2");

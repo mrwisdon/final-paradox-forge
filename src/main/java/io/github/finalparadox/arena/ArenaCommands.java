@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.B5EncounterManager;
+import io.github.finalparadox.entity.B5EncounterData;
 import io.github.finalparadox.entity.B8EncounterManager;
 import io.github.finalparadox.entity.KorosEchoEntity;
 import io.github.finalparadox.registry.ModEntities;
@@ -284,6 +285,7 @@ public final class ArenaCommands {
             source.sendFailure(Component.literal("All players must be within the B5 fight arena."));
             return 0;
         }
+        B5EncounterData.get(level).markPreBattleDialogueComplete();
         if (!B5ArenaStaging.beginEncounter(player)) {
             source.sendFailure(Component.literal("Could not start the staged B5 encounter."));
             return 0;

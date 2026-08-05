@@ -134,6 +134,11 @@ public final class ArenaDeploymentManager {
             }
             return;
         }
+        if (definition == ArenaDefinitions.B5 && data.floorAnchor().isPresent()) {
+            BlockPos anchor = data.floorAnchor().orElseThrow();
+            B5ArenaStaging.tryStartPreBattleDialogue(level, data, anchor);
+            return;
+        }
         if (definition == ArenaDefinitions.B1
                 && data.floorAnchor().isPresent()) {
             data.activeBossUuid().ifPresent(uuid -> {
