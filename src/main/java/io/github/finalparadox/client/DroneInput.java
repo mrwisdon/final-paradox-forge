@@ -7,9 +7,11 @@ import io.github.finalparadox.network.DroneExitPacket;
 import io.github.finalparadox.network.DroneInputPacket;
 import io.github.finalparadox.network.ModNetwork;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
+import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -22,6 +24,8 @@ import net.minecraftforge.fml.common.Mod;
         value = Dist.CLIENT)
 public final class DroneInput {
     private static int lastInputState;
+    private static float lastSentYRot;
+    private static float lastSentXRot;
 
     private DroneInput() {
     }
@@ -34,10 +38,20 @@ public final class DroneInput {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null) {
             lastInputState = 0;
+            lastSentYRot = 0.0F;
+            lastSentXRot = 0.0F;
             return;
         }
 
         boolean controlling = minecraft.getCameraEntity() instanceof DroneEntity;
+        float yRot = minecraft.player.getYRot();
+        float xRot = minecraft.player.getXRot();
+        if (controlling && minecraft.getCameraEntity() instanceof DroneEntity drone) {
+            drone.yRotO = yRot;
+            drone.setYRot(yRot);
+            drone.xRotO = xRot;
+            drone.setXRot(xRot);
+        }
         int state = 0;
         if (controlling && minecraft.screen == null) {
             if (minecraft.options.keyUp.isDown()) {
@@ -59,9 +73,14 @@ public final class DroneInput {
                 state |= DroneEntity.FLAG_DOWN;
             }
         }
-        if (state != lastInputState) {
-            ModNetwork.CHANNEL.sendToServer(new DroneInputPacket(state));
+        boolean rotationChanged = controlling
+                && (Math.abs(Mth.wrapDegrees(yRot - lastSentYRot)) >= 0.25F
+                || Math.abs(xRot - lastSentXRot) >= 0.25F);
+        if (state != lastInputState || rotationChanged) {
+            ModNetwork.CHANNEL.sendToServer(new DroneInputPacket(state, yRot, xRot));
             lastInputState = state;
+            lastSentYRot = yRot;
+            lastSentXRot = xRot;
         }
         if (controlling && minecraft.screen == null) {
             while (DroneKeyMappings.DROP_BOMB.consumeClick()) {
@@ -84,6 +103,15 @@ public final class DroneInput {
     public static void onRenderHand(RenderHandEvent event) {
         if (Minecraft.getInstance().getCameraEntity() instanceof DroneEntity) {
             event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.getCameraEntity() instanceof DroneEntity && minecraft.player != null) {
+            event.setYaw(minecraft.player.getYRot());
+            event.setPitch(minecraft.player.getXRot());
         }
     }
 }

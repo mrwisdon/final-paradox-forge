@@ -47,7 +47,7 @@ public final class DroneEvents {
     public static void onPlayerDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             DroneEntity.cancelFor(player);
-            player.setCamera(null);
+            DroneEntity.resetCameraFor(player);
         }
     }
 
@@ -55,7 +55,7 @@ public final class DroneEvents {
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             DroneEntity.cancelFor(player);
-            player.setCamera(null);
+            DroneEntity.resetCameraFor(player);
         }
     }
 

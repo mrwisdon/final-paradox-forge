@@ -15,8 +15,10 @@ must stay at the deploy point.
 
 ## Camera and body
 
-- `ServerPlayer.setCamera(DroneEntity)` switches the client camera to the
-  drone while the player stays in survival mode.
+- A direct `ClientboundSetCameraPacket(drone)` switches the client camera to
+  the drone while the player stays in survival mode. Vanilla
+  `ServerPlayer.setCamera` is avoided because it teleports the body to the
+  camera entity.
 - The body is frozen at the deploy anchor every server tick
   (`setNoGravity`, zero delta movement, `setPos` back to anchor).
 - Client hides hands and cancels attack/use input while
@@ -29,6 +31,12 @@ must stay at the deploy point.
 
 - WASD moves relative to drone yaw, Space ascends, Shift descends, speed
   0.45 blocks/tick; server-authoritative with `DroneInputPacket` held state.
+- Mouse look is applied client-side through `ViewportEvent.ComputeCameraAngles`
+  because vanilla skips player rotation packets while the camera is not the
+  player; `DroneInputPacket` also carries yaw/pitch so the server drone and
+  frozen body keep the same facing.
+- Flight is clamped to 48 blocks from the deploy anchor so the drone stays
+  inside the chunk-streaming radius of the frozen body.
 - R drops a `recon_drone_bomb`: gravity entity, up to 40 ticks or impact fuse,
   radius 3.5, 20 damage to hostile entities via
   `GlaivorusAbilityState.isHostileTarget`, knockback, no terrain destruction.

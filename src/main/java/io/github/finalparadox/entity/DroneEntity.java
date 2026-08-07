@@ -7,6 +7,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundSetCameraPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -38,8 +39,11 @@ public final class DroneEntity extends Entity {
 
     public static final int MAX_BOMBS = 8;
     public static final int DEPLOY_COOLDOWN_TICKS = 20 * 180;
+    /** Keeps the camera inside the player's streamed chunk radius. */
+    private static final double MAX_FLIGHT_RADIUS = 48.0D;
 
     private static final String ACTIVE_KEY = "finalparadox.recon_drone_active";
+    private static final String ACTIVE_DRONE_UUID_KEY = "finalparadox.recon_drone_uuid";
     private static final String ANCHOR_X_KEY = "finalparadox.recon_drone_anchor_x";
     private static final String ANCHOR_Y_KEY = "finalparadox.recon_drone_anchor_y";
     private static final String ANCHOR_Z_KEY = "finalparadox.recon_drone_anchor_z";
@@ -83,13 +87,14 @@ public final class DroneEntity extends Entity {
             return false;
         }
 
-        player.setCamera(drone);
         CompoundTag data = player.getPersistentData();
         data.putBoolean(ACTIVE_KEY, true);
+        data.putUUID(ACTIVE_DRONE_UUID_KEY, drone.getUUID());
         data.putDouble(ANCHOR_X_KEY, player.getX());
         data.putDouble(ANCHOR_Y_KEY, player.getY());
         data.putDouble(ANCHOR_Z_KEY, player.getZ());
         data.putString(ANCHOR_DIMENSION_KEY, player.level().dimension().location().toString());
+        player.connection.send(new ClientboundSetCameraPacket(drone));
         player.setNoGravity(true);
         player.setDeltaMovement(Vec3.ZERO);
         player.getCooldowns().addCooldown(ModItems.RECON_DRONE.get(), DEPLOY_COOLDOWN_TICKS);
@@ -108,27 +113,25 @@ public final class DroneEntity extends Entity {
 
     public static boolean isActiveFor(ServerPlayer player) {
         return player.getPersistentData().getBoolean(ACTIVE_KEY)
-                && player.getCamera() instanceof DroneEntity drone
-                && player.getUUID().equals(drone.ownerId);
+                && findFor(player) != null;
     }
 
     public static DroneEntity findFor(ServerPlayer player) {
-        if (player.getCamera() instanceof DroneEntity drone
+        CompoundTag data = player.getPersistentData();
+        if (!data.getBoolean(ACTIVE_KEY) || !data.hasUUID(ACTIVE_DRONE_UUID_KEY)) {
+            return null;
+        }
+        UUID droneId = data.getUUID(ACTIVE_DRONE_UUID_KEY);
+        if (player.serverLevel().getEntity(droneId) instanceof DroneEntity drone
                 && player.getUUID().equals(drone.ownerId)
                 && !drone.isRemoved()) {
             return drone;
         }
-        if (!player.getPersistentData().getBoolean(ACTIVE_KEY)) {
-            return null;
-        }
-        for (Entity entity : player.serverLevel().getAllEntities()) {
-            if (entity instanceof DroneEntity drone
-                    && player.getUUID().equals(drone.ownerId)
-                    && !drone.isRemoved()) {
-                return drone;
-            }
-        }
         return null;
+    }
+
+    public static void resetCameraFor(ServerPlayer player) {
+        player.connection.send(new ClientboundSetCameraPacket(player));
     }
 
     public static void endFor(ServerPlayer player) {
@@ -137,6 +140,7 @@ public final class DroneEntity extends Entity {
             drone.endMode(player);
         } else if (player.getPersistentData().getBoolean(ACTIVE_KEY)) {
             player.getPersistentData().remove(ACTIVE_KEY);
+            player.getPersistentData().remove(ACTIVE_DRONE_UUID_KEY);
             player.getPersistentData().remove(ANCHOR_X_KEY);
             player.getPersistentData().remove(ANCHOR_Y_KEY);
             player.getPersistentData().remove(ANCHOR_Z_KEY);
@@ -151,15 +155,18 @@ public final class DroneEntity extends Entity {
             drone.discard();
         }
         player.getPersistentData().remove(ACTIVE_KEY);
+        player.getPersistentData().remove(ACTIVE_DRONE_UUID_KEY);
         player.getPersistentData().remove(ANCHOR_X_KEY);
         player.getPersistentData().remove(ANCHOR_Y_KEY);
         player.getPersistentData().remove(ANCHOR_Z_KEY);
         player.getPersistentData().remove(ANCHOR_DIMENSION_KEY);
     }
 
-    public void onInput(ServerPlayer player, int state) {
+    public void onInput(ServerPlayer player, int state, float yRot, float xRot) {
         if (isControlledBy(player)) {
             inputState = state;
+            player.setYRot(yRot);
+            player.setXRot(xRot);
         }
     }
 
@@ -272,6 +279,18 @@ public final class DroneEntity extends Entity {
         } else {
             resolved = new Vec3(0.0D, move.y * MOVE_SPEED, 0.0D);
         }
+        double currentDistance = Math.sqrt(
+                (getX() - anchorX) * (getX() - anchorX)
+                        + (getY() - anchorY) * (getY() - anchorY)
+                        + (getZ() - anchorZ) * (getZ() - anchorZ));
+        if (currentDistance >= MAX_FLIGHT_RADIUS) {
+            setDeltaMovement(Vec3.ZERO);
+            return;
+        }
+        double remaining = MAX_FLIGHT_RADIUS - currentDistance;
+        if (resolved.length() > remaining) {
+            resolved = resolved.normalize().scale(Math.max(0.0D, remaining));
+        }
         setDeltaMovement(resolved);
         move(MoverType.SELF, resolved);
     }
@@ -281,9 +300,10 @@ public final class DroneEntity extends Entity {
     }
 
     private void endMode(ServerPlayer player) {
-        player.setCamera(null);
+        resetCameraFor(player);
         CompoundTag data = player.getPersistentData();
         data.remove(ACTIVE_KEY);
+        data.remove(ACTIVE_DRONE_UUID_KEY);
         data.remove(ANCHOR_X_KEY);
         data.remove(ANCHOR_Y_KEY);
         data.remove(ANCHOR_Z_KEY);
