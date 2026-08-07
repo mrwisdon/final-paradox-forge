@@ -46,6 +46,7 @@ import io.github.finalparadox.item.ApigloBladeItem;
 import io.github.finalparadox.item.TharFragmentItem;
 import io.github.finalparadox.item.NightfallItem;
 import io.github.finalparadox.item.AtacromGauntletItem;
+import io.github.finalparadox.item.ReconDroneItem;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.registries.DeferredRegister;
@@ -101,6 +102,8 @@ public final class ModItems {
     public static final RegistryObject<Item> NIGHTFALL = REGISTER.register("nightfall", NightfallItem::new);
     public static final RegistryObject<Item> ATACROM_GAUNTLET =
             REGISTER.register("atacrom_gauntlet", AtacromGauntletItem::new);
+    public static final RegistryObject<Item> RECON_DRONE =
+            REGISTER.register("recon_drone", ReconDroneItem::new);
     /** Renderer-only handheld sprite used while the guard window is active. */
     public static final RegistryObject<Item> ATACROM_GAUNTLET_DISPLAY =
             REGISTER.register("atacrom_gauntlet_display", () -> new Item(new Item.Properties()));

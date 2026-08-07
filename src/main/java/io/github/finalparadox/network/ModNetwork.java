@@ -8,7 +8,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "6";
+    private static final String PROTOCOL_VERSION = "7";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.ChannelBuilder
             .named(ResourceLocation.fromNamespaceAndPath(FinalParadox.MOD_ID, "main"))
@@ -67,6 +67,24 @@ public final class ModNetwork {
                 .encoder(TerrastalkerDismountAckPacket::encode)
                 .decoder(TerrastalkerDismountAckPacket::decode)
                 .consumerMainThread(TerrastalkerDismountAckPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(DroneInputPacket.class, 8,
+                        NetworkDirection.PLAY_TO_SERVER)
+                .encoder(DroneInputPacket::encode)
+                .decoder(DroneInputPacket::decode)
+                .consumerMainThread(DroneInputPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(DroneBombPacket.class, 9,
+                        NetworkDirection.PLAY_TO_SERVER)
+                .encoder(DroneBombPacket::encode)
+                .decoder(DroneBombPacket::decode)
+                .consumerMainThread(DroneBombPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(DroneExitPacket.class, 10,
+                        NetworkDirection.PLAY_TO_SERVER)
+                .encoder(DroneExitPacket::encode)
+                .decoder(DroneExitPacket::decode)
+                .consumerMainThread(DroneExitPacket::handle)
                 .add();
     }
 
