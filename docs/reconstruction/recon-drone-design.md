@@ -104,10 +104,14 @@ path and a vulnerable body proxy at the deploy point.
   value so unrelated immunity is never shortened.
 - The server sends no sampled tracer particles. Each salvo sends one compact
   S2C packet containing both start/end pairs and their miss/block/entity impact
-  types. A client-only, entity-free renderer advances short yellow glowing
-  streaks at about 12 blocks/tick with partial-tick interpolation. It emits both
-  muzzle flashes immediately and block smoke or entity critical particles only
-  when a streak arrives. Tracers are camera-relative and clear on world switch.
+  types. A client-only, entity-free renderer advances a 0.65-block, two-layer
+  white-yellow/orange tracer at 32 blocks/tick on a continuous game-time clock.
+  The clock avoids whole-tick packet-boundary jumps and guarantees one rendered
+  frame for short paths before cleanup. Small renderer-owned muzzle flashes
+  replace continuous flame particles; low-frequency smoke avoids a muzzle fire
+  column. On visual arrival, block hits use local block-state fragments plus a
+  spark and entity hits use two small critical sparks. Tracers remain
+  camera-relative and clear on world switch or disconnect.
 - Client-only tickable sounds attach to every tracked drone. `WARMING` plays the
   non-looping `drone_gatling_spinup`; `FIRING` plays the looping
   `drone_gatling_fire`. Both stop immediately when the synchronized state
