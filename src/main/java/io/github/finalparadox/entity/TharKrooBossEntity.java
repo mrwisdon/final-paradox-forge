@@ -1,5 +1,10 @@
 package io.github.finalparadox.entity;
 
+import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.ArenaEntranceMemory;
+import io.github.finalparadox.arena.B2ArenaStaging;
+import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
 import io.github.finalparadox.registry.ModSounds;
 import net.minecraft.core.BlockPos;
@@ -9,6 +14,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
@@ -48,6 +55,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -83,9 +91,13 @@ public final class TharKrooBossEntity extends MagmaCube {
     private static final int PHASE_THREE = 7;
     private static final int FINALE = 8;
     private static final int COMPLETE = 9;
+    private static final int PRE_BATTLE = 10;
     private static final int INTRO_LINES = 22;
     private static final int INTRO_LINE_GAP = 60;
     private static final int INTRO_END = INTRO_LINES * INTRO_LINE_GAP + 40;
+    private static final int DEFEAT_DIALOGUE_1_TICK = 80;
+    private static final int DEFEAT_DIALOGUE_2_TICK = 150;
+    private static final int DEFEAT_RESPAWN_TICKS = 200;
     private static final String OWNER_KEY = "finalparadox.thar_kroo_owner";
     private static final String MINION_KEY = "finalparadox.thar_kroo_minion";
     private static final String CUSTODIAN_KEY = "finalparadox.thar_kroo_custodian";
@@ -110,6 +122,7 @@ public final class TharKrooBossEntity extends MagmaCube {
             Component.translatable("entity.finalparadox.thar_kroo.bossbar"),
             BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.PROGRESS);
     private final List<ScheduledLine> dialogue = new ArrayList<>();
+    private final Set<UUID> entranceViewers = new HashSet<>();
     private final List<ShadowOrb> shadowOrbs = new ArrayList<>();
     private final List<FlameChargeState> flameCharges = new ArrayList<>();
     private final List<Vec3> fireFieldDangerPoints = new ArrayList<>();
@@ -158,6 +171,9 @@ public final class TharKrooBossEntity extends MagmaCube {
     private boolean initialized;
     private boolean completionHandled;
     private boolean needsMusicRecovery;
+    private boolean preBattleDialoguePlayed;
+    private boolean defeatActive;
+    private int defeatTicks;
     private UUID flameTarget;
     private UUID laserTarget;
     private UUID blackfireTarget;
@@ -179,6 +195,48 @@ public final class TharKrooBossEntity extends MagmaCube {
         bossEvent.setVisible(false);
         setNoGravity(true);
         setSilent(true);
+    }
+
+    @Nullable
+    public static TharKrooBossEntity createPrepared(ServerLevel level, BlockPos position) {
+        TharKrooBossEntity boss = ModEntities.THAR_KROO.get().create(level);
+        if (boss != null) {
+            boss.moveTo(position.getX(), position.getY(), position.getZ(), 180.0F, 0.0F);
+            boss.initializeEncounter();
+        }
+        return boss;
+    }
+
+    public boolean isWaiting() {
+        return phase == WAITING;
+    }
+
+    public boolean startPreBattleDialogue() {
+        if (phase != WAITING || preBattleDialoguePlayed) return false;
+        preBattleDialoguePlayed = true;
+        if (!(level() instanceof ServerLevel server)) return true;
+        entranceViewers.clear();
+        for (ServerPlayer player : server.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == server && !player.isSpectator()
+                    && ArenaEntranceMemory.markIfFirst(player, "b2")) {
+                entranceViewers.add(player.getUUID());
+            }
+        }
+        if (entranceViewers.isEmpty()) return true;
+        phase = PRE_BATTLE;
+        phaseTick = -1;
+        totalTick = 0;
+        queueIntroDialogue();
+        playGlobal(SoundEvents.ENDER_DRAGON_GROWL, 1.0F, 1.25F);
+        return true;
+    }
+
+    public boolean preBattleDialoguePlayed() {
+        return preBattleDialoguePlayed;
+    }
+
+    public void markPreBattleDialoguePlayed() {
+        preBattleDialoguePlayed = true;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -220,6 +278,8 @@ public final class TharKrooBossEntity extends MagmaCube {
         anchorX = getX();
         anchorY = getY();
         anchorZ = getZ();
+        defeatActive = false;
+        defeatTicks = 0;
         setPersistenceRequired();
         setNoAi(true);
         setNoGravity(true);
@@ -241,30 +301,36 @@ public final class TharKrooBossEntity extends MagmaCube {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
-        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-        if (level().isClientSide) return InteractionResult.SUCCESS;
-        if (phase != WAITING) {
-            player.sendSystemMessage(Component.translatable("message.finalparadox.thar_kroo.already_started"));
-            return InteractionResult.CONSUME;
-        }
-        beginEncounter();
+        // B2 uses the proximity-triggered pre-battle dialogue and the Echo of
+        // Koros to start the encounter, so the boss no longer opens on use.
         return InteractionResult.CONSUME;
     }
 
-    private void beginEncounter() {
+    public boolean beginEncounter() {
+        if (phase != WAITING) return false;
         cleanupTransient();
         encounterPlayers.clear();
         laserDamageLevels.clear();
-        phase = INTRO;
-        phaseTick = -1;
         totalTick = 0;
-        dialogue.clear();
         for (ServerPlayer player : combatPlayers()) encounterPlayers.add(player.getUUID());
+        if (preBattleDialoguePlayed) {
+            phase = COUNTDOWN;
+            phaseTick = -1;
+        } else {
+            phase = INTRO;
+            phaseTick = -1;
+            queueIntroDialogue();
+        }
+        playGlobal(SoundEvents.ENDER_DRAGON_GROWL, 1.0F, 1.25F);
+        return true;
+    }
+
+    private void queueIntroDialogue() {
+        dialogue.clear();
         for (int line = 1; line <= INTRO_LINES; line++) {
             dialogue.add(new ScheduledLine((line - 1) * INTRO_LINE_GAP,
                     "dialogue.finalparadox.thar_kroo.intro." + line));
         }
-        playGlobal(SoundEvents.ENDER_DRAGON_GROWL, 1.0F, 1.25F);
     }
 
     @Override
@@ -272,6 +338,10 @@ public final class TharKrooBossEntity extends MagmaCube {
         super.tick();
         if (!(level() instanceof ServerLevel server) || isRemoved() || isDeadOrDying()) return;
         if (!initialized) initializeEncounter();
+        if (defeatActive) {
+            tickDefeat(server);
+            return;
+        }
         setDeltaMovement(Vec3.ZERO);
         bossEvent.setProgress(Mth.clamp(getHealth() / getMaxHealth(), 0.0F, 1.0F));
         if (phase == WAITING || phase == COMPLETE) {
@@ -304,10 +374,119 @@ public final class TharKrooBossEntity extends MagmaCube {
         tickTransientAttacks(server);
 
         if (phase == INTRO) tickIntro();
+        else if (phase == PRE_BATTLE) tickPreBattle();
         else if (phase == COUNTDOWN) tickCountdown();
         else if (phase == INTERMISSION_ONE || phase == INTERMISSION_TWO) tickIntermission(server);
         else if (phase == FINALE) tickFinale(server);
         else tickCombat(server);
+    }
+
+    private void tickPreBattle() {
+        if (phaseTick >= INTRO_END) {
+            phase = WAITING;
+            phaseTick = 0;
+            entranceViewers.clear();
+        }
+    }
+
+    public static void onPlayerDeath(ServerPlayer player) {
+        if (!(player.level() instanceof ServerLevel server)) return;
+        ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.B2);
+        if (data.state() != ArenaDeploymentData.DeploymentState.READY
+                || !ArenaDefinitions.B2.id().equals(data.arenaId())) {
+            return;
+        }
+        data.activeBossUuid().map(server::getEntity)
+                .filter(TharKrooBossEntity.class::isInstance)
+                .map(TharKrooBossEntity.class::cast)
+                .filter(Entity::isAlive)
+                .ifPresent(boss -> boss.handlePlayerDeath(player));
+    }
+
+    public void handlePlayerDeath(ServerPlayer player) {
+        if (!(level() instanceof ServerLevel server) || defeatActive) return;
+        if (phase < COUNTDOWN || phase == PRE_BATTLE || phase == COMPLETE) return;
+        if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
+            player.gameMode.changeGameModeForPlayer(GameType.SPECTATOR);
+        }
+        Vec3 above = position().add(0.0D, 10.0D, 0.0D);
+        player.teleportTo(server, above.x, above.y, above.z, player.getYRot(), player.getXRot());
+        if (allPlayersSpectator(server)) startDefeat(server);
+    }
+
+    private static boolean allPlayersSpectator(ServerLevel server) {
+        for (ServerPlayer player : server.players()) {
+            if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void startDefeat(ServerLevel server) {
+        defeatActive = true;
+        defeatTicks = 0;
+        for (ServerPlayer player : server.players()) {
+            player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 50, 10));
+            player.connection.send(new ClientboundSetSubtitleTextPacket(
+                    Component.translatable("subtitle.finalparadox.thar_kroo.defeat")));
+            player.connection.send(new ClientboundSetTitleTextPacket(
+                    Component.translatable("title.finalparadox.thar_kroo.defeat")));
+            server.playSound(null, player.blockPosition(), SoundEvents.WITHER_DEATH,
+                    SoundSource.MASTER, 1.0F, 1.8F);
+        }
+    }
+
+    private void tickDefeat(ServerLevel server) {
+        defeatTicks++;
+        if (defeatTicks == DEFEAT_DIALOGUE_1_TICK) {
+            for (ServerPlayer player : server.players()) {
+                player.sendSystemMessage(
+                        Component.translatable("dialogue.finalparadox.thar_kroo.defeat.1"));
+            }
+            server.playSound(null, blockPosition(), SoundEvents.ELDER_GUARDIAN_AMBIENT,
+                    SoundSource.MASTER, 1.0F, 1.8F);
+        } else if (defeatTicks == DEFEAT_DIALOGUE_2_TICK) {
+            Component line = Component.empty()
+                    .append(Component.translatable("message.finalparadox.koros.guide.speaker")
+                            .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFBBDFF))
+                                    .withBold(true).withItalic(true)))
+                    .append(Component.translatable("dialogue.finalparadox.thar_kroo.defeat.2"));
+            for (ServerPlayer player : server.players()) {
+                player.sendSystemMessage(line);
+            }
+            server.playSound(null, blockPosition(), SoundEvents.TRIDENT_RETURN,
+                    SoundSource.MASTER, 1.0F, 1.7F);
+        }
+        if (defeatTicks >= DEFEAT_RESPAWN_TICKS) {
+            restartAfterDefeat(server);
+        }
+    }
+
+    private void restartAfterDefeat(ServerLevel server) {
+        defeatActive = false;
+        defeatTicks = 0;
+        BlockPos destination = new BlockPos(
+                Mth.floor(anchorX), Mth.floor(anchorY), Mth.floor(anchorZ) - 21);
+        for (ServerPlayer player : server.players()) {
+            if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
+                player.teleportTo(server, destination.getX() + 0.5D, destination.getY(),
+                        destination.getZ() + 0.5D, 0.0F, 0.0F);
+                player.gameMode.changeGameModeForPlayer(GameType.ADVENTURE);
+            }
+            player.removeEffect(MobEffects.WITHER);
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.DAMAGE_RESISTANCE, 2020, 1, false, false, false));
+            player.addEffect(new MobEffectInstance(MobEffects.HEAL, 20, 10, true, false));
+        }
+        ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.B2);
+        BlockPos anchor = data.floorAnchor().orElse(
+                new BlockPos(Mth.floor(anchorX), Mth.floor(anchorY), Mth.floor(anchorZ)));
+        cleanupEncounter(server);
+        data.clearActiveBoss();
+        discard();
+        B2ArenaStaging.spawn(server, data, anchor)
+                .ifPresent(stage -> stage.boss().markPreBattleDialoguePlayed());
     }
 
     private void tickIntro() {
@@ -1275,7 +1454,10 @@ public final class TharKrooBossEntity extends MagmaCube {
     private void broadcast(Component message) {
         if (level().getServer() == null) return;
         for (ServerPlayer player : level().getServer().getPlayerList().getPlayers()) {
-            if (player.level() == level()) player.sendSystemMessage(message);
+            if (player.level() == level()
+                    && (phase != PRE_BATTLE || entranceViewers.contains(player.getUUID()))) {
+                player.sendSystemMessage(message);
+            }
         }
     }
 
@@ -1350,6 +1532,9 @@ public final class TharKrooBossEntity extends MagmaCube {
         super.addAdditionalSaveData(tag);
         tag.putBoolean("TharInitialized", initialized);
         tag.putBoolean("TharComplete", completionHandled);
+        tag.putBoolean("TharPreBattleDialoguePlayed", preBattleDialoguePlayed);
+        tag.putBoolean("TharDefeatActive", defeatActive);
+        tag.putInt("TharDefeatTicks", defeatTicks);
         tag.putBoolean("TharShielded", shielded);
         tag.putInt("TharPhase", phase);
         tag.putInt("TharPhaseTick", phaseTick);
@@ -1418,6 +1603,9 @@ public final class TharKrooBossEntity extends MagmaCube {
         super.readAdditionalSaveData(tag);
         initialized = tag.getBoolean("TharInitialized");
         completionHandled = tag.getBoolean("TharComplete");
+        preBattleDialoguePlayed = tag.getBoolean("TharPreBattleDialoguePlayed");
+        defeatActive = tag.getBoolean("TharDefeatActive");
+        defeatTicks = tag.getInt("TharDefeatTicks");
         shielded = tag.getBoolean("TharShielded");
         phase = tag.getInt("TharPhase");
         phaseTick = tag.getInt("TharPhaseTick");
@@ -1490,7 +1678,8 @@ public final class TharKrooBossEntity extends MagmaCube {
         barrageHitCooldowns.clear();
         shadowOrbs.clear();
         setInvulnerable(shielded || phase == WAITING || phase == INTRO || phase == COUNTDOWN
-                || phase == INTERMISSION_ONE || phase == INTERMISSION_TWO || phase == FINALE || phase == COMPLETE);
+                || phase == PRE_BATTLE || phase == INTERMISSION_ONE || phase == INTERMISSION_TWO
+                || phase == FINALE || phase == COMPLETE);
         if (level() instanceof ServerLevel server && !alteredBlocks.isEmpty()
                 && phase != PHASE_ONE && phase != PHASE_TWO && phase != PHASE_THREE
                 && flameTick < 0 && fireFieldTick < 0) restoreArena(server);

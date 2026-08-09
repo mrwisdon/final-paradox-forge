@@ -161,7 +161,8 @@ IDLE（竞技场就绪，无 Boss）
 - 触发器位置/类型需要先和用户确认（原版 B5 入场是玩家走到某个点 + 对话，
   没有「右键」；右键方案是本模组自己的适配，需要明确触发物）。
 - 状态机里需要防重入：IDLE 时才能触发；战斗中右键提示「已在战斗中」；
-  Boss 存活时 `/arena reset` 被拦截（现有逻辑）。
+  B5 的 `/arena reset` 会先结束活动战斗并清掉双 Boss，再重新部署并补回
+  Koyomi/Gariheuz 与 Echo of Koros。
 - 可参考现有 `ArenaDeploymentData.state()`（IDLE/DEPLOYING/READY/ERROR）的
   状态枚举风格，把战斗状态也放进持久化数据，保证重载后状态不丢。
 

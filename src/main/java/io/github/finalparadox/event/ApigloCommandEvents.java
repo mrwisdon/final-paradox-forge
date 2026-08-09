@@ -7,6 +7,7 @@ import io.github.finalparadox.arena.ArenaCommands;
 import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.TerrastalkerRoverEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
+import io.github.finalparadox.entity.EotharEchoEntity;
 import io.github.finalparadox.entity.ZombieSupermatrixEntity;
 import io.github.finalparadox.entity.B8EncounterController;
 import io.github.finalparadox.entity.B8EncounterManager;
@@ -125,6 +126,13 @@ public final class ApigloCommandEvents {
                         .then(Commands.argument("echo", StringArgumentType.word())
                                 .then(Commands.argument("action", StringArgumentType.word())
                                         .executes(context -> handleKorosAction(
+                                                context.getSource().getPlayerOrException(),
+                                                StringArgumentType.getString(context, "echo"),
+                                                StringArgumentType.getString(context, "action"))))))
+                .then(Commands.literal("eothar_menu")
+                        .then(Commands.argument("echo", StringArgumentType.word())
+                                .then(Commands.argument("action", StringArgumentType.word())
+                                        .executes(context -> handleEotharAction(
                                                 context.getSource().getPlayerOrException(),
                                                 StringArgumentType.getString(context, "echo"),
                                                 StringArgumentType.getString(context, "action")))))));
@@ -351,6 +359,18 @@ public final class ApigloCommandEvents {
         }
         Entity entity = player.serverLevel().getEntity(uuid);
         return entity instanceof ApigloBossEntity apiglo ? apiglo.handleGuideAction(player, action) : 0;
+    }
+
+    private static int handleEotharAction(ServerPlayer player, String rawUuid, String action) {
+        final UUID uuid;
+        try {
+            uuid = UUID.fromString(rawUuid);
+        } catch (IllegalArgumentException exception) {
+            return 0;
+        }
+        Entity entity = player.serverLevel().getEntity(uuid);
+        return entity instanceof EotharEchoEntity eothar
+                ? eothar.handleMenu(player, action) : 0;
     }
 
     private static int handleKorosAction(ServerPlayer player, String rawUuid, String action) {

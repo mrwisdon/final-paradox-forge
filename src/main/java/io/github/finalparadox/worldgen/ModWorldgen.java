@@ -22,6 +22,38 @@ public final class ModWorldgen {
             STRUCTURE_PIECES.register("marawthar_arena",
                     () -> (StructurePieceType.StructureTemplateType) MarawTharArenaPiece::new);
 
+    public static final RegistryObject<StructureType<B8ArenaStructure>> B8_ARENA =
+            STRUCTURE_TYPES.register("b8_arena",
+                    () -> () -> B8ArenaStructure.CODEC);
+
+    public static final RegistryObject<StructurePieceType> B8_ARENA_PIECE =
+            STRUCTURE_PIECES.register("b8_arena",
+                    () -> (StructurePieceType.StructureTemplateType) B8ArenaPiece::new);
+
+    public static final RegistryObject<StructureType<B5ArenaStructure>> B5_ARENA =
+            STRUCTURE_TYPES.register("b5_arena",
+                    () -> () -> B5ArenaStructure.CODEC);
+
+    public static final RegistryObject<StructurePieceType> B5_ARENA_PIECE =
+            STRUCTURE_PIECES.register("b5_arena",
+                    () -> (StructurePieceType.StructureTemplateType) B5ArenaPiece::new);
+
+    public static final RegistryObject<StructureType<B1ArenaStructure>> B1_ARENA =
+            STRUCTURE_TYPES.register("b1_arena",
+                    () -> () -> B1ArenaStructure.CODEC);
+
+    public static final RegistryObject<StructurePieceType> B1_ARENA_PIECE =
+            STRUCTURE_PIECES.register("b1_arena",
+                    () -> (StructurePieceType.StructureTemplateType) B1ArenaPiece::new);
+
+    public static final RegistryObject<StructureType<B2ArenaStructure>> B2_ARENA =
+            STRUCTURE_TYPES.register("b2_arena",
+                    () -> () -> B2ArenaStructure.CODEC);
+
+    public static final RegistryObject<StructurePieceType> B2_ARENA_PIECE =
+            STRUCTURE_PIECES.register("b2_arena",
+                    () -> (StructurePieceType.StructureTemplateType) B2ArenaPiece::new);
+
     private ModWorldgen() {
     }
 

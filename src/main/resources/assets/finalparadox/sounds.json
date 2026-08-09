@@ -15,6 +15,22 @@
       }
     ]
   },
+  "apiglo_entrance_intro": {
+    "sounds": [
+      {
+        "name": "finalparadox:music/doble_filo_intro",
+        "stream": true
+      }
+    ]
+  },
+  "apiglo_entrance_loop": {
+    "sounds": [
+      {
+        "name": "finalparadox:music/doble_filo_loop",
+        "stream": true
+      }
+    ]
+  },
   "thar_kroo": {
     "sounds": [
       {

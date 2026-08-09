@@ -1,9 +1,16 @@
 package io.github.finalparadox.entity;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.phys.Vec3;
 
@@ -38,6 +45,7 @@ public final class B5EncounterManager {
     public static void tick(ServerLevel level) {
         tickRewardParticles(level);
         B5EncounterData data = B5EncounterData.get(level);
+        tickPreBattleDialogue(level, data);
         if (!data.active()) {
             CONTROLLERS.remove(key(level));
             return;
@@ -49,6 +57,55 @@ public final class B5EncounterManager {
             controller.recover(level, data);
         }
         controller.tick(level, data);
+    }
+
+    private static void tickPreBattleDialogue(ServerLevel level, B5EncounterData data) {
+        if (data.active()) return;
+        int ticks = data.preBattleDialogueTicks();
+        if (ticks < 0) return;
+        if (ticks == 0) {
+            sendDialogue(level, data, gariLine("luisb1202.functions.bossfight.b5.dialogos.dia16.1"),
+                    SoundEvents.PILLAGER_AMBIENT, 1.2F);
+        } else if (ticks == 50) {
+            sendDialogue(level, data, koyoLine("luisb1202.functions.bossfight.b5.dialogos.dia16.2"),
+                    SoundEvents.PILLAGER_AMBIENT, 1.7F);
+        }
+        if (ticks >= 51) {
+            data.setPreBattleDialogueTicks(-1);
+            return;
+        }
+        data.setPreBattleDialogueTicks(ticks + 1);
+    }
+
+    private static void sendDialogue(
+            ServerLevel level,
+            B5EncounterData data,
+            Component message,
+            SoundEvent sound,
+            float pitch
+    ) {
+        for (ServerPlayer player : level.players()) {
+            if (!data.preBattleViewers().contains(player.getUUID())) continue;
+            player.sendSystemMessage(message);
+            level.playSound(null, player.blockPosition(), sound, SoundSource.MASTER, 1.0F, pitch);
+        }
+    }
+
+    private static Component gariLine(String lineKey) {
+        return Component.literal("").append(
+                        Component.translatable("luisb1202.functions.bossfight.b5.dialogos.dia10.1")
+                                .withStyle(Style.EMPTY.withColor(ChatFormatting.DARK_RED)
+                                        .withBold(true).withItalic(true)))
+                .append(Component.translatable(lineKey));
+    }
+
+    private static Component koyoLine(String lineKey) {
+        return Component.literal("").append(
+                        Component.translatable("luisb1202.functions.bossfight.b5.dialogos.dia1.1")
+                                .withStyle(Style.EMPTY.withColor(TextColor.parseColor("#ea3434"))
+                                        .withBold(true).withItalic(true)))
+                .append(Component.translatable(lineKey)
+                        .withStyle(Style.EMPTY.withColor(TextColor.parseColor("#ffa4be"))));
     }
 
     private static void tickRewardParticles(ServerLevel level) {

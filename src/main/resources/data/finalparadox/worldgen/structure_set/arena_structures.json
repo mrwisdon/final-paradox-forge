@@ -1,0 +1,30 @@
+{
+  "structures": [
+    {
+      "structure": "finalparadox:b1_arena",
+      "weight": 1
+    },
+    {
+      "structure": "finalparadox:b2_arena",
+      "weight": 1
+    },
+    {
+      "structure": "finalparadox:b5_arena",
+      "weight": 1
+    },
+    {
+      "structure": "finalparadox:b8_arena",
+      "weight": 1
+    },
+    {
+      "structure": "finalparadox:marawthar_arena",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 161803398,
+    "spacing": 19,
+    "separation": 18
+  }
+}

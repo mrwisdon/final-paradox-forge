@@ -94,6 +94,7 @@ public final class ClientModEvents {
         event.registerEntityRenderer(ModEntities.MARAWTHAR.get(), MarawTharRenderer::new);
         event.registerEntityRenderer(ModEntities.KOYOMI.get(), ZombieRenderer::new);
         event.registerEntityRenderer(ModEntities.GARI.get(), PillagerRenderer::new);
+        event.registerEntityRenderer(ModEntities.EOTHAR_ECHO.get(), EotharEchoRenderer::new);
         event.registerEntityRenderer(ModEntities.KOROS_ECHO.get(), KorosEchoRenderer::new);
     }
 

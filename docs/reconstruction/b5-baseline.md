@@ -173,7 +173,7 @@ comparison against `bossfight/b5/**` (v1.1.15), the controller was rewritten:
 | h7 | 3 bursts (0.5/1.8/3.1 s) interleaved with h6 | same |
 | Run loop | tp_dentro box, water fall (y=43 + fleecy pit), spectator teleport, levitation/jump clear, boat kill, `separar` (Koyomi 4 blocks toward -1131) | same |
 | Finale/victory | reset + iddle bosses + `dia_end` chain -> Gari drops badge -> Koyomi leaves -> fleecy box opens -> victory | same; reward item carries full NBT (name/lore/glint/HideFlags 16/CanPlaceOn) |
-| Defeat | derrota -> respawn 5 s later (reset + iddle bosses) | same |
+| Defeat | derrota -> respawn 5 s later (reset + iddle bosses) | same, and the staged Koyomi/Gariheuz + Echo of Koros are re-registered for another attempt |
 | Countdown | 3/2/1 at 3/4/5 s, fight at 6 s + bell + Koyomi music | same |
 | Music | koyomi_main_intro/loop, inter_intro/loop, inter_final, abatir_jefe (record source, exact delays) | registered + ogg files copied |
 | Text | all titles/dialogues/bossbars/reward use original `luisb1202.*` keys | 530 keys copied verbatim from VM zh_cn + original en_us |
