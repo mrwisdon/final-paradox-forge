@@ -105,8 +105,9 @@ path and a vulnerable body proxy at the deploy point.
 - The server sends no sampled tracer particles. Each salvo sends one compact
   S2C packet containing both start/end pairs and their miss/block/entity impact
   types. A client-only, entity-free renderer advances a 0.65-block, two-layer
-  white-yellow/orange tracer at 32 blocks/tick on a continuous game-time clock.
-  The clock avoids whole-tick packet-boundary jumps and guarantees one rendered
+  white-yellow/orange tracer at 16 blocks/tick on a continuous game-time clock.
+  The maximum 64-block trajectory therefore takes about 4 ticks (200 ms). The
+  clock avoids whole-tick packet-boundary jumps and guarantees one rendered
   frame for short paths before cleanup. Small renderer-owned muzzle flashes
   replace continuous flame particles; low-frequency smoke avoids a muzzle fire
   column. On visual arrival, block hits use local block-state fragments plus a

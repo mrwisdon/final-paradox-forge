@@ -2,7 +2,7 @@ package io.github.finalparadox.client;
 
 /** Pure timing math for the client-only Gatling tracer renderer. */
 public final class DroneTracerTimeline {
-    public static final double SPEED_PER_TICK = 32.0D;
+    public static final double SPEED_PER_TICK = 16.0D;
     public static final double TRAIL_LENGTH = 0.65D;
     public static final double POST_ARRIVAL_FADE_TICKS = 0.25D;
     public static final double MAX_UNRENDERED_TICKS = 20.0D;

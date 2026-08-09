@@ -16,7 +16,7 @@ final class DroneTracerTimelineTest {
 
         double elapsed = DroneTracerTimeline.elapsed(nextFrame, spawn);
         assertEquals(0.10D, elapsed, EPSILON);
-        assertEquals(3.20D,
+        assertEquals(1.60D,
                 DroneTracerTimeline.frontDistance(elapsed, 64.0D), EPSILON);
     }
 
@@ -34,23 +34,23 @@ final class DroneTracerTimelineTest {
     }
 
     @Test
-    void sixtyFourBlockTracerTravelsForExactlyTwoTicks() {
-        assertEquals(2.0D, DroneTracerTimeline.travelTicks(64.0D), EPSILON);
-        assertFalse(DroneTracerTimeline.hasArrived(1.999D, 64.0D));
-        assertTrue(DroneTracerTimeline.hasArrived(2.0D, 64.0D));
+    void sixtyFourBlockTracerTravelsForExactlyFourTicks() {
+        assertEquals(4.0D, DroneTracerTimeline.travelTicks(64.0D), EPSILON);
+        assertFalse(DroneTracerTimeline.hasArrived(3.999D, 64.0D));
+        assertTrue(DroneTracerTimeline.hasArrived(4.0D, 64.0D));
     }
 
     @Test
     void frontTailAndArrivalFadeHaveStableBoundaries() {
-        assertEquals(16.0D,
+        assertEquals(8.0D,
                 DroneTracerTimeline.frontDistance(0.5D, 64.0D), EPSILON);
-        assertEquals(15.35D,
-                DroneTracerTimeline.tailDistance(16.0D), EPSILON);
+        assertEquals(7.35D,
+                DroneTracerTimeline.tailDistance(8.0D), EPSILON);
         assertEquals(1.0D,
-                DroneTracerTimeline.arrivalFade(2.0D, 64.0D), EPSILON);
+                DroneTracerTimeline.arrivalFade(4.0D, 64.0D), EPSILON);
         assertEquals(0.5D,
-                DroneTracerTimeline.arrivalFade(2.125D, 64.0D), EPSILON);
+                DroneTracerTimeline.arrivalFade(4.125D, 64.0D), EPSILON);
         assertEquals(0.0D,
-                DroneTracerTimeline.arrivalFade(2.25D, 64.0D), EPSILON);
+                DroneTracerTimeline.arrivalFade(4.25D, 64.0D), EPSILON);
     }
 }
