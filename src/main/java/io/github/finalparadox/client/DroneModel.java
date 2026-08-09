@@ -82,7 +82,7 @@ public final class DroneModel extends EntityModel<DroneEntity> {
                 "fuselage",
                 CubeListBuilder.create()
                         .texOffs(0, 0)
-                        .addBox(-3.5F, -1.25F, -4.0F, 7.0F, 2.5F, 8.0F),
+                        .addBox(-4.0F, -1.25F, -4.0F, 8.0F, 2.5F, 8.0F),
                 PartPose.ZERO);
         frame.addOrReplaceChild(
                 "top_plate",
@@ -109,6 +109,21 @@ public final class DroneModel extends EntityModel<DroneEntity> {
                         .addBox(-2.5F, -2.0F, -3.0F, 5.0F, 0.75F, 6.0F),
                 PartPose.ZERO);
 
+        // Solid lateral hangers bridging each belly edge to its Gatling mount,
+        // so the guns no longer read as thin wires hanging off the hull.
+        frame.addOrReplaceChild(
+                "hanger_left",
+                CubeListBuilder.create()
+                        .texOffs(16, 20)
+                        .addBox(-4.4F, -2.0F, -0.35F, 1.9F, 0.4F, 0.7F),
+                PartPose.ZERO);
+        frame.addOrReplaceChild(
+                "hanger_right",
+                CubeListBuilder.create()
+                        .texOffs(16, 20)
+                        .addBox(2.5F, -2.0F, -0.35F, 1.9F, 0.4F, 0.7F),
+                PartPose.ZERO);
+
         PartDefinition antenna = frame.addOrReplaceChild(
                 "antenna", CubeListBuilder.create(), PartPose.offset(2.25F, 1.75F, 2.5F));
         antenna.addOrReplaceChild(
@@ -132,7 +147,7 @@ public final class DroneModel extends EntityModel<DroneEntity> {
                 "strut",
                 CubeListBuilder.create()
                         .texOffs(0, 20)
-                        .addBox(-0.5F, -0.35F, -7.2F, 1.0F, 0.7F, 6.0F),
+                        .addBox(-0.8F, -0.5F, -7.2F, 1.6F, 1.0F, 6.0F),
                 PartPose.ZERO);
         arm.addOrReplaceChild(
                 "motor",
@@ -153,13 +168,13 @@ public final class DroneModel extends EntityModel<DroneEntity> {
                 "blade_left",
                 CubeListBuilder.create()
                         .texOffs(32, 20)
-                        .addBox(-4.0F, -0.1F, -0.35F, 3.5F, 0.2F, 0.7F),
+                        .addBox(-4.0F, -0.25F, -0.35F, 3.5F, 0.5F, 0.7F),
                 PartPose.rotation(0.0F, 8.0F * Mth.DEG_TO_RAD, 0.0F));
         rotor.addOrReplaceChild(
                 "blade_right",
                 CubeListBuilder.create()
                         .texOffs(32, 20)
-                        .addBox(0.5F, -0.1F, -0.35F, 3.5F, 0.2F, 0.7F),
+                        .addBox(0.5F, -0.25F, -0.35F, 3.5F, 0.5F, 0.7F),
                 PartPose.rotation(0.0F, -8.0F * Mth.DEG_TO_RAD, 0.0F));
     }
 
@@ -202,7 +217,7 @@ public final class DroneModel extends EntityModel<DroneEntity> {
                 "mount",
                 CubeListBuilder.create()
                         .texOffs(16, 20)
-                        .addBox(-0.55F, -0.6F, -0.55F, 1.1F, 5.0F, 1.1F),
+                        .addBox(-0.8F, -0.6F, -0.8F, 1.6F, 5.8F, 1.6F),
                 PartPose.ZERO);
         gun.addOrReplaceChild(
                 "receiver",
@@ -268,10 +283,10 @@ public final class DroneModel extends EntityModel<DroneEntity> {
                 * 0.008F, -0.14F, 0.14F);
         frame.xRot = Mth.clamp((float) -entity.getDeltaMovement().y
                 * 0.3F, -0.12F, 0.12F);
-        camera.xRot = Mth.clamp(headPitch * Mth.DEG_TO_RAD, -0.75F, 0.75F);
-        float gunPitch = Mth.clamp(headPitch * Mth.DEG_TO_RAD, -0.75F, 0.75F);
-        leftGun.xRot = gunPitch;
-        rightGun.xRot = gunPitch;
+        float modelPitch = DroneModelMath.modelPitchRadians(headPitch);
+        camera.xRot = modelPitch;
+        leftGun.xRot = modelPitch;
+        rightGun.xRot = modelPitch;
 
         float barrelSpin = switch (entity.getGatlingState()) {
             case DroneEntity.GATLING_WARMING -> ageInTicks * 0.45F;

@@ -123,13 +123,40 @@ path and a vulnerable body proxy at the deploy point.
 
 - The entity renderer uses an original 64x64 cutout texture and a dedicated
   `ModelPart` layer instead of stacking vanilla item models. The silhouette is
-  a low dark-gray fuselage with four diagonal arms, one motor per arm, thin
-  two-blade rotors, a rear antenna, and a cyan-blue forward gimbal lens.
+  a low dark-gray fuselage with four diagonal arms, one motor per arm, two-blade
+  rotors, a rear antenna, and a cyan-blue forward gimbal lens. All box
+  coordinates are interpreted by `ModelPart` natively at 1/16 of a block; the
+  renderer applies no extra 1/16 scale.
 - Two independent belly Gatlings hang at model X -4.8 and +4.8 (world lateral
   offsets -0.30 and +0.30 blocks). Each has its own mount, receiver, magazine,
   grip, and six-tube `CubeListBuilder` barrel cluster. Both gimbals follow the
   pilot pitch; static 0.5-degree inward yaw visually matches the 32-block
   convergence. The clusters counter-rotate while `WARMING` or `FIRING`.
+- The renderer yaw is `180.0F - entityYaw` (see `DroneModelMath`): the
+  model-local nose and barrels point toward -z while entity yaw 0 faces +z, so
+  the extra 180 degrees keeps the drawn muzzles on the ballistic rays
+  (lateral 0.30, drop 1.10, forward 0.56). Ballistics constants, hitbox,
+  passenger/camera placement, and textures are unchanged.
+- The camera gimbal and both gun gimbals use `DroneModelMath.modelPitchRadians`:
+  visual pitch is the negated pilot pitch (`-entityPitch`) clamped to +-0.75
+  radians, applied identically to `camera.xRot`, `leftGun.xRot`, and
+  `rightGun.xRot`. Server ballistic rays are unchanged and always follow the
+  pilot look, so the clamp only limits the drawn camera/guns.
+- The fuselage was widened from 7.0 to 8.0 model pixels (x -4.0..4.0, center
+  x=0). Each arm strut is now 1.6 wide by 1.0 tall (was 1.0 x 0.7) with the
+  same center line, length, arm pivot and yaw. Rotor blades are 0.5 thick
+  (was 0.2), thickened symmetrically around the original center; blade length,
+  width, and spin are unchanged.
+- Each Gatling mount is now 1.6 x 1.6 in cross-section and 5.8 tall (was
+  1.1 x 1.1 x 5.0), extended upward toward the belly so its top reaches
+  y=-1.8 in frame space, 0.2 into the hanger band. Gun pivots, receivers,
+  barrel clusters, and muzzle axes are unchanged.
+- Solid lateral hangers (`hanger_left` / `hanger_right`) were added at the
+  frame level, bridging each belly edge (x +-2.5) to the gun mount (x -4.8 /
+  +4.8): left x -4.4..-2.5, right x 2.5..4.4, both y -2.0..-1.6 and
+  z -0.35..0.35. Each overlaps its mount by 0.4 (x), 0.2 (y), and 0.15 (z)
+  model pixels, so the M134s no longer look like thin wires hanging off the
+  hull. The hangers reuse the existing dark-gray hardware UV area.
 - The four rotors use a checkerboard direction pattern: front-left and
   rear-right turn clockwise while front-right and rear-left turn
   counter-clockwise. Every horizontally or vertically adjacent pair therefore
@@ -177,6 +204,10 @@ path and a vulnerable body proxy at the deploy point.
 
 - Verify first-person camera height, drone model visibility, all six movement
   directions, collision correction, abrupt reversal, and high-latency feel.
+- Verify the gimbaled camera/guns track the pilot look through `-entityPitch`
+  (clamped to +-0.75 rad) while ascending, descending, and turning; the parent
+  `frame.xRot`/`frame.zRot` pitch/roll decoration combined with extreme pitch
+  still needs real-machine observation.
 - Verify Shift continuously descends without a transient local dismount and H
   always returns exactly once.
 - Verify the proxy skin/equipment, melee/projectile/environment damage, death
@@ -192,6 +223,11 @@ path and a vulnerable body proxy at the deploy point.
   blocks without spread, blocks always occlude targets, and same-target salvos
   apply both one-point hits. Observe the six-tube geometry and 0.5-degree inward
   gimbals from front/side views.
+- Verify the thickened fuselage/struts/blades/mounts and the new belly hangers
+  read as one connected drone from a distance, in all four cardinal yaws, and
+  that the hangers stay visually joined to the mounts at normal pitch; extreme
+  pitch still separates the fixed hangers from the gimbaled mounts, which is a
+  known remaining visual risk.
 - Hold through the full 120 firing ticks and verify the warning, immediate loop
   stop, 4-second continuing smoke lock, release/re-press behavior, and automatic
   re-warm when attack remains held. Recheck menu, focus loss, H, death, cleanup,

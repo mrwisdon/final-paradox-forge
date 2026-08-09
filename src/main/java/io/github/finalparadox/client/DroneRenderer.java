@@ -46,7 +46,10 @@ public final class DroneRenderer extends EntityRenderer<DroneEntity> {
         pose.pushPose();
         float yaw = Mth.rotLerp(partialTick, entity.yRotO, entity.getYRot());
         float pitch = Mth.lerp(partialTick, entity.xRotO, entity.getXRot());
-        pose.mulPose(Axis.YP.rotationDegrees(-yaw));
+        // The model's local nose/barrels point toward -z while entity yaw 0
+        // faces +z, so the render rotation is 180 - yaw (see DroneModelMath);
+        // modelYawDegrees is the exact function covered by unit tests.
+        pose.mulPose(Axis.YP.rotationDegrees(DroneModelMath.modelYawDegrees(yaw)));
 
         model.setupAnim(entity, 0.0F, 0.0F, entity.tickCount + partialTick, 0.0F, pitch);
         VertexConsumer consumer = buffer.getBuffer(model.renderType(TEXTURE));
