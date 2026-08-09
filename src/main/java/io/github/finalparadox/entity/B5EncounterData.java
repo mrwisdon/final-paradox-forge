@@ -1,9 +1,11 @@
 package io.github.finalparadox.entity;
 
+import io.github.finalparadox.arena.ArenaEntranceMemory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.UUID;
@@ -93,6 +95,9 @@ public final class B5EncounterData extends SavedData {
     private int musicTicks;
     private int musicPhase; // 0 none, 1 main intro, 2 main loop, 3 inter intro, 4 inter loop, 5 inter final, 6 abatir
     private boolean victoryPlayed;
+    private boolean preBattleDialoguePlayed;
+    private int preBattleDialogueTicks = -1;
+    private final Set<UUID> preBattleViewers = new HashSet<>();
     private final Set<UUID> deadPlayers = new HashSet<>();
     private final Map<UUID, Integer> h5Hits = new HashMap<>();
     private final Map<UUID, Integer> h3IntermissionHits = new HashMap<>();
@@ -160,6 +165,9 @@ public final class B5EncounterData extends SavedData {
         data.musicTicks = tag.getInt("MusicTicks");
         data.musicPhase = tag.getInt("MusicPhase");
         data.victoryPlayed = tag.getBoolean("VictoryPlayed");
+        data.preBattleDialoguePlayed = tag.getBoolean("PreBattleDialoguePlayed");
+        data.preBattleDialogueTicks = tag.contains("PreBattleDialogueTicks")
+                ? tag.getInt("PreBattleDialogueTicks") : -1;
         long[] dead = tag.getLongArray("DeadPlayers");
         for (int i = 0; i + 1 < dead.length; i += 2) {
             data.deadPlayers.add(new UUID(dead[i], dead[i + 1]));
@@ -227,6 +235,8 @@ public final class B5EncounterData extends SavedData {
         tag.putInt("MusicTicks", musicTicks);
         tag.putInt("MusicPhase", musicPhase);
         tag.putBoolean("VictoryPlayed", victoryPlayed);
+        tag.putBoolean("PreBattleDialoguePlayed", preBattleDialoguePlayed);
+        tag.putInt("PreBattleDialogueTicks", preBattleDialogueTicks);
         long[] dead = new long[deadPlayers.size() * 2];
         int deadIndex = 0;
         for (UUID uuid : deadPlayers) {
@@ -757,6 +767,49 @@ public final class B5EncounterData extends SavedData {
 
     public void setVictoryPlayed(boolean v) {
         this.victoryPlayed = v;
+        setDirty();
+    }
+
+    public boolean preBattleDialoguePlayed() {
+        return preBattleDialoguePlayed;
+    }
+
+    public Set<UUID> preBattleViewers() {
+        return preBattleViewers;
+    }
+
+    public void startPreBattleDialogue(ServerLevel level) {
+        if (preBattleDialoguePlayed) return;
+        preBattleDialoguePlayed = true;
+        preBattleViewers.clear();
+        for (ServerPlayer player : level.players()) {
+            if (!player.isSpectator() && ArenaEntranceMemory.markIfFirst(player, "b5")) {
+                preBattleViewers.add(player.getUUID());
+            }
+        }
+        preBattleDialogueTicks = preBattleViewers.isEmpty() ? -1 : 0;
+        setDirty();
+    }
+
+    public int preBattleDialogueTicks() {
+        return preBattleDialogueTicks;
+    }
+
+    public void setPreBattleDialogueTicks(int ticks) {
+        if (this.preBattleDialogueTicks == ticks) return;
+        this.preBattleDialogueTicks = ticks;
+        setDirty();
+    }
+
+    public void resetPreBattleDialogue() {
+        preBattleDialoguePlayed = false;
+        preBattleDialogueTicks = -1;
+        setDirty();
+    }
+
+    public void markPreBattleDialogueComplete() {
+        preBattleDialoguePlayed = true;
+        preBattleDialogueTicks = -1;
         setDirty();
     }
 

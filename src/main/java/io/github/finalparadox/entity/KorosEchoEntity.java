@@ -2,6 +2,9 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDefinitions;
 import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.arena.ArenaEntranceMemory;
+import io.github.finalparadox.arena.B1ArenaStaging;
+import io.github.finalparadox.arena.B2ArenaStaging;
 import io.github.finalparadox.arena.B5ArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
@@ -36,6 +39,8 @@ import net.minecraftforge.network.NetworkHooks;
 import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -51,6 +56,7 @@ public final class KorosEchoEntity extends Entity {
     private long b8DialogueStart = -1L;
     private int b8DialogueStep;
     private boolean b8IntroStarted;
+    private final Set<UUID> b8EntranceViewers = new HashSet<>();
 
     public KorosEchoEntity(EntityType<? extends KorosEchoEntity> type, Level level) {
         super(type, level);
@@ -70,6 +76,20 @@ public final class KorosEchoEntity extends Entity {
     public static KorosEchoEntity createB8(ServerLevel level, BlockPos arenaAnchor) {
         KorosEchoEntity echo = create(level, arenaAnchor);
         if (echo != null) echo.guideMode = "b8";
+        return echo;
+    }
+
+    @Nullable
+    public static KorosEchoEntity createB1(ServerLevel level, BlockPos arenaAnchor) {
+        KorosEchoEntity echo = create(level, arenaAnchor);
+        if (echo != null) echo.guideMode = "b1";
+        return echo;
+    }
+
+    @Nullable
+    public static KorosEchoEntity createB2(ServerLevel level, BlockPos arenaAnchor) {
+        KorosEchoEntity echo = create(level, arenaAnchor);
+        if (echo != null) echo.guideMode = "b2";
         return echo;
     }
 
@@ -116,8 +136,8 @@ public final class KorosEchoEntity extends Entity {
                 player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1, true, false));
             }
         }
-        if (!"b8".equals(guideMode)) {
-            ArenaDeploymentData data = ArenaDeploymentData.get(server);
+        if ("b5".equals(guideMode)) {
+            ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.B5);
             data.stagedGariUuid().map(server::getEntity)
                     .filter(GariBossEntity.class::isInstance)
                     .map(GariBossEntity.class::cast)
@@ -134,11 +154,22 @@ public final class KorosEchoEntity extends Entity {
         if ("b8".equals(guideMode)) {
             // Source matriz/gen_no_boss: the matrix announces itself when a
             // player approaches, then Koros tells him to talk before fighting.
-            if (!b8IntroStarted && hasPlayerNear(server, 24.0D)) {
-                b8IntroStarted = true;
-                b8DialogueStart = server.getGameTime();
-                b8DialogueStep = 0;
-                sendB8IntroLine(server, 0);
+            ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.B8);
+            if (!b8IntroStarted && !data.b8Triggered()) {
+                b8EntranceViewers.clear();
+                for (ServerPlayer player : server.players()) {
+                    if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR
+                            && player.distanceToSqr(this) <= 24.0D * 24.0D
+                            && ArenaEntranceMemory.markIfFirst(player, "b8")) {
+                        b8EntranceViewers.add(player.getUUID());
+                    }
+                }
+                if (!b8EntranceViewers.isEmpty()) {
+                    b8IntroStarted = true;
+                    b8DialogueStart = server.getGameTime();
+                    b8DialogueStep = 0;
+                    sendB8IntroLine(server, 0);
+                }
             }
             if (b8DialogueStart >= 0L) {
                 // Source timings: matrix lines at +0s, +4s, +4s, then the
@@ -149,7 +180,10 @@ public final class KorosEchoEntity extends Entity {
                     b8DialogueStep = step;
                     sendB8IntroLine(server, step);
                 }
-                if (elapsed >= 320) b8DialogueStart = -1L;
+                if (elapsed >= 320) {
+                    b8DialogueStart = -1L;
+                    b8EntranceViewers.clear();
+                }
             }
         }
     }
@@ -182,16 +216,44 @@ public final class KorosEchoEntity extends Entity {
             }
             return 1;
         }
+        if ("b1".equals(guideMode)) {
+            ArenaDeploymentData b1Data = ArenaDeploymentData.get(player.serverLevel(), ArenaDefinitions.B1);
+            return B1ArenaStaging.find(player.serverLevel(), b1Data)
+                    .map(stage -> stage.boss().handleGuideAction(player, action))
+                    .orElse(0);
+        }
+        if ("b2".equals(guideMode)) {
+            switch (action) {
+                case "main" -> showB2Main(player);
+                case "b2_d1" -> showB2D1(player);
+                case "b2_d2" -> showB2D2(player);
+                case "b2_d5" -> showB2D5(player);
+                case "b2_d6" -> showB2D6(player);
+                case "b2_d7" -> showB2D7(player);
+                case "confirm" -> showB2Confirm(player);
+                case "start" -> {
+                    if (!B2ArenaStaging.allPlayersInside(player.serverLevel(), arenaAnchor)) {
+                        showPlayersMissing(player);
+                        return 0;
+                    }
+                    if (!B2ArenaStaging.beginEncounter(player)) {
+                        player.sendSystemMessage(Component.translatable(
+                                "message.finalparadox.koros.interaction.unavailable"));
+                        return 0;
+                    }
+                }
+                default -> {
+                    return 0;
+                }
+            }
+            return 1;
+        }
         switch (action) {
             case "main" -> showMain(player);
             case "briefing" -> showBriefing(player);
             case "mechanics" -> showMechanics(player);
             case "confirm" -> showConfirmation(player);
             case "start" -> {
-                if (!B5ArenaStaging.allPlayersInside(player.serverLevel(), arenaAnchor)) {
-                    showPlayersMissing(player);
-                    return 0;
-                }
                 if (!B5ArenaStaging.beginEncounter(player)) {
                     player.sendSystemMessage(Component.translatable("message.finalparadox.koros.interaction.unavailable"));
                     return 0;
@@ -207,11 +269,27 @@ public final class KorosEchoEntity extends Entity {
     private boolean canUseGuide(ServerPlayer player) {
         if (player.level() != level() || !player.isAlive()
                 || player.distanceToSqr(this) > 100.0D) return false;
-        ArenaDeploymentData data = ArenaDeploymentData.get(player.serverLevel());
+        ArenaDeploymentData data = ArenaDeploymentData.get(player.serverLevel(), guideMode);
         if ("b8".equals(guideMode)) {
             return data.state() == ArenaDeploymentData.DeploymentState.READY
                     && ArenaDefinitions.B8.id().equals(data.arenaId())
                     && !B8EncounterManager.isActive(player.serverLevel())
+                    && data.floorAnchor().map(arenaAnchor::equals).orElse(false)
+                    && data.korosUuid().map(getUUID()::equals).orElse(false);
+        }
+        if ("b1".equals(guideMode)) {
+            return data.state() == ArenaDeploymentData.DeploymentState.READY
+                    && ArenaDefinitions.B1.id().equals(data.arenaId())
+                    && (data.activeBossUuid().isEmpty()
+                            || B1ArenaStaging.hasWaitingBoss(player.serverLevel(), data))
+                    && data.floorAnchor().map(arenaAnchor::equals).orElse(false)
+                    && data.korosUuid().map(getUUID()::equals).orElse(false);
+        }
+        if ("b2".equals(guideMode)) {
+            return data.state() == ArenaDeploymentData.DeploymentState.READY
+                    && ArenaDefinitions.B2.id().equals(data.arenaId())
+                    && (data.activeBossUuid().isEmpty()
+                            || B2ArenaStaging.hasWaitingBoss(player.serverLevel(), data))
                     && data.floorAnchor().map(arenaAnchor::equals).orElse(false)
                     && data.korosUuid().map(getUUID()::equals).orElse(false);
         }
@@ -285,6 +363,147 @@ public final class KorosEchoEntity extends Entity {
         player.level().playSound(null, player.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.MASTER, 1.0F, 2.0F);
     }
 
+    /* ------------------------------ B2 pre-fight Koros ------------------------------ */
+
+    private void showB2Main(ServerPlayer player) {
+        guideHeader(player, MK + "b2.ini.1");
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "b2.ini.2", "b2_d1"));
+        player.sendSystemMessage(button(MK + "b2.ini.3", "b2_d5"));
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "b1.ini.3", "confirm"));
+        guideFooter(player);
+    }
+
+    private void showB2D1(ServerPlayer player) {
+        guideHeader(player, MK + "b2.d1.1");
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "b1.d1.2", "b2_d2"));
+        player.sendSystemMessage(button(MK + "10_gris.d1.2", "main"));
+        player.sendSystemMessage(Component.empty());
+        playGuideSound(player);
+    }
+
+    private void showB2D2(ServerPlayer player) {
+        guideHeader(player, MK + "b2.d2.1");
+        player.sendSystemMessage(Component.empty());
+        guideEntry(player, MK + "b2.d2.2",
+                frag(MK + "b2.d2.3", ChatFormatting.RED, true), frag(MK + "b2.d2.4"),
+                frag(MK + "b2.d2.5", ChatFormatting.RED), frag(MK + "b2.d2.6", ChatFormatting.RED),
+                frag(MK + "b2.d2.7", ChatFormatting.RED), frag(MK + "b2.d2.8"),
+                frag(MK + "b2.d2.9", ChatFormatting.YELLOW), frag(MK + "b2.d2.10"),
+                frag(MK + "b2.d2.11", ChatFormatting.AQUA, true),
+                frag("item.written_book.1.page.0.2"), frag(MK + "b2.d2.12", ChatFormatting.GOLD),
+                frag(MK + "b2.d2.13"), frag(MK + "b2.d2.14", ChatFormatting.GOLD),
+                frag(MK + "b2.d2.15"));
+        guideEntry(player, MK + "b2.d2.16",
+                frag(MK + "b2.d2.17", ChatFormatting.GOLD, true), frag(MK + "b2.d2.18"),
+                frag(MK + "b2.d2.19", ChatFormatting.GOLD), frag(MK + "b2.d2.20"),
+                frag(MK + "b2.d2.21", ChatFormatting.RED), frag(MK + "b2.d2.22"),
+                frag(MK + "b2.d2.23", ChatFormatting.GOLD), frag(MK + "b2.d2.24"),
+                frag(MK + "b2.d2.11", ChatFormatting.AQUA, true),
+                frag("item.written_book.1.page.0.2"), frag(MK + "b2.d2.25", ChatFormatting.GOLD),
+                frag(MK + "b2.d2.26"), frag(MK + "b2.d2.27", ChatFormatting.GOLD),
+                frag(MK + "b2.d2.28"), frag(MK + "b2.d2.29", ChatFormatting.AQUA),
+                frag(MK + "b2.d2.30"), frag(MK + "b2.d2.31", ChatFormatting.GOLD),
+                frag(MK + "b2.d2.32"), frag(MK + "b2.d2.33", ChatFormatting.RED),
+                frag("item.written_book.3.page.1.11", ChatFormatting.WHITE),
+                frag("item.written_book.2.page.0.3"));
+        guideEntry(player, MK + "b2.d2.34",
+                frag(MK + "b2.d2.35", ChatFormatting.YELLOW, true), frag(MK + "b2.d2.36"),
+                frag(MK + "b2.d2.37", ChatFormatting.GOLD), frag(MK + "b2.d2.38"),
+                frag("score.escudo.name.1", ChatFormatting.RED), frag(MK + "b2.d2.39"),
+                frag(MK + "b2.d2.40", ChatFormatting.RED), frag(MK + "b2.d2.41"),
+                frag(MK + "b2.d2.37", ChatFormatting.GOLD), frag(MK + "b2.d2.42"));
+        guideEntry(player, MK + "b2.d2.43",
+                frag(MK + "b2.d2.44", ChatFormatting.YELLOW, true), frag(MK + "b2.d2.45"),
+                frag(MK + "b2.d2.46", ChatFormatting.DARK_PURPLE), frag(MK + "b2.d2.47"),
+                frag(MK + "b2.d2.48", ChatFormatting.RED), frag(MK + "b2.d2.49"));
+        guideEntry(player, MK + "b2.d2.50",
+                frag(MK + "b2.d2.51", ChatFormatting.YELLOW, true), frag(MK + "b2.d2.52"),
+                frag(MK + "b2.d2.53", ChatFormatting.GOLD), frag(MK + "b2.d2.54"));
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(Component.translatable(MK + "b1.d2.49"));
+        guideEntry(player, MK + "b2.d2.55",
+                frag(MK + "b2.d2.56", ChatFormatting.RED, true), frag(MK + "b2.d2.57"),
+                frag(MK + "b2.d2.58", ChatFormatting.GOLD), frag(MK + "b2.d2.59", ChatFormatting.GRAY),
+                frag(MK + "b2.d2.60"), frag(MK + "b2.d2.61", ChatFormatting.GOLD),
+                frag(MK + "b2.d2.62"), frag(MK + "b2.d2.63", ChatFormatting.RED),
+                frag(MK + "b2.d2.64"), frag(MK + "b2.d2.65", ChatFormatting.LIGHT_PURPLE),
+                frag(MK + "b2.d2.66"), frag(MK + "b2.d2.11", ChatFormatting.AQUA, true),
+                frag(MK + "b2.d2.67"), frag(MK + "b2.d2.23", ChatFormatting.GOLD),
+                frag(MK + "b2.d2.68"));
+        guideEntry(player, MK + "b2.d2.69",
+                frag(MK + "b2.d2.70", ChatFormatting.YELLOW, true), frag(MK + "b2.d2.71"),
+                frag(MK + "b2.d2.72", ChatFormatting.GOLD), frag(MK + "b2.d2.73"),
+                frag(MK + "b2.d2.74", ChatFormatting.RED),
+                frag("item.written_book.3.page.1.11"));
+        player.sendSystemMessage(Component.empty());
+        guideEntry(player, MK + "b2.d2.75", frag(MK + "b2.d2.76"));
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "10_gris.d1.2", "main"));
+        playGuideSound(player);
+    }
+
+    private void showB2D5(ServerPlayer player) {
+        player.sendSystemMessage(Component.translatable(MK + "b2.d5.1")
+                .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFBBDFF))
+                        .withBold(true).withItalic(true)));
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "b2.d5.2", "b2_d6"));
+        player.sendSystemMessage(button(
+                "luisb1202.functions.carga_lanas.11_cian.zachaia.dialogo.mosquitos.5.3", "main"));
+        player.sendSystemMessage(Component.empty());
+        playGuideSound(player);
+    }
+
+    private void showB2D6(ServerPlayer player) {
+        player.sendSystemMessage(Component.translatable(MK + "b2.d6.1")
+                .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFBBDFF))
+                        .withBold(true).withItalic(true)));
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(MK + "b2.d6.2", "b2_d7"));
+        player.sendSystemMessage(button(
+                "luisb1202.functions.carga_lanas.11_cian.zachaia.dialogo.mosquitos.5.3", "main"));
+        player.sendSystemMessage(Component.empty());
+        playGuideSound(player);
+    }
+
+    private void showB2D7(ServerPlayer player) {
+        player.sendSystemMessage(Component.translatable(MK + "b2.d7.1")
+                .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFBBDFF))
+                        .withBold(true).withItalic(true)));
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(button(
+                "luisb1202.functions.carga_lanas.11_cian.zachaia.dialogo.mosquitos.5.3", "main"));
+        player.sendSystemMessage(Component.empty());
+        playGuideSound(player);
+    }
+
+    private void showB2Confirm(ServerPlayer player) {
+        guideHeader(player, MK + "b1.d3.1");
+        player.sendSystemMessage(Component.empty());
+        player.sendSystemMessage(Component.empty()
+                .append(button(MK + "b1.ini.3", "start"))
+                .append(Component.literal("       "))
+                .append(button(MK + "10_gris.d1.2", "main")));
+        player.sendSystemMessage(Component.empty());
+        playGuideSound(player);
+    }
+
+    private void guideEntry(
+            ServerPlayer player, String headingKey, B8GuideFragment... fragments) {
+        MutableComponent hover = Component.empty();
+        for (B8GuideFragment fragment : fragments) {
+            Style style = Style.EMPTY;
+            if (fragment.color() != null) style = style.withColor(fragment.color());
+            if (fragment.bold()) style = style.withBold(true);
+            hover.append(Component.translatable(fragment.key()).withStyle(style));
+        }
+        player.sendSystemMessage(Component.translatable(headingKey).withStyle(
+                Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hover))));
+    }
+
     /* ------------------------------ B8 pre-fight Koros ------------------------------ */
 
     private static final String MK = "luisb1202.functions.talentos.minikoros.dialogos.";
@@ -328,6 +547,7 @@ public final class KorosEchoEntity extends Entity {
                         .withBold(true).withItalic(true))
                 : Component.translatable("luisb1202.functions.bossfight.b8.dialogos.dia4.1");
         for (ServerPlayer player : server.players()) {
+            if (!b8EntranceViewers.contains(player.getUUID())) continue;
             player.sendSystemMessage(speaker.copy().append(Component.translatable(messageKey)));
             server.playSound(null, player.blockPosition(), sound, SoundSource.MASTER, 1.0F, pitch);
         }
@@ -440,15 +660,7 @@ public final class KorosEchoEntity extends Entity {
 
     private void b8GuideEntry(
             ServerPlayer player, String headingKey, B8GuideFragment... fragments) {
-        MutableComponent hover = Component.empty();
-        for (B8GuideFragment fragment : fragments) {
-            Style style = Style.EMPTY;
-            if (fragment.color() != null) style = style.withColor(fragment.color());
-            if (fragment.bold()) style = style.withBold(true);
-            hover.append(Component.translatable(fragment.key()).withStyle(style));
-        }
-        player.sendSystemMessage(Component.translatable(headingKey).withStyle(
-                Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hover))));
+        guideEntry(player, headingKey, fragments);
     }
 
     /** Source b8/d3: confirm the challenge. */
@@ -466,7 +678,7 @@ public final class KorosEchoEntity extends Entity {
     /** Source b8/check_players -> b8/ini: all inside, start the encounter. */
     private void startB8FromKoros(ServerPlayer player) {
         ServerLevel level = player.serverLevel();
-        ArenaDeploymentData data = ArenaDeploymentData.get(level);
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, ArenaDefinitions.B8);
         BlockPos anchor = data.floorAnchor().orElse(null);
         if (anchor == null || !b8AllPlayersInside(level, anchor)) {
             showB8Missing(player);
@@ -554,6 +766,9 @@ public final class KorosEchoEntity extends Entity {
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.contains("ArenaAnchor")) arenaAnchor = BlockPos.of(tag.getLong("ArenaAnchor"));
         if (tag.contains("GuideMode")) guideMode = tag.getString("GuideMode");
+        if (tag.contains("B8IntroStarted")) b8IntroStarted = tag.getBoolean("B8IntroStarted");
+        if (tag.contains("B8DialogueStart")) b8DialogueStart = tag.getLong("B8DialogueStart");
+        if (tag.contains("B8DialogueStep")) b8DialogueStep = tag.getInt("B8DialogueStep");
         setInvulnerable(true);
     }
 
@@ -561,6 +776,9 @@ public final class KorosEchoEntity extends Entity {
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putLong("ArenaAnchor", arenaAnchor.asLong());
         tag.putString("GuideMode", guideMode);
+        tag.putBoolean("B8IntroStarted", b8IntroStarted);
+        tag.putLong("B8DialogueStart", b8DialogueStart);
+        tag.putInt("B8DialogueStep", b8DialogueStep);
     }
 
     @Override

@@ -1,5 +1,8 @@
 package io.github.finalparadox.entity;
 
+import io.github.finalparadox.arena.ArenaDeploymentData;
+import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.B5ArenaStaging;
 import io.github.finalparadox.registry.ModSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -264,14 +267,6 @@ public final class B5EncounterController {
     private void tickCountdown(ServerLevel server, B5EncounterData data) {
         int ticks = data.countdownTicks() + 1;
         data.setCountdownTicks(ticks);
-        if (ticks == 1) {
-            sendDialogueNow(server, dialogueGari("luisb1202.functions.bossfight.b5.dialogos.dia16.1"),
-                    SoundEvents.PILLAGER_AMBIENT, 1.2F);
-        }
-        if (ticks == 50) {
-            sendDialogueNow(server, dialogueKoyo("luisb1202.functions.bossfight.b5.dialogos.dia16.2"),
-                    SoundEvents.PILLAGER_AMBIENT, 1.7F);
-        }
         if (ticks == 60) countdownTitle(server, "luisb1202.functions.bossfight.b1.cuenta_atras.3.1");
         if (ticks == 80) countdownTitle(server, "luisb1202.functions.afijos.detonante.2.1");
         if (ticks == 100) countdownTitle(server, "luisb1202.functions.afijos.detonante.1.2");
@@ -2104,24 +2099,7 @@ public final class B5EncounterController {
 
     private void respawn(ServerLevel server, B5EncounterData data) {
         endEncounter(server, data);
-        KoyomiBossEntity koyo = KoyomiBossEntity.createPrepared(server);
-        GariBossEntity gari = GariBossEntity.createPrepared(server);
-        if (koyo != null) {
-            Vec3 pos = rel(data, -41, 1, 2);
-            koyo.moveTo(pos.x, pos.y, pos.z, -90, 0);
-            koyo.setInvulnerable(true);
-            koyo.setNoAi(true);
-            koyo.setBossBarEnabled(false);
-            server.addFreshEntity(koyo);
-        }
-        if (gari != null) {
-            Vec3 pos = rel(data, -41, 1, -2);
-            gari.moveTo(pos.x, pos.y, pos.z, -90, 0);
-            gari.setInvulnerable(true);
-            gari.setNoAi(true);
-            gari.setBossBarEnabled(false);
-            server.addFreshEntity(gari);
-        }
+        B5ArenaStaging.spawn(server, ArenaDeploymentData.get(server, ArenaDefinitions.B5), data.anchor());
         for (ServerPlayer player : server.players()) {
             if (player.isSpectator()) {
                 Vec3 tp = rel(data, -17, 1, 0);
