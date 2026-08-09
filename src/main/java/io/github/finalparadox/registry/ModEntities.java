@@ -55,6 +55,7 @@ import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
 import io.github.finalparadox.entity.DroneEntity;
 import io.github.finalparadox.entity.DroneBombEntity;
+import io.github.finalparadox.entity.DroneBodyProxyEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.registries.DeferredRegister;
@@ -191,8 +192,17 @@ public final class ModEntities {
                             DroneEntity::new, MobCategory.MISC)
                     .sized(0.6F, 0.6F)
                     .clientTrackingRange(128)
-                    .updateInterval(1)
-                    .build("recon_drone"));
+                     .updateInterval(1)
+                     .build("recon_drone"));
+    public static final RegistryObject<EntityType<DroneBodyProxyEntity>> RECON_DRONE_BODY =
+            REGISTER.register(
+                    "recon_drone_body",
+                    () -> EntityType.Builder.<DroneBodyProxyEntity>of(
+                                    DroneBodyProxyEntity::new, MobCategory.MISC)
+                            .sized(0.6F, 1.8F)
+                            .clientTrackingRange(64)
+                            .updateInterval(2)
+                            .build("recon_drone_body"));
     public static final RegistryObject<EntityType<DroneBombEntity>> RECON_DRONE_BOMB = REGISTER.register(
             "recon_drone_bomb", () -> EntityType.Builder.<DroneBombEntity>of(
                             DroneBombEntity::new, MobCategory.MISC)

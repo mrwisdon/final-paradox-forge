@@ -1540,14 +1540,15 @@
   "item.finalparadox.recon_drone": "Recon Drone",
   "item.finalparadox.recon_drone.lore.1": "§9Right-click to deploy a §f§lrecon drone§9 while your",
   "item.finalparadox.recon_drone.lore.2": "§9body stays behind. Fly with §eWASD§9, §eSpace§9 and §eShift§9.",
-  "item.finalparadox.recon_drone.lore.3": "§9§eR§9 drops a §6bomb§9; §eH§9 returns to your body.",
-  "item.finalparadox.recon_drone.lore.4": "§8Cooldown: §73 minutes§8; each deployment carries §78§8 bombs.",
+  "item.finalparadox.recon_drone.lore.3": "§9Hold §eLeft Click§9 to fire twin Gatlings; sustained fire overheats.",
+  "item.finalparadox.recon_drone.lore.4": "§9§eR§9 drops a §6bomb§9; §eH§9 returns. §8Cooldown: §73 min§8; §78§8 bombs.",
   "message.finalparadox.recon_drone.cooldown": "The recon drone is still cooling down.",
   "message.finalparadox.recon_drone.already_active": "A recon drone is already active.",
   "message.finalparadox.recon_drone.no_bombs": "The recon drone has no bombs left.",
   "message.finalparadox.recon_drone.exited": "Recon drone dismissed.",
   "message.finalparadox.recon_drone.ready": "The recon drone is ready!",
-  "message.finalparadox.recon_drone.controls.title": "Recon drone controls: WASD fly, Space/Shift up/down, R bomb, H exit.",
+  "message.finalparadox.recon_drone.controls.title": "Recon drone: WASD fly, Space/Shift up/down, hold Left Click for twin Gatlings (watch heat), R bomb, H exit.",
+  "message.finalparadox.recon_drone.overheated": "Twin Gatlings overheated! Cooling locked for 4 seconds.",
   "key.finalparadox.recon_drone.drop_bomb": "Drone: Drop Bomb",
   "key.finalparadox.recon_drone.exit": "Drone: Exit"
 }

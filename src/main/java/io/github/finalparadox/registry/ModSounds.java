@@ -27,6 +27,10 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> KOYOMI_INTER_FINAL = register("koyomi_inter_final");
     public static final RegistryObject<SoundEvent> ABATIR_JEFE = register("abatir_jefe");
     public static final RegistryObject<SoundEvent> B8_ABORDO_LOOP = register("b8_abordo_loop");
+    public static final RegistryObject<SoundEvent> DRONE_GATLING_SPINUP =
+            register("drone_gatling_spinup");
+    public static final RegistryObject<SoundEvent> DRONE_GATLING_FIRE =
+            register("drone_gatling_fire");
 
     private static RegistryObject<SoundEvent> register(String name) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(FinalParadox.MOD_ID, name);

@@ -1540,14 +1540,15 @@
   "item.finalparadox.recon_drone": "侦察无人机",
   "item.finalparadox.recon_drone.lore.1": "§9右键部署一架§f§l侦察无人机§9，你的",
   "item.finalparadox.recon_drone.lore.2": "§9本体将留在原地。使用§eWASD§9飞行，§e空格§9上升，§eShift§9下降。",
-  "item.finalparadox.recon_drone.lore.3": "§9按§eR§9投弹，按§eH§9返回本体。",
-  "item.finalparadox.recon_drone.lore.4": "§8冷却：§73分钟§8；每次部署携带§78§8枚炸弹。",
+  "item.finalparadox.recon_drone.lore.3": "§9按住§e左键§9使用双加特林机枪；持续射击会导致过热。",
+  "item.finalparadox.recon_drone.lore.4": "§9§eR§9投弹，§eH§9返回。§8冷却：§73分钟§8；携带§78§8枚炸弹。",
   "message.finalparadox.recon_drone.cooldown": "侦察无人机仍在冷却中。",
   "message.finalparadox.recon_drone.already_active": "已经有一架侦察无人机在活动。",
   "message.finalparadox.recon_drone.no_bombs": "侦察无人机的炸弹已耗尽。",
   "message.finalparadox.recon_drone.exited": "侦察无人机已回收。",
   "message.finalparadox.recon_drone.ready": "侦察无人机已就绪！",
-  "message.finalparadox.recon_drone.controls.title": "侦察无人机控制：WASD 飞行，空格/Shift 升降，R 投弹，H 退出。",
+  "message.finalparadox.recon_drone.controls.title": "侦察无人机：WASD 飞行，空格/Shift 升降，按住左键使用双加特林（注意热量），R 投弹，H 退出。",
+  "message.finalparadox.recon_drone.overheated": "双加特林机枪过热！强制冷却4秒。",
   "key.finalparadox.recon_drone.drop_bomb": "无人机：投弹",
   "key.finalparadox.recon_drone.exit": "无人机：退出"
 }

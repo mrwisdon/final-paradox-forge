@@ -7,7 +7,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-/** Dismisses the recon drone and restores the owner's camera. */
+/** Dismisses the recon drone and returns its passenger to the anchor. */
 public final class DroneExitPacket {
     public DroneExitPacket() {
     }

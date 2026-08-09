@@ -4,56 +4,59 @@ import io.github.finalparadox.FinalParadox;
 import io.github.finalparadox.entity.DroneEntity;
 import io.github.finalparadox.network.DroneBombPacket;
 import io.github.finalparadox.network.DroneExitPacket;
-import io.github.finalparadox.network.DroneInputPacket;
+import io.github.finalparadox.network.DroneGunInputPacket;
 import io.github.finalparadox.network.ModNetwork;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
-import net.minecraftforge.client.event.ViewportEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Reads vanilla movement keys while the camera is on a drone, sends held-state
- * updates to the server, and hides the local player's hands.
+ * Feeds movement keys into the local client-controlled drone vehicle. Vanilla
+ * sends the resulting root-vehicle pose to the server each player tick.
  */
 @Mod.EventBusSubscriber(modid = FinalParadox.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE,
         value = Dist.CLIENT)
 public final class DroneInput {
-    private static int lastInputState;
-    private static float lastSentYRot;
-    private static float lastSentXRot;
+    private static boolean exitRequested;
+    private static int lastGunDroneId = -1;
+    private static boolean lastGunHeld;
 
     private DroneInput() {
     }
 
     @SubscribeEvent
     public static void clientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) {
+        if (event.phase != TickEvent.Phase.START) {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
+        DroneGatlingSoundManager.tick(minecraft);
+        DroneTracerRenderer.tick(minecraft);
         if (minecraft.player == null) {
-            lastInputState = 0;
-            lastSentYRot = 0.0F;
-            lastSentXRot = 0.0F;
+            exitRequested = false;
+            lastGunDroneId = -1;
+            lastGunHeld = false;
             return;
         }
 
-        boolean controlling = minecraft.getCameraEntity() instanceof DroneEntity;
-        float yRot = minecraft.player.getYRot();
-        float xRot = minecraft.player.getXRot();
-        if (controlling && minecraft.getCameraEntity() instanceof DroneEntity drone) {
-            drone.yRotO = yRot;
-            drone.setYRot(yRot);
-            drone.xRotO = xRot;
-            drone.setXRot(xRot);
+        if (!(minecraft.player.getVehicle() instanceof DroneEntity drone)) {
+            updateGunInput(-1, false);
+            exitRequested = false;
+            return;
         }
+        if (exitRequested) {
+            drone.setClientInput(0);
+            updateGunInput(drone.getId(), false);
+            return;
+        }
+
         int state = 0;
-        if (controlling && minecraft.screen == null) {
+        if (minecraft.screen == null && minecraft.isWindowActive()) {
             if (minecraft.options.keyUp.isDown()) {
                 state |= DroneEntity.FLAG_FORWARD;
             }
@@ -73,45 +76,70 @@ public final class DroneInput {
                 state |= DroneEntity.FLAG_DOWN;
             }
         }
-        boolean rotationChanged = controlling
-                && (Math.abs(Mth.wrapDegrees(yRot - lastSentYRot)) >= 0.25F
-                || Math.abs(xRot - lastSentXRot) >= 0.25F);
-        if (state != lastInputState || rotationChanged) {
-            ModNetwork.CHANNEL.sendToServer(new DroneInputPacket(state, yRot, xRot));
-            lastInputState = state;
-            lastSentYRot = yRot;
-            lastSentXRot = xRot;
-        }
-        if (controlling && minecraft.screen == null) {
+        drone.setClientInput(state);
+        boolean gunHeld = minecraft.screen == null
+                && minecraft.isWindowActive()
+                && minecraft.options.keyAttack.isDown();
+        updateGunInput(drone.getId(), gunHeld);
+        if (minecraft.screen == null) {
             while (DroneKeyMappings.DROP_BOMB.consumeClick()) {
                 ModNetwork.CHANNEL.sendToServer(new DroneBombPacket());
             }
             while (DroneKeyMappings.EXIT.consumeClick()) {
+                drone.setClientInput(0);
+                updateGunInput(drone.getId(), false);
                 ModNetwork.CHANNEL.sendToServer(new DroneExitPacket());
+                exitRequested = true;
             }
         }
     }
 
     @SubscribeEvent
     public static void onInteractionInput(InputEvent.InteractionKeyMappingTriggered event) {
-        if (Minecraft.getInstance().getCameraEntity() instanceof DroneEntity) {
+        if (isControllingDrone()) {
             event.setCanceled(true);
         }
     }
 
     @SubscribeEvent
     public static void onRenderHand(RenderHandEvent event) {
-        if (Minecraft.getInstance().getCameraEntity() instanceof DroneEntity) {
+        if (isControllingDrone()) {
             event.setCanceled(true);
         }
     }
 
+    /** Hides the real passenger, including armor and held items, on every client. */
     @SubscribeEvent
-    public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.getCameraEntity() instanceof DroneEntity && minecraft.player != null) {
-            event.setYaw(minecraft.player.getYRot());
-            event.setPitch(minecraft.player.getXRot());
+    public static void onRenderPlayer(RenderPlayerEvent.Pre event) {
+        if (event.getEntity().getVehicle() instanceof DroneEntity) {
+            event.setCanceled(true);
         }
+    }
+
+    private static boolean isControllingDrone() {
+        Minecraft minecraft = Minecraft.getInstance();
+        return minecraft.player != null
+                && minecraft.player.getVehicle() instanceof DroneEntity;
+    }
+
+    public static void handleAuthorizedDismount(int droneEntityId) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player != null
+                && minecraft.player.getVehicle() instanceof DroneEntity drone
+                && drone.getId() == droneEntityId) {
+            drone.setClientInput(0);
+            updateGunInput(drone.getId(), false);
+            drone.confirmClientDismount(minecraft.player);
+        }
+        exitRequested = false;
+    }
+
+    private static void updateGunInput(int droneEntityId, boolean held) {
+        if (droneEntityId == lastGunDroneId && held == lastGunHeld) {
+            return;
+        }
+        ModNetwork.CHANNEL.sendToServer(new DroneGunInputPacket(held));
+        lastGunDroneId = droneEntityId;
+        lastGunHeld = held;
     }
 }
