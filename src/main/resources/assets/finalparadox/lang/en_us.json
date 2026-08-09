@@ -1536,5 +1536,19 @@
   "message.finalparadox.koros.guide.ability.tridentstorm": "   §e▶ §rTridentstorm (§l!§r dangerous)",
   "message.finalparadox.koros.guide.ability.tridentstorm.detail": "§6§lTridentstorm§r\n\nOnly players marked with purple poison can see the entire room covered with white areas that anticipate an imminent barrage of tridents.\nTridents deal §cmuch more damage§f if they hit you\nseveral times.\n\n§b§lStrategic tip:§r\n\n1º If you have purple poison, guide the players with green poison to the safe zone.",
   "entity.finalparadox.hostile_terrastalker": "§c§lTerrastalker",
-  "luisb1202.functions.carga_lanas.14_verde.el_acechador.msg.1": "§c§l<§c!§c§l> §cThe Terrastalker's autocannon has overheated and is cooling down!"
+  "luisb1202.functions.carga_lanas.14_verde.el_acechador.msg.1": "§c§l<§c!§c§l> §cThe Terrastalker's autocannon has overheated and is cooling down!",
+  "item.finalparadox.recon_drone": "Recon Drone",
+  "item.finalparadox.recon_drone.lore.1": "§9Right-click to deploy a §f§lrecon drone§9 while your",
+  "item.finalparadox.recon_drone.lore.2": "§9body stays behind. Fly with §eWASD§9, §eSpace§9 and §eShift§9.",
+  "item.finalparadox.recon_drone.lore.3": "§9Hold §eLeft Click§9 to fire twin Gatlings; sustained fire overheats.",
+  "item.finalparadox.recon_drone.lore.4": "§9§eR§9 drops a §6bomb§9; §eH§9 returns. §8Cooldown: §73 min§8; §78§8 bombs.",
+  "message.finalparadox.recon_drone.cooldown": "The recon drone is still cooling down.",
+  "message.finalparadox.recon_drone.already_active": "A recon drone is already active.",
+  "message.finalparadox.recon_drone.no_bombs": "The recon drone has no bombs left.",
+  "message.finalparadox.recon_drone.exited": "Recon drone dismissed.",
+  "message.finalparadox.recon_drone.ready": "The recon drone is ready!",
+  "message.finalparadox.recon_drone.controls.title": "Recon drone: WASD fly, Space/Shift up/down, hold Left Click for twin Gatlings (watch heat), R bomb, H exit.",
+  "message.finalparadox.recon_drone.overheated": "Twin Gatlings overheated! Cooling locked for 4 seconds.",
+  "key.finalparadox.recon_drone.drop_bomb": "Drone: Drop Bomb",
+  "key.finalparadox.recon_drone.exit": "Drone: Exit"
 }

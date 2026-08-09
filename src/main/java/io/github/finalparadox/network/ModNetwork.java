@@ -1,6 +1,7 @@
 package io.github.finalparadox.network;
 
 import io.github.finalparadox.FinalParadox;
+import io.github.finalparadox.entity.DroneEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
@@ -8,7 +9,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "6";
+    private static final String PROTOCOL_VERSION = "11";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.ChannelBuilder
             .named(ResourceLocation.fromNamespaceAndPath(FinalParadox.MOD_ID, "main"))
@@ -68,6 +69,36 @@ public final class ModNetwork {
                 .decoder(TerrastalkerDismountAckPacket::decode)
                 .consumerMainThread(TerrastalkerDismountAckPacket::handle)
                 .add();
+        CHANNEL.messageBuilder(DroneBombPacket.class, 8,
+                        NetworkDirection.PLAY_TO_SERVER)
+                .encoder(DroneBombPacket::encode)
+                .decoder(DroneBombPacket::decode)
+                .consumerMainThread(DroneBombPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(DroneExitPacket.class, 9,
+                        NetworkDirection.PLAY_TO_SERVER)
+                .encoder(DroneExitPacket::encode)
+                .decoder(DroneExitPacket::decode)
+                .consumerMainThread(DroneExitPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(DroneDismountPacket.class, 10,
+                        NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(DroneDismountPacket::encode)
+                .decoder(DroneDismountPacket::decode)
+                .consumerMainThread(DroneDismountPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(DroneGunInputPacket.class, 11,
+                        NetworkDirection.PLAY_TO_SERVER)
+                .encoder(DroneGunInputPacket::encode)
+                .decoder(DroneGunInputPacket::decode)
+                .consumerMainThread(DroneGunInputPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(DroneTracerPacket.class, 12,
+                        NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(DroneTracerPacket::encode)
+                .decoder(DroneTracerPacket::decode)
+                .consumerMainThread(DroneTracerPacket::handle)
+                .add();
     }
 
     public static void sendDismountAck(
@@ -80,4 +111,22 @@ public final class ModNetwork {
                         player.getX(), player.getY(), player.getZ(),
                         player.getYRot(), player.getXRot()));
     }
+
+    public static void sendDroneDismount(
+            net.minecraft.server.level.ServerPlayer player,
+            int droneEntityId
+    ) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new DroneDismountPacket(droneEntityId));
+    }
+
+    /**
+     * Forge broadcasts to every player tracking this non-player entity. The owner is
+     * a distinct ServerPlayer at the same position as its mounted drone, so it is in
+     * that tracking set without a second PLAYER send that could duplicate the salvo.
+     */
+    public static void sendDroneTracer(DroneEntity drone, DroneTracerPacket packet) {
+        CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> drone), packet);
+    }
+
 }

@@ -62,6 +62,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.BAMBOOMERANG.get().getDefaultInstance());
                         output.accept(ModItems.NIGHTFALL.get().getDefaultInstance());
                         output.accept(ModItems.ATACROM_GAUNTLET.get().getDefaultInstance());
+                        output.accept(ModItems.RECON_DRONE.get().getDefaultInstance());
                     })
                     .build());
 

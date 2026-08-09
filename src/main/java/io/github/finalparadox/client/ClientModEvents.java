@@ -26,6 +26,8 @@ public final class ClientModEvents {
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(TerrastalkerKeyMappings.DISMOUNT);
+        event.register(DroneKeyMappings.DROP_BOMB);
+        event.register(DroneKeyMappings.EXIT);
         event.register(NightfallKeyMappings.COMBO);
         event.register(NightfallKeyMappings.RIFT);
         event.register(NightfallKeyMappings.LASER);
@@ -77,6 +79,10 @@ public final class ClientModEvents {
         event.registerEntityRenderer(ModEntities.OMEGA_TECHNIQUE.get(), OmegaTechniqueRenderer::new);
         event.registerEntityRenderer(ModEntities.TERRASTALKER_ROVER.get(), TerrastalkerRoverRenderer::new);
         event.registerEntityRenderer(ModEntities.HOSTILE_TERRASTALKER.get(), TerrastalkerRoverRenderer::new);
+        event.registerEntityRenderer(ModEntities.RECON_DRONE.get(), DroneRenderer::new);
+        event.registerEntityRenderer(
+                ModEntities.RECON_DRONE_BODY.get(), DroneBodyProxyRenderer::new);
+        event.registerEntityRenderer(ModEntities.RECON_DRONE_BOMB.get(), DroneBombRenderer::new);
         event.registerEntityRenderer(ModEntities.ZOMBIE_SUPERMATRIX.get(), ZombieSupermatrixRenderer::new);
         event.registerEntityRenderer(ModEntities.B8_H2_MODULE.get(), B8H2ModuleRenderer::new);
         event.registerEntityRenderer(ModEntities.B8_SNIPER_BULLET.get(), B8SniperBulletRenderer::new);
@@ -89,6 +95,12 @@ public final class ClientModEvents {
         event.registerEntityRenderer(ModEntities.KOYOMI.get(), ZombieRenderer::new);
         event.registerEntityRenderer(ModEntities.GARI.get(), PillagerRenderer::new);
         event.registerEntityRenderer(ModEntities.KOROS_ECHO.get(), KorosEchoRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerLayerDefinitions(
+            EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(DroneModel.DRONE_LAYER, DroneModel::createBodyLayer);
     }
 
     @SubscribeEvent

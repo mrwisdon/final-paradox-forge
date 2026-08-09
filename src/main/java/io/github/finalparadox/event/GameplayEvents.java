@@ -47,6 +47,7 @@ import io.github.finalparadox.entity.EctronTowerEntity;
 import io.github.finalparadox.entity.EchoingShieldEntity;
 import io.github.finalparadox.item.EchoingAmethystShieldItem;
 import io.github.finalparadox.item.AdaptiveDefenseMatrixItem;
+import io.github.finalparadox.item.ReconDroneItem;
 import io.github.finalparadox.item.KoyomiOmegaTridentItem;
 import io.github.finalparadox.ability.ProfaneStanceState;
 import io.github.finalparadox.entity.OmegaTechniqueEntity;
@@ -411,6 +412,7 @@ public final class GameplayEvents {
         tickCooldown(player,BamboomerangItem.COOLDOWN_KEY,"message.finalparadox.bamboomerang.ready");
         tickEchoingShieldCooldown(player);
         tickCooldown(player,AdaptiveDefenseMatrixItem.COOLDOWN_KEY,"message.finalparadox.defense_matrix.ready");
+        tickCooldown(player,ReconDroneItem.COOLDOWN_KEY,"message.finalparadox.recon_drone.ready");
         int sparkCooldown=player.getPersistentData().getInt(LastSparkOfHopeItem.COOLDOWN_KEY);if(sparkCooldown>0){if(--sparkCooldown>0)player.getPersistentData().putInt(LastSparkOfHopeItem.COOLDOWN_KEY,sparkCooldown);else{player.getPersistentData().remove(LastSparkOfHopeItem.COOLDOWN_KEY);player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.finalparadox.last_spark.ready"),true);player.level().playSound(null,player.blockPosition(),SoundEvents.UI_BUTTON_CLICK.value(),SoundSource.PLAYERS,1,1.5F);}}
         if(player.getItemBySlot(EquipmentSlot.FEET).is(ModItems.VALYRIAN_STEEL_TOE_CAPS.get())){
             boolean bossNearby=!player.serverLevel().getEntitiesOfClass(LivingEntity.class,player.getBoundingBox().inflate(128),entity->entity instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon||entity instanceof net.minecraft.world.entity.boss.wither.WitherBoss||entity.getTags().contains("boss")).isEmpty();

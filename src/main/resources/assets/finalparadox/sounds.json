@@ -126,5 +126,15 @@
         "stream": true
       }
     ]
+  },
+  "drone_gatling_spinup": {
+    "sounds": [
+      "finalparadox:entity/drone_gatling_spinup"
+    ]
+  },
+  "drone_gatling_fire": {
+    "sounds": [
+      "finalparadox:entity/drone_gatling_fire"
+    ]
   }
 }

@@ -53,6 +53,9 @@ import io.github.finalparadox.entity.NightfallChainBladeEntity;
 import io.github.finalparadox.entity.AtacromGauntletEntity;
 import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.KorosEchoEntity;
+import io.github.finalparadox.entity.DroneEntity;
+import io.github.finalparadox.entity.DroneBombEntity;
+import io.github.finalparadox.entity.DroneBodyProxyEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.registries.DeferredRegister;
@@ -184,6 +187,29 @@ public final class ModEntities {
     public static final RegistryObject<EntityType<ProfaneTechniqueEntity>> PROFANE_TECHNIQUE=REGISTER.register("profane_technique",()->EntityType.Builder.<ProfaneTechniqueEntity>of(ProfaneTechniqueEntity::new,MobCategory.MISC).sized(.1F,.1F).clientTrackingRange(64).updateInterval(1).build("profane_technique"));
     public static final RegistryObject<EntityType<OmegaTechniqueEntity>> OMEGA_TECHNIQUE=REGISTER.register("omega_technique",()->EntityType.Builder.<OmegaTechniqueEntity>of(OmegaTechniqueEntity::new,MobCategory.MISC).sized(.1F,.1F).clientTrackingRange(64).updateInterval(1).build("omega_technique"));
     public static final RegistryObject<EntityType<TerrastalkerRoverEntity>> TERRASTALKER_ROVER=REGISTER.register("terrastalker_rover",()->EntityType.Builder.<TerrastalkerRoverEntity>of(TerrastalkerRoverEntity::new,MobCategory.MISC).sized(.6F,.8F).clientTrackingRange(64).updateInterval(1).build("terrastalker_rover"));
+    public static final RegistryObject<EntityType<DroneEntity>> RECON_DRONE = REGISTER.register(
+            "recon_drone", () -> EntityType.Builder.<DroneEntity>of(
+                            DroneEntity::new, MobCategory.MISC)
+                    .sized(0.6F, 0.6F)
+                    .clientTrackingRange(128)
+                     .updateInterval(1)
+                     .build("recon_drone"));
+    public static final RegistryObject<EntityType<DroneBodyProxyEntity>> RECON_DRONE_BODY =
+            REGISTER.register(
+                    "recon_drone_body",
+                    () -> EntityType.Builder.<DroneBodyProxyEntity>of(
+                                    DroneBodyProxyEntity::new, MobCategory.MISC)
+                            .sized(0.6F, 1.8F)
+                            .clientTrackingRange(64)
+                            .updateInterval(2)
+                            .build("recon_drone_body"));
+    public static final RegistryObject<EntityType<DroneBombEntity>> RECON_DRONE_BOMB = REGISTER.register(
+            "recon_drone_bomb", () -> EntityType.Builder.<DroneBombEntity>of(
+                            DroneBombEntity::new, MobCategory.MISC)
+                    .sized(0.4F, 0.4F)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build("recon_drone_bomb"));
     public static final RegistryObject<EntityType<HostileTerrastalkerEntity>> HOSTILE_TERRASTALKER = REGISTER.register(
             "hostile_terrastalker",
             () -> EntityType.Builder.<HostileTerrastalkerEntity>of(
