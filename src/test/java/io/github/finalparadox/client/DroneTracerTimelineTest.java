@@ -16,7 +16,7 @@ final class DroneTracerTimelineTest {
 
         double elapsed = DroneTracerTimeline.elapsed(nextFrame, spawn);
         assertEquals(0.10D, elapsed, EPSILON);
-        assertEquals(1.60D,
+        assertEquals(1.20D,
                 DroneTracerTimeline.frontDistance(elapsed, 64.0D), EPSILON);
     }
 
@@ -34,23 +34,25 @@ final class DroneTracerTimelineTest {
     }
 
     @Test
-    void sixtyFourBlockTracerTravelsForExactlyFourTicks() {
-        assertEquals(4.0D, DroneTracerTimeline.travelTicks(64.0D), EPSILON);
-        assertFalse(DroneTracerTimeline.hasArrived(3.999D, 64.0D));
-        assertTrue(DroneTracerTimeline.hasArrived(4.0D, 64.0D));
+    void sixtyFourBlockTracerTravelsForSixteenThirdsTicks() {
+        double travelTicks = DroneTracerTimeline.travelTicks(64.0D);
+        assertEquals(16.0D / 3.0D, travelTicks, EPSILON);
+        assertFalse(DroneTracerTimeline.hasArrived(travelTicks - 1.0E-4D, 64.0D));
+        assertTrue(DroneTracerTimeline.hasArrived(travelTicks, 64.0D));
     }
 
     @Test
     void frontTailAndArrivalFadeHaveStableBoundaries() {
-        assertEquals(8.0D,
+        double travelTicks = DroneTracerTimeline.travelTicks(64.0D);
+        assertEquals(6.0D,
                 DroneTracerTimeline.frontDistance(0.5D, 64.0D), EPSILON);
-        assertEquals(7.35D,
-                DroneTracerTimeline.tailDistance(8.0D), EPSILON);
+        assertEquals(5.35D,
+                DroneTracerTimeline.tailDistance(6.0D), EPSILON);
         assertEquals(1.0D,
-                DroneTracerTimeline.arrivalFade(4.0D, 64.0D), EPSILON);
+                DroneTracerTimeline.arrivalFade(travelTicks, 64.0D), EPSILON);
         assertEquals(0.5D,
-                DroneTracerTimeline.arrivalFade(4.125D, 64.0D), EPSILON);
+                DroneTracerTimeline.arrivalFade(travelTicks + 0.125D, 64.0D), EPSILON);
         assertEquals(0.0D,
-                DroneTracerTimeline.arrivalFade(4.25D, 64.0D), EPSILON);
+                DroneTracerTimeline.arrivalFade(travelTicks + 0.25D, 64.0D), EPSILON);
     }
 }
