@@ -55,15 +55,16 @@ public final class DroneEntity extends Entity {
     public static final int INPUT_MASK = FLAG_FORWARD | FLAG_BACK | FLAG_LEFT
             | FLAG_RIGHT | FLAG_UP | FLAG_DOWN;
 
-    public static final int MAX_BOMBS = 8;
+    public static final int MAX_BOMBS = DroneBombReload.MAX_BOMBS;
     public static final int DEPLOY_COOLDOWN_TICKS = 20 * 180;
+    public static final int BOMB_RELOAD_TICKS = DroneBombReload.RELOAD_TICKS;
 
     public static final int GATLING_IDLE = DroneGatlingCycle.IDLE;
     public static final int GATLING_WARMING = DroneGatlingCycle.WARMING;
     public static final int GATLING_FIRING = DroneGatlingCycle.FIRING;
     public static final int GATLING_OVERHEATED = DroneGatlingCycle.OVERHEATED;
     public static final int GATLING_WARMUP_TICKS = DroneGatlingCycle.WARMUP_TICKS;
-    private static final float GATLING_DAMAGE_PER_RAY = 1.0F;
+    private static final float GATLING_DAMAGE_PER_RAY = 4.0F;
 
     private static final String ACTIVE_KEY = "finalparadox.recon_drone_active";
     private static final String ACTIVE_DRONE_UUID_KEY = "finalparadox.recon_drone_uuid";
@@ -76,6 +77,8 @@ public final class DroneEntity extends Entity {
     private static final String WAS_NO_GRAVITY_KEY = "finalparadox.recon_drone_was_no_gravity";
     private static final String BODY_DAMAGE_BYPASS_KEY =
             "finalparadox.recon_drone_body_damage_bypass";
+    private static final String BOMB_RELOAD_PROGRESS_KEY =
+            "finalparadox.recon_drone_bomb_reload_progress";
 
     private static final float MOVE_SPEED = 0.45F;
     private static final int ORPHAN_CLEANUP_TICKS = 20;
@@ -98,6 +101,7 @@ public final class DroneEntity extends Entity {
     private double anchorZ;
     private boolean allowDismount;
     private boolean gatlingHeld;
+    private int bombReloadProgressTicks;
     private DroneGatlingCycle.Snapshot gatlingCycle = DroneGatlingCycle.Snapshot.initial();
 
     private int remoteLerpSteps;
@@ -391,8 +395,13 @@ public final class DroneEntity extends Entity {
                 ModEntities.RECON_DRONE_BOMB.get(), level());
         bomb.setPos(getX(), getY() - 0.2D, getZ());
         bomb.setOwner(player.getUUID());
-        level().addFreshEntity(bomb);
-        entityData.set(DATA_BOMBS, bombs - 1);
+        if (!level().addFreshEntity(bomb)) {
+            return false;
+        }
+        DroneBombReload.Snapshot reload = DroneBombReload.afterDrop(
+                new DroneBombReload.Snapshot(bombs, bombReloadProgressTicks));
+        entityData.set(DATA_BOMBS, reload.bombs());
+        bombReloadProgressTicks = reload.progressTicks();
         level().playSound(null, blockPosition(), SoundEvents.TNT_PRIMED,
                 SoundSource.PLAYERS, 1.0F, 0.9F);
         if (level() instanceof ServerLevel server) {
@@ -470,6 +479,7 @@ public final class DroneEntity extends Entity {
             return;
         }
         tickGatling(server, owner);
+        tickBombReload(owner);
     }
 
     private void tickGatling(ServerLevel server, ServerPlayer owner) {
@@ -497,6 +507,18 @@ public final class DroneEntity extends Entity {
         if (entityData.get(DATA_GATLING_STATE) != GATLING_IDLE) {
             entityData.set(DATA_GATLING_STATE, GATLING_IDLE);
         }
+    }
+
+    private void tickBombReload(ServerPlayer owner) {
+        if (!owner.isAlive()) {
+            return;
+        }
+        DroneBombReload.Snapshot reload = DroneBombReload.tick(
+                new DroneBombReload.Snapshot(getBombs(), bombReloadProgressTicks));
+        if (reload.bombs() != getBombs()) {
+            entityData.set(DATA_BOMBS, reload.bombs());
+        }
+        bombReloadProgressTicks = reload.progressTicks();
     }
 
     private void fireGatlingSalvo(ServerLevel server, ServerPlayer owner) {
@@ -752,7 +774,10 @@ public final class DroneEntity extends Entity {
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.hasUUID("Owner")) ownerId = tag.getUUID("Owner");
-        entityData.set(DATA_BOMBS, tag.getInt("Bombs"));
+        DroneBombReload.Snapshot reload = DroneBombReload.normalize(
+                tag.getInt("Bombs"), tag.getInt(BOMB_RELOAD_PROGRESS_KEY));
+        entityData.set(DATA_BOMBS, reload.bombs());
+        bombReloadProgressTicks = reload.progressTicks();
         anchorX = tag.getDouble("AnchorX");
         anchorY = tag.getDouble("AnchorY");
         anchorZ = tag.getDouble("AnchorZ");
@@ -762,6 +787,7 @@ public final class DroneEntity extends Entity {
     protected void addAdditionalSaveData(CompoundTag tag) {
         if (ownerId != null) tag.putUUID("Owner", ownerId);
         tag.putInt("Bombs", getBombs());
+        tag.putInt(BOMB_RELOAD_PROGRESS_KEY, bombReloadProgressTicks);
         tag.putDouble("AnchorX", anchorX);
         tag.putDouble("AnchorY", anchorY);
         tag.putDouble("AnchorZ", anchorZ);

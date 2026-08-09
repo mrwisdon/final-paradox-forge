@@ -67,6 +67,16 @@ path and a vulnerable body proxy at the deploy point.
 
 - R sends the existing server-authoritative `DroneBombPacket`.
 - Each deployment carries 8 bombs, synchronized through `SynchedEntityData`.
+- While a valid active controlling rider is mounted, one underslung bomb
+  reloads every 200 server ticks (10 seconds), up to the 8-bomb cap. A
+  full payload never banks progress; any successful drop restarts a fresh
+  full 200-tick interval, so at most one bomb is restored per interval and
+  a drop below the cap always waits the full 10 seconds again.
+- Reload progress persists in the drone entity NBT
+  (`finalparadox.recon_drone_bomb_reload_progress`), so save/reload cannot
+  reset or duplicate progress. Legacy drones without the tag load with
+  zero progress; loaded bomb count and progress are clamped to valid
+  ranges.
 - `recon_drone_bomb` is a gravity entity with a 40-tick or impact fuse, radius
   3.5, 20 hostile-only damage through `GlaivorusAbilityState`, knockback, and no
   terrain destruction.
@@ -88,8 +98,9 @@ path and a vulnerable body proxy at the deploy point.
   lock. When it ends, held input returns to `WARMING`; released input returns
   to `IDLE`. At all other non-overheated times, heat falls by 2 per tick while
   not firing.
-- While firing, both guns fire together every 2 ticks. Each ray deals 1
-  player-attributed damage over at most 64 blocks. The two muzzles start 0.30
+- While firing, both guns fire together every 2 ticks. Each ray deals 4
+  player-attributed damage over at most 64 blocks; a same-target salvo of
+  both rays applies 8 damage total. The two muzzles start 0.30
   blocks left and right of the center, 1.10 blocks below the drone origin, and
   0.56 blocks forward. Their unspread base rays meet on the central sight line
   32 blocks ahead (about 0.537 degrees of inward aim).
@@ -196,8 +207,9 @@ path and a vulnerable body proxy at the deploy point.
   `DroneBodyProxyRenderer.java`, `DroneBombRenderer.java`,
   `DroneGatlingSoundInstance.java`, `DroneGatlingSoundManager.java`,
   `DroneTracerRenderer.java`
-- `entity/DroneGatlingCycle.java`, `DroneGatlingBallistics.java` are pure logic
-  classes with no `DroneEntity` static-initialization dependency.
+- `entity/DroneGatlingCycle.java`, `DroneGatlingBallistics.java`,
+  `DroneBombReload.java` are pure logic classes with no `DroneEntity`
+  static-initialization dependency.
 - `registry/ModEntities.java`
 
 ## Remaining in-game validation
@@ -217,6 +229,9 @@ path and a vulnerable body proxy at the deploy point.
   reconnect, server restart, or dimension anomalies.
 - Verify multiplayer remote drone rendering and that other players can see and
   damage the anchor proxy while the owner is far away.
+- Verify the 10-second underslung bomb reload cadence: dropping the eighth
+  bomb restarts a fresh full interval, a full payload never banks time,
+  and a save/reload mid-progress neither resets nor duplicates progress.
 - Verify the exact one-second spin-up feel, continuous-fire loop seam and
   volume/attenuation for both the pilot and remote players. Confirm both tracers
   line up with the rendered muzzles at extreme pitch, visibly converge near 32
