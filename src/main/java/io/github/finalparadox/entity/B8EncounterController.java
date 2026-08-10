@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.ArenaFightParticipants;
 import io.github.finalparadox.registry.ModItems;
 import io.github.finalparadox.registry.ModSounds;
 import net.minecraft.core.BlockPos;
@@ -164,7 +165,6 @@ public final class B8EncounterController {
     private static final String SPEAKER_MATRIX = DIALOGUE_BASE + "dia4.1";
 
     // Anchor-relative offsets from the player-deployed floor anchor.
-    private static final Vec3iOffset PLAYER_SPAWN = new Vec3iOffset(11, 1, 1);
     private static final Vec3iOffset MATRIX_CORE = new Vec3iOffset(0, 7, 0);
     private static final Vec3iOffset SPECTATOR_TP = new Vec3iOffset(0, 13, 0);
     private static final Vec3iOffset TP_BACK = new Vec3iOffset(13, 1, 0);
@@ -210,17 +210,13 @@ public final class B8EncounterController {
         data.clearParticipants();
         data.clearSpectators();
         data.clearMounts();
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B8)) {
             data.addParticipant(player.getUUID());
         }
 
         snapshotGameRules(server, data);
         applyBossGameRules(server, data);
 
-        BlockPos spawn = data.anchor().offset(PLAYER_SPAWN.x(), PLAYER_SPAWN.y(), PLAYER_SPAWN.z());
-        for (ServerPlayer player : server.players()) {
-            player.setRespawnPosition(server.dimension(), spawn, 0.0F, false, false);
-        }
         forceChunks(server, data, true);
 
         long now = server.getGameTime();
@@ -249,6 +245,12 @@ public final class B8EncounterController {
         if (!data.active()) return;
         this.serverLevel = server;
         this.data = data;
+        if (data.state() != B8EncounterData.STATE_VICTORY
+                && data.state() != B8EncounterData.STATE_DEFEAT
+                && data.state() != B8EncounterData.STATE_CLEANUP
+                && ArenaFightParticipants.allDefeated(server, ArenaDefinitions.B8)) {
+            defeat(server, data);
+        }
         fireTimers(server, data);
         if (data.h2Active()
                 && data.state() >= B8EncounterData.STATE_PHASE_1
@@ -292,7 +294,7 @@ public final class B8EncounterController {
                 MobEffects.DAMAGE_RESISTANCE, 40, 4, true, false, false);
         MobEffectInstance regeneration = new MobEffectInstance(
                 MobEffects.REGENERATION, 40, 4, true, false, false);
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B8)) {
             if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
                 player.addEffect(resistance);
                 player.addEffect(regeneration);
@@ -1821,7 +1823,12 @@ public final class B8EncounterController {
     /* ------------------------------ M6 defeat flow ------------------------------ */
 
     public void onPlayerDeath(ServerLevel server, ServerPlayer player) {
-        if (!data.active()) return;
+        if (!data.active()
+                || data.state() == B8EncounterData.STATE_VICTORY
+                || data.state() == B8EncounterData.STATE_DEFEAT
+                || data.state() == B8EncounterData.STATE_CLEANUP) return;
+        if (!ArenaFightParticipants.markDefeated(
+                server, ArenaDefinitions.B8, player.getUUID())) return;
         data.addSpectator(player.getUUID());
         if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
             player.gameMode.changeGameModeForPlayer(GameType.SPECTATOR);
@@ -1832,22 +1839,15 @@ public final class B8EncounterController {
                     center.getX(), center.getY() + SPECTATOR_TP.y(), center.getZ(),
                     player.getYRot(), player.getXRot());
         }
-        if (allPlayersSpectator(server)) {
+        if (ArenaFightParticipants.allDefeated(server, ArenaDefinitions.B8)) {
             defeat(server, data);
         }
-    }
-
-    private boolean allPlayersSpectator(ServerLevel server) {
-        for (ServerPlayer player : server.players()) {
-            if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) return false;
-        }
-        return true;
     }
 
     private void defeat(ServerLevel server, B8EncounterData data) {
         if (data.state() == B8EncounterData.STATE_DEFEAT) return;
         data.setState(B8EncounterData.STATE_DEFEAT);
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B8)) {
             player.connection.send(new ClientboundSetTitleTextPacket(
                     Component.translatable("luisb1202.functions.bossfight.b1.derrota.1")));
             player.connection.send(new ClientboundSetSubtitleTextPacket(
@@ -1860,9 +1860,11 @@ public final class B8EncounterController {
 
     private void respawn(ServerLevel server, B8EncounterData data) {
         BlockPos anchor = data.anchor();
+        List<ServerPlayer> participants = ArenaFightParticipants.onlinePlayers(
+                server, ArenaDefinitions.B8);
         endEncounter(server, data);
         if (anchor == null) return;
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : participants) {
             if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
                 player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
                 player.teleportTo(server,
@@ -1996,15 +1998,13 @@ public final class B8EncounterController {
         dialogue(server, 4);
         BlockPos anchor = data.anchor();
         if (anchor != null) {
-            for (ServerPlayer player : server.players()) {
+            for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B8)) {
                 if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
                     player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
                     player.teleportTo(server,
                             anchor.getX() + 14, anchor.getY() + 1, anchor.getZ(),
                             90.0F, 0.0F);
                 }
-                player.setRespawnPosition(server.dimension(), server.getSharedSpawnPos(),
-                        0.0F, false, false);
             }
             spawnReward(server, anchor);
             spawnCelebration(server, anchor);
@@ -2016,7 +2016,7 @@ public final class B8EncounterController {
         // Grant the matrix directly so nobody can miss it, no matter where the
         // fight ended; a full inventory drops the leftover at the player's feet.
         ItemStack matrix = new ItemStack(ModItems.ADAPTIVE_DEFENSE_MATRIX.get());
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B8)) {
             if (player.isSpectator()) continue;
             if (!player.getInventory().add(matrix.copy())) {
                 ItemEntity drop = new ItemEntity(server,
@@ -2069,15 +2069,13 @@ public final class B8EncounterController {
         }
         BlockPos anchor = data.anchor();
         if (anchor != null) {
-            for (ServerPlayer player : server.players()) {
+            for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B8)) {
                 if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
                     player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
                     player.teleportTo(server,
                             anchor.getX() + 14, anchor.getY() + 1, anchor.getZ(),
                             90.0F, 0.0F);
                 }
-                player.setRespawnPosition(server.dimension(), server.getSharedSpawnPos(),
-                        0.0F, false, false);
             }
             spawnReward(server, anchor);
         }
@@ -2271,6 +2269,7 @@ public final class B8EncounterController {
         data.clearSpectators();
         data.clearMounts();
         data.clearCleanup();
+        ArenaFightParticipants.clear(server, ArenaDefinitions.B8);
         if (!endedInVictory) stopRecords(server);
         lastBossValue = -1;
     }

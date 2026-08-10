@@ -2,6 +2,7 @@ package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.ArenaFightParticipants;
 import io.github.finalparadox.arena.B5ArenaStaging;
 import io.github.finalparadox.registry.ModSounds;
 import net.minecraft.ChatFormatting;
@@ -125,7 +126,7 @@ public final class B5EncounterController {
         data.setH2PendingDue(0L);
         data.setKoyoUuid(koyo.getUUID());
         data.setGariUuid(gari.getUUID());
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B5)) {
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 120, 101, true, false));
             player.addEffect(new MobEffectInstance(MobEffects.HEAL, 1, 100));
             double rx = player.getX() - data.anchor().getX();
@@ -274,8 +275,7 @@ public final class B5EncounterController {
     }
 
     private void playerLoopTail(ServerLevel server, B5EncounterData data) {
-        boolean anyNonSpectator = false;
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B5)) {
             if (data.isDeadPlayer(player.getUUID())) {
                 if (player.isAlive() && !player.isSpectator()) player.setGameMode(GameType.SPECTATOR);
                 if (player.isAlive()) {
@@ -285,11 +285,9 @@ public final class B5EncounterController {
             } else if (player.isSpectator()) {
                 Vec3 tp = rel(data, -1, 7, 0);
                 player.teleportTo(tp.x, tp.y, tp.z);
-            } else if (player.isAlive()) {
-                anyNonSpectator = true;
             }
         }
-        if (!anyNonSpectator) {
+        if (ArenaFightParticipants.allDefeated(server, ArenaDefinitions.B5)) {
             defeat(server, data);
         }
         if (data.respawnScheduled()) {
@@ -355,7 +353,7 @@ public final class B5EncounterController {
 
     private void runLoopTail(ServerLevel server, B5EncounterData data,
                              KoyomiBossEntity koyo, GariBossEntity gari) {
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B5)) {
             if (player.isSpectator() || player.isCreative()) continue;
             double rx = player.getX() - data.anchor().getX();
             double rz = player.getZ() - data.anchor().getZ();
@@ -1847,6 +1845,7 @@ public final class B5EncounterController {
         data.setFinalePrepared(false);
         data.setDialogueCounter(0);
         data.clearDeadPlayers();
+        ArenaFightParticipants.resetDefeated(server, ArenaDefinitions.B5);
         data.clearH5Hits();
         data.clearH3IntermissionHits();
         data.setShieldBearer(SHIELD_NONE);
@@ -1858,7 +1857,7 @@ public final class B5EncounterController {
         data.setH4Timer(-1);
         data.setH4DamagePhase(false);
         ScoreboardHelper.removeTimer(server);
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B5)) {
             if (player.isSpectator()) {
                 Vec3 tp = rel(data, -17, 1, 0);
                 player.teleportTo(tp.x, tp.y, tp.z);
@@ -1964,7 +1963,7 @@ public final class B5EncounterController {
                         .withStyle(Style.EMPTY.withColor(TextColor.parseColor("#ffa4be"))))
                 : Component.translatable("luisb1202.functions.bossfight.b5.dialogos.dia_end." + suffix)
                 .withStyle(stage == 7 ? Style.EMPTY.withColor(TextColor.parseColor("#FBBDFF")) : Style.EMPTY);
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B5)) {
             player.sendSystemMessage(message);
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 160, 10, true, false));
             if (player.isSpectator()) {
@@ -2033,10 +2032,11 @@ public final class B5EncounterController {
         broadcastTitle("luisb1202.functions.bossfight.b1.victoria.1");
         broadcastSubtitle("luisb1202.functions.bossfight.b5.victoria.1");
         playForAll(server, SoundEvents.PLAYER_LEVELUP, 0.8F);
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B5)) {
             player.setGameMode(GameType.SURVIVAL);
         }
         endEncounter(server, data);
+        ArenaFightParticipants.clear(server, ArenaDefinitions.B5);
     }
 
     private void defeat(ServerLevel server, B5EncounterData data) {
@@ -2077,7 +2077,7 @@ public final class B5EncounterController {
             closeFleccy(server, data);
         }
         stopMusic(server, data);
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B5)) {
             if (data.isDeadPlayer(player.getUUID()) && player.isSpectator()) {
                 player.setGameMode(GameType.ADVENTURE);
             }
@@ -2095,12 +2095,15 @@ public final class B5EncounterController {
     /** Public reset entry used by the manager. */
     public void endEncounterPublic(ServerLevel server, B5EncounterData data) {
         endEncounter(server, data);
+        ArenaFightParticipants.clear(server, ArenaDefinitions.B5);
     }
 
     private void respawn(ServerLevel server, B5EncounterData data) {
+        List<ServerPlayer> participants = ArenaFightParticipants.onlinePlayers(
+                server, ArenaDefinitions.B5);
         endEncounter(server, data);
         B5ArenaStaging.spawn(server, ArenaDeploymentData.get(server, ArenaDefinitions.B5), data.anchor());
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : participants) {
             if (player.isSpectator()) {
                 Vec3 tp = rel(data, -17, 1, 0);
                 player.teleportTo(tp.x, tp.y, tp.z);
@@ -2112,6 +2115,7 @@ public final class B5EncounterController {
         data.setActive(false);
         data.setRespawnScheduled(false);
         data.setDirty();
+        ArenaFightParticipants.clear(server, ArenaDefinitions.B5);
     }
 
     /* ------------------------------ reward ------------------------------ */

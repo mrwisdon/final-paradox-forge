@@ -8,6 +8,7 @@ import io.github.finalparadox.entity.B5EncounterManager;
 import io.github.finalparadox.entity.B5EncounterData;
 import io.github.finalparadox.entity.B8EncounterManager;
 import io.github.finalparadox.entity.KorosEchoEntity;
+import io.github.finalparadox.item.ArenaCompassDestination;
 import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -226,6 +227,8 @@ public final class ArenaCommands {
             source.sendFailure(Component.literal("Could not start the Apiglo entrance sequence."));
             return 0;
         }
+        ArenaCompassDestination.setForArena(
+                level, definition, data.floorAnchor().orElseThrow());
         source.sendSuccess(() -> Component.literal("Apiglo created for B1 at logical anchor "
                 + ArenaDeploymentManager.format(spawn) + "."), true);
         return 1;

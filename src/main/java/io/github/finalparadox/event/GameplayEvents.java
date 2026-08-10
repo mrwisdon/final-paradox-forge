@@ -13,6 +13,7 @@ import io.github.finalparadox.item.LastSparkOfHopeItem;
 import io.github.finalparadox.item.SoullessEdgeItem;
 import io.github.finalparadox.item.TyrannicalDecapitatorItem;
 import io.github.finalparadox.entity.WindTornadoEntity;
+import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.B5EncounterManager;
 import io.github.finalparadox.entity.B8EncounterManager;
 import io.github.finalparadox.entity.MarawTharBossEntity;
@@ -252,6 +253,7 @@ public final class GameplayEvents {
     @SubscribeEvent public static void onLivingDeath(LivingDeathEvent event){
         B8EncounterManager.onLivingDeath(event.getEntity(), event.getSource());
         if(event.getEntity() instanceof ServerPlayer deadPlayer){
+            ApigloBossEntity.onPlayerDeath(deadPlayer);
             B5EncounterManager.onPlayerDeath(deadPlayer);
             B8EncounterManager.onPlayerDeath(deadPlayer);
             MarawTharBossEntity.onPlayerDeath(deadPlayer);

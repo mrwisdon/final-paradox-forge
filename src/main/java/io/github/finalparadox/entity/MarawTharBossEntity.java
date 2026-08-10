@@ -3,6 +3,7 @@ package io.github.finalparadox.entity;
 import io.github.finalparadox.ability.NightfallSlashFrames;
 import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.ArenaFightParticipants;
 import io.github.finalparadox.arena.MarawTharArenaStaging;
 import io.github.finalparadox.item.AtacromGauntletItem;
 import io.github.finalparadox.registry.ModSounds;
@@ -618,6 +619,10 @@ public final class MarawTharBossEntity extends WitherSkeleton {
         }
         if (defeatActive) {
             tickDefeat(server);
+            return;
+        }
+        if (ArenaFightParticipants.allDefeated(server, ArenaDefinitions.MARAWTHAR)) {
+            startDefeat(server);
             return;
         }
         if (!orphanCleanupDone) {
@@ -4158,23 +4163,16 @@ public final class MarawTharBossEntity extends WitherSkeleton {
         if (!(level() instanceof ServerLevel server) || isVictoryActive() || defeatActive) {
             return;
         }
+        if (!ArenaFightParticipants.markDefeated(
+                server, ArenaDefinitions.MARAWTHAR, player.getUUID())) return;
         if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
             player.gameMode.changeGameModeForPlayer(GameType.SPECTATOR);
         }
         Vec3 above = position().add(0.0D, 10.0D, 0.0D);
         player.teleportTo(server, above.x, above.y, above.z, player.getYRot(), player.getXRot());
-        if (allPlayersSpectator(server)) {
+        if (ArenaFightParticipants.allDefeated(server, ArenaDefinitions.MARAWTHAR)) {
             startDefeat(server);
         }
-    }
-
-    private static boolean allPlayersSpectator(ServerLevel server) {
-        for (ServerPlayer player : server.players()) {
-            if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private void startDefeat(ServerLevel server) {
@@ -4184,7 +4182,8 @@ public final class MarawTharBossEntity extends WitherSkeleton {
                 Component.translatable("luisb1202.functions.bossfight.b1.derrota.1"),
                 Component.translatable("luisb1202.functions.bossfight.b1.derrota.2"),
                 5, 40, 5);
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(
+                server, ArenaDefinitions.MARAWTHAR)) {
             server.playSound(null, player.blockPosition(), SoundEvents.WITHER_DEATH,
                     SoundSource.MASTER, 1.0F, 1.8F);
         }
@@ -4199,7 +4198,8 @@ public final class MarawTharBossEntity extends WitherSkeleton {
                             .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xAA0000))
                                     .withBold(true).withItalic(true)))
                     .append(Component.translatable("b9_dialogo_17"));
-            for (ServerPlayer player : server.players()) {
+            for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(
+                    server, ArenaDefinitions.MARAWTHAR)) {
                 player.sendSystemMessage(line);
             }
             server.playSound(null, blockPosition(), SoundEvents.RAVAGER_ROAR,
@@ -4212,7 +4212,8 @@ public final class MarawTharBossEntity extends WitherSkeleton {
                             .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x94E4FF))
                                     .withBold(true).withItalic(true)))
                     .append(Component.translatable("b9_dialogo_19"));
-            for (ServerPlayer player : server.players()) {
+            for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(
+                    server, ArenaDefinitions.MARAWTHAR)) {
                 player.sendSystemMessage(line);
             }
         }
@@ -4225,7 +4226,8 @@ public final class MarawTharBossEntity extends WitherSkeleton {
         defeatActive = false;
         defeatTicks = 0;
         Vec3 destination = encounterCenter.add(5.0D, 0.0D, -9.0D);
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(
+                server, ArenaDefinitions.MARAWTHAR)) {
             if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
                 player.teleportTo(server, destination.x, destination.y, destination.z,
                         -37.0F, 5.0F);
@@ -4239,6 +4241,7 @@ public final class MarawTharBossEntity extends WitherSkeleton {
         ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.MARAWTHAR);
         BlockPos anchor = data.floorAnchor().orElse(
                 BlockPos.containing(encounterCenter).offset(0, -1, 0));
+        ArenaFightParticipants.clear(server, ArenaDefinitions.MARAWTHAR);
         discard();
         MarawTharArenaStaging.spawnBoss(server, data, anchor);
     }
@@ -4407,6 +4410,7 @@ public final class MarawTharBossEntity extends WitherSkeleton {
         if (tick >= VICTORY_FINISH_TICK) {
             stopVictoryMusic(server);
             setVictoryActive(false);
+            ArenaFightParticipants.clear(server, ArenaDefinitions.MARAWTHAR);
             discard();
             return;
         }
@@ -4606,6 +4610,9 @@ public final class MarawTharBossEntity extends WitherSkeleton {
     @Override
     public void remove(RemovalReason reason) {
         if (reason.shouldDestroy()) {
+            if (level() instanceof ServerLevel server) {
+                ArenaFightParticipants.clear(server, ArenaDefinitions.MARAWTHAR);
+            }
             if (level() instanceof ServerLevel server && isVictoryActive()) {
                 stopVictoryMusic(server);
             }

@@ -1,5 +1,7 @@
 package io.github.finalparadox.entity;
 
+import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.ArenaFightParticipants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -133,7 +135,10 @@ public final class B5EncounterManager {
     public static void onPlayerDeath(ServerPlayer player) {
         ServerLevel level = player.serverLevel();
         B5EncounterData data = B5EncounterData.get(level);
-        if (data.active()) data.markDeadPlayer(player.getUUID());
+        if (data.active() && ArenaFightParticipants.markDefeated(
+                level, ArenaDefinitions.B5, player.getUUID())) {
+            data.markDeadPlayer(player.getUUID());
+        }
     }
 
     public static void reset(ServerLevel level) {

@@ -1,7 +1,10 @@
 package io.github.finalparadox.entity;
 
-import io.github.finalparadox.arena.B1ArenaStaging;
+import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.ArenaEntranceMemory;
+import io.github.finalparadox.arena.ArenaFightParticipants;
+import io.github.finalparadox.arena.B1ArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
 import io.github.finalparadox.registry.ModSounds;
@@ -58,6 +61,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.phys.AABB;
@@ -93,6 +97,8 @@ public final class ApigloBossEntity extends Zombie {
     private static final int MUSIC_NONE = 0;
     private static final int MUSIC_ENTRANCE = 1;
     private static final int MUSIC_BATTLE = 2;
+    private static final int DEFEAT_DIALOGUE_TICK = 3 * 20;
+    private static final int DEFEAT_RESPAWN_TICK = 6 * 20;
     private static final int[] BUTCHERING_TICKS = {80,120,160,200,240,270,300,330,360,390,410,430,450,470,490,505,520,535,550,565,573,581,589,597,605,613,621,629,637};
     private static final double STAMPEDE_RING_RADIUS = 19.0D;
     private static final double STAMPEDE_CHARGE_STEP = STAMPEDE_RING_RADIUS * 2.0D / 30.0D;
@@ -133,6 +139,8 @@ public final class ApigloBossEntity extends Zombie {
     private boolean needsReloadRecovery;
     private boolean victoryHandled;
     private boolean preBattleDialoguePlayed;
+    private boolean defeatActive;
+    private int defeatTicks;
     private double anchorX;
     private double anchorY;
     private double anchorZ;
@@ -159,6 +167,18 @@ public final class ApigloBossEntity extends Zombie {
 
     public boolean isWaiting() {
         return phase == WAITING;
+    }
+
+    /** True when this waiting boss is still at its persisted encounter anchor. */
+    public boolean isWaitingAt(BlockPos expected) {
+        return isWaiting() && matchesAnchor(expected);
+    }
+
+    /** True when the persisted encounter anchor equals {@code expected}. */
+    public boolean matchesAnchor(BlockPos expected) {
+        return Mth.floor(anchorX) == expected.getX()
+                && Mth.floor(anchorY) == expected.getY()
+                && Mth.floor(anchorZ) == expected.getZ();
     }
 
     public boolean startPreBattleDialogue() {
@@ -402,6 +422,10 @@ public final class ApigloBossEntity extends Zombie {
             bossEvent.setVisible(false);
             return;
         }
+        if (defeatActive) {
+            tickDefeat(level);
+            return;
+        }
         totalTick++;
         processDialogue(level);
         tickMusic(level);
@@ -473,14 +497,14 @@ public final class ApigloBossEntity extends Zombie {
     }
 
     private void tickFight(ServerLevel level) {
+        if (ArenaFightParticipants.allDefeated(level, ArenaDefinitions.B1)) {
+            startDefeat(level);
+            return;
+        }
         List<ServerPlayer> players = combatPlayers();
         if (phase != INTRO && phase != COUNTDOWN && players.isEmpty()) {
             if (++emptyPlayerTicks >= 200) {
-                showTitle(Component.translatable("title.finalparadox.apiglo.defeat"),
-                        Component.translatable("subtitle.finalparadox.apiglo.defeat"));
-                cleanupEncounter(level);
-                stopMusic();
-                discard();
+                startDefeat(level);
                 return;
             }
         } else emptyPlayerTicks = 0;
@@ -821,6 +845,91 @@ public final class ApigloBossEntity extends Zombie {
                 && player.distanceToSqr(anchorX, anchorY, anchorZ) <= 64.0D * 64.0D);
     }
 
+    public static void onPlayerDeath(ServerPlayer player) {
+        if (!(player.level() instanceof ServerLevel server)) return;
+        ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.B1);
+        if (!ArenaDefinitions.B1.id().equals(data.arenaId())) return;
+        data.activeBossUuid().map(server::getEntity)
+                .filter(ApigloBossEntity.class::isInstance)
+                .map(ApigloBossEntity.class::cast)
+                .filter(Entity::isAlive)
+                .ifPresent(boss -> boss.handlePlayerDeath(player));
+    }
+
+    private void handlePlayerDeath(ServerPlayer player) {
+        if (!(level() instanceof ServerLevel server) || defeatActive || victoryHandled) return;
+        if (phase == WAITING || phase == PRE_BATTLE) return;
+        if (!ArenaFightParticipants.markDefeated(
+                server, ArenaDefinitions.B1, player.getUUID())) return;
+        if (!player.isSpectator()) player.setGameMode(GameType.SPECTATOR);
+        player.teleportTo(server, anchorX - 17.0D, anchorY + 10.0D, anchorZ,
+                player.getYRot(), player.getXRot());
+        if (ArenaFightParticipants.allDefeated(server, ArenaDefinitions.B1)) {
+            startDefeat(server);
+        }
+    }
+
+    private void startDefeat(ServerLevel server) {
+        if (defeatActive || victoryHandled || phase == WAITING || phase == PRE_BATTLE) return;
+        defeatActive = true;
+        defeatTicks = 0;
+        setInvulnerable(true);
+        setNoAi(true);
+        Component title = Component.translatable("title.finalparadox.apiglo.defeat");
+        Component subtitle = Component.translatable("subtitle.finalparadox.apiglo.defeat");
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B1)) {
+            player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 40, 10));
+            player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
+            player.connection.send(new ClientboundSetTitleTextPacket(title));
+            server.playSound(null, player.blockPosition(), SoundEvents.WITHER_DEATH,
+                    SoundSource.MASTER, 1.0F, 1.8F);
+        }
+    }
+
+    private void tickDefeat(ServerLevel server) {
+        defeatTicks++;
+        if (defeatTicks == DEFEAT_DIALOGUE_TICK) {
+            Component dialogue = Component.translatable(
+                    "luisb1202.functions.bossfight.b1.dialogos.dia10.1");
+            for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B1)) {
+                player.sendSystemMessage(dialogue);
+                server.playSound(null, player.blockPosition(), SoundEvents.PIGLIN_ANGRY,
+                        SoundSource.MASTER, 1.0F, 1.4F);
+            }
+        }
+        if (defeatTicks >= DEFEAT_RESPAWN_TICK) restartAfterDefeat(server);
+    }
+
+    private void restartAfterDefeat(ServerLevel server) {
+        BlockPos bossAnchor = new BlockPos(
+                Mth.floor(anchorX), Mth.floor(anchorY), Mth.floor(anchorZ));
+        ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.B1);
+        BlockPos floorAnchor = data.floorAnchor().orElse(bossAnchor.offset(0, -1, 0));
+        BlockPos destination = floorAnchor.offset(ArenaDefinitions.B1_RESPAWN.offset());
+        Set<UUID> participants = ArenaFightParticipants.participants(server, ArenaDefinitions.B1);
+        for (UUID playerId : participants) {
+            ServerPlayer player = server.getServer().getPlayerList().getPlayer(playerId);
+            if (player == null) continue;
+            if (player.isSpectator()) {
+                player.teleportTo(server, destination.getX() + 0.5D,
+                        destination.getY(), destination.getZ() + 0.5D,
+                        ArenaDefinitions.B1_RESPAWN.yaw(), 0.0F);
+                player.setGameMode(GameType.ADVENTURE);
+            }
+            player.removeEffect(MobEffects.WITHER);
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.DAMAGE_RESISTANCE, 2020, 1, false, false, false));
+            player.addEffect(new MobEffectInstance(MobEffects.HEAL, 20, 10, true, false));
+        }
+        cleanupEncounter(server);
+        stopMusic();
+        data.clearActiveBoss();
+        ArenaFightParticipants.clear(server, ArenaDefinitions.B1);
+        discard();
+        B1ArenaStaging.spawn(server, data, floorAnchor)
+                .ifPresent(stage -> stage.boss().markPreBattleDialoguePlayed());
+    }
+
     private List<Vec3> randomGridPositions(int count, double avoidPlayerRadius) {
         List<Vec3> candidates = new ArrayList<>();
         for (int x = -18; x <= 18; x += 6) {
@@ -963,7 +1072,10 @@ public final class ApigloBossEntity extends Zombie {
         showTitle(Component.translatable("title.finalparadox.apiglo.victory"),
                 Component.translatable("subtitle.finalparadox.apiglo.victory"));
         playGlobal(SoundEvents.PLAYER_LEVELUP, 1.0F, 0.8F);
-        if (level() instanceof ServerLevel server) cleanupEncounter(server);
+        if (level() instanceof ServerLevel server) {
+            cleanupEncounter(server);
+            ArenaFightParticipants.clear(server, ArenaDefinitions.B1);
+        }
         stopMusic();
         bossEvent.setVisible(false);
     }
@@ -1058,6 +1170,8 @@ public final class ApigloBossEntity extends Zombie {
         tag.putBoolean("ApigloP2Butchering", phaseTwoButchering);
         tag.putBoolean("ApigloVictoryHandled", victoryHandled);
         tag.putBoolean("ApigloPreBattleDialoguePlayed", preBattleDialoguePlayed);
+        tag.putBoolean("ApigloDefeatActive", defeatActive);
+        tag.putInt("ApigloDefeatTicks", defeatTicks);
         tag.putDouble("ApigloAnchorX", anchorX);
         tag.putDouble("ApigloAnchorY", anchorY);
         tag.putDouble("ApigloAnchorZ", anchorZ);
@@ -1095,6 +1209,8 @@ public final class ApigloBossEntity extends Zombie {
         phaseTwoButchering = tag.getBoolean("ApigloP2Butchering");
         victoryHandled = tag.getBoolean("ApigloVictoryHandled");
         preBattleDialoguePlayed = tag.getBoolean("ApigloPreBattleDialoguePlayed");
+        defeatActive = tag.getBoolean("ApigloDefeatActive");
+        defeatTicks = tag.getInt("ApigloDefeatTicks");
         anchorX = tag.getDouble("ApigloAnchorX");
         anchorY = tag.getDouble("ApigloAnchorY");
         anchorZ = tag.getDouble("ApigloAnchorZ");

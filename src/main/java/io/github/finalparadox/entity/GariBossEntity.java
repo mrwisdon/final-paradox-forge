@@ -1,6 +1,7 @@
 package io.github.finalparadox.entity;
 
 import io.github.finalparadox.registry.ModEntities;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerBossEvent;
@@ -33,6 +34,7 @@ public final class GariBossEntity extends Pillager {
             Component.translatable("luisb1202.functions.bossfight.b5.vida.ini.1"),
             BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.PROGRESS);
     private boolean bossBarEnabled = true;
+    private BlockPos arenaAnchor;
 
     public GariBossEntity(EntityType<GariBossEntity> type, Level level) {
         super(type, level);
@@ -126,15 +128,32 @@ public final class GariBossEntity extends Pillager {
         }
     }
 
+    public void setArenaAnchor(BlockPos anchor) {
+        this.arenaAnchor = anchor.immutable();
+    }
+
+    /** Read-only arena anchor used to attribute this waiting boss to its arena. */
+    public BlockPos arenaAnchor() {
+        return arenaAnchor;
+    }
+
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         bossBarEnabled = !tag.contains("B5BossBarEnabled") || tag.getBoolean("B5BossBarEnabled");
+        if (tag.contains("B5AnchorX")) {
+            arenaAnchor = new BlockPos(tag.getInt("B5AnchorX"), tag.getInt("B5AnchorY"), tag.getInt("B5AnchorZ"));
+        }
     }
 
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putBoolean("B5BossBarEnabled", bossBarEnabled);
+        if (arenaAnchor != null) {
+            tag.putInt("B5AnchorX", arenaAnchor.getX());
+            tag.putInt("B5AnchorY", arenaAnchor.getY());
+            tag.putInt("B5AnchorZ", arenaAnchor.getZ());
+        }
     }
 }

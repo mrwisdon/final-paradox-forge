@@ -1,11 +1,10 @@
 package io.github.finalparadox.arena;
 
 import io.github.finalparadox.entity.ApigloBossEntity;
+import io.github.finalparadox.entity.B5EncounterData;
 import io.github.finalparadox.entity.MarawTharBossEntity;
-import io.github.finalparadox.entity.EotharEchoEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
 import io.github.finalparadox.entity.GariBossEntity;
-import io.github.finalparadox.entity.KorosEchoEntity;
 import io.github.finalparadox.entity.TharKrooBossEntity;
 import io.github.finalparadox.entity.ZombieSupermatrixEntity;
 import io.github.finalparadox.registry.ModEntities;
@@ -126,46 +125,24 @@ public final class ArenaDeploymentManager {
             ArenaDefinition definition,
             ArenaDeploymentData data
     ) {
-        if (definition == ArenaDefinitions.B5
-                && !io.github.finalparadox.entity.B5EncounterManager.isActive(level)
-                && data.activeBossUuid().isEmpty()
-                && data.stagedKoyoUuid().isEmpty()
-                && data.stagedGariUuid().isEmpty()
-                && data.korosUuid().isEmpty()
-                && data.floorAnchor().isPresent()) {
-            if (B5ArenaStaging.spawn(level, data, data.floorAnchor().orElseThrow()).isEmpty()) {
-                data.fail("Could not migrate the staged B5 bosses and Echo of Koros");
-                notifyPlayers(level, Component.literal("B5 arena migration failed while creating its waiting entities."));
-            } else {
+        if (definition == ArenaDefinitions.B5 && data.floorAnchor().isPresent()) {
+            BlockPos anchor = data.floorAnchor().orElseThrow();
+            boolean wasMissing = data.stagedKoyoUuid().isEmpty()
+                    && data.stagedGariUuid().isEmpty()
+                    && data.korosUuid().isEmpty();
+            Optional<B5ArenaStaging.Stage> stage = B5ArenaStaging.reconcile(level, data, anchor);
+            if (stage.isPresent() && wasMissing) {
+                B5EncounterData.get(level).resetPreBattleDialogue();
                 notifyPlayers(level, Component.literal(
                         "B5 waiting entities restored. Talk to the Echo of Koros to begin the encounter."));
             }
-            return;
-        }
-        if (definition == ArenaDefinitions.B5 && data.floorAnchor().isPresent()) {
-            BlockPos anchor = data.floorAnchor().orElseThrow();
             B5ArenaStaging.tryStartPreBattleDialogue(level, data, anchor);
             return;
         }
         if (definition == ArenaDefinitions.B1
                 && data.floorAnchor().isPresent()) {
-            data.activeBossUuid().ifPresent(uuid -> {
-                Entity existing = level.getEntity(uuid);
-                if (!(existing instanceof ApigloBossEntity boss) || !boss.isAlive()) {
-                    data.clearActiveBoss();
-                }
-            });
-            data.korosUuid().ifPresent(uuid -> {
-                Entity existing = level.getEntity(uuid);
-                if (!(existing instanceof KorosEchoEntity echo) || !echo.isAlive()) {
-                    data.clearKoros();
-                }
-            });
             BlockPos anchor = data.floorAnchor().orElseThrow();
-            Optional<B1ArenaStaging.Stage> stage = B1ArenaStaging.find(level, data);
-            if (stage.isEmpty() && data.activeBossUuid().isEmpty()) {
-                stage = B1ArenaStaging.spawn(level, data, anchor);
-            }
+            Optional<B1ArenaStaging.Stage> stage = B1ArenaStaging.reconcile(level, data);
             stage.ifPresent(existing -> {
                 if (B1ArenaStaging.anyPlayerInside(level, anchor)
                         && existing.boss().isWaiting()
@@ -177,25 +154,8 @@ public final class ArenaDeploymentManager {
         }
         if (definition == ArenaDefinitions.B2
                 && data.floorAnchor().isPresent()) {
-            data.activeBossUuid().ifPresent(uuid -> {
-                Entity existing = level.getEntity(uuid);
-                if (!(existing instanceof TharKrooBossEntity boss) || !boss.isAlive()) {
-                    data.clearActiveBoss();
-                }
-            });
-            data.korosUuid().ifPresent(uuid -> {
-                Entity existing = level.getEntity(uuid);
-                if (!(existing instanceof KorosEchoEntity echo) || !echo.isAlive()) {
-                    data.clearKoros();
-                }
-            });
             BlockPos anchor = data.floorAnchor().orElseThrow();
-            Optional<B2ArenaStaging.Stage> stage = B2ArenaStaging.find(level, data);
-            if (stage.isEmpty()
-                    && (data.activeBossUuid().isEmpty()
-                            || B2ArenaStaging.hasWaitingBoss(level, data))) {
-                stage = B2ArenaStaging.spawn(level, data, anchor);
-            }
+            Optional<B2ArenaStaging.Stage> stage = B2ArenaStaging.reconcile(level, data);
             stage.ifPresent(existing -> {
                 if (B2ArenaStaging.anyPlayerInside(level, anchor)
                         && existing.boss().isWaiting()
@@ -205,50 +165,19 @@ public final class ArenaDeploymentManager {
             });
             return;
         }
-        if (definition == ArenaDefinitions.B8
-                && !io.github.finalparadox.entity.B8EncounterManager.isActive(level)
-                && !data.b8Triggered()
-                && data.activeBossUuid().isEmpty()
-                && data.korosUuid().isEmpty()
-                && data.floorAnchor().isPresent()) {
-            BlockPos anchor = data.floorAnchor().orElseThrow();
-            BlockPos pos = anchor.offset(ArenaDefinitions.B8_KOROS_OFFSET);
-            level.getChunkAt(pos);
-            KorosEchoEntity koros = KorosEchoEntity.createB8(level, anchor);
-            if (koros != null) {
-                koros.moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.0F, 0.0F);
-                if (level.addFreshEntity(koros)) {
-                    data.setKorosUuid(koros.getUUID());
-                    koros.playArrivalEffects();
-                }
-            }
+        if (definition == ArenaDefinitions.B8 && data.floorAnchor().isPresent()) {
+            B8ArenaStaging.reconcile(level, data, data.floorAnchor().orElseThrow());
             return;
         }
-        if (definition == ArenaDefinitions.MARAWTHAR) {
-            if (data.marawTharTriggered() || data.activeBossUuid().isPresent()) return;
-            Optional<BlockPos> anchorResult = data.floorAnchor();
-            if (anchorResult.isEmpty()) return;
-            BlockPos anchor = anchorResult.get();
-            data.eotharUuid().ifPresent(uuid -> {
-                Entity existing = level.getEntity(uuid);
-                if (!(existing instanceof EotharEchoEntity echo) || !echo.isAlive()) {
-                    data.clearEothar();
+        if (definition == ArenaDefinitions.MARAWTHAR && data.floorAnchor().isPresent()) {
+            BlockPos anchor = data.floorAnchor().orElseThrow();
+            MarawTharArenaStaging.reconcile(level, data, anchor).ifPresent(stage -> {
+                if (stage.created()) {
+                    notifyPlayers(level, Component.literal(
+                            "Eothar's echo stirs at the Maraw'Thar arena."));
                 }
             });
-            if (data.eotharUuid().isPresent()) {
-                Entity existing = level.getEntity(data.eotharUuid().orElseThrow());
-                if (existing instanceof EotharEchoEntity echo
-                        && !MarawTharArenaStaging.anyPlayerNear(level, anchor, 30.0D)) {
-                    echo.depart();
-                    data.clearEothar();
-                }
-                return;
-            }
-            if (MarawTharArenaStaging.anyPlayerNear(level, anchor, 18.0D)) {
-                MarawTharArenaStaging.spawnEothar(level, data, anchor).ifPresent(echo ->
-                        notifyPlayers(level, Component.literal(
-                                "Eothar's echo stirs at the Maraw'Thar arena.")));
-            }
+            return;
         }
     }
 

@@ -140,6 +140,11 @@ public final class KoyomiBossEntity extends Zombie {
         this.arenaAnchor = anchor.immutable();
     }
 
+    /** Read-only arena anchor used to attribute this waiting boss to its arena. */
+    public BlockPos arenaAnchor() {
+        return arenaAnchor;
+    }
+
     private static ItemStack trident() {
         ItemStack stack = new ItemStack(Items.TRIDENT);
         stack.getOrCreateTag().putBoolean("Unbreakable", true);

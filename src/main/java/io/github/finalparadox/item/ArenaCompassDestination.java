@@ -2,6 +2,8 @@ package io.github.finalparadox.item;
 
 import io.github.finalparadox.arena.ArenaDefinition;
 import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.ArenaFightParticipants;
+import io.github.finalparadox.arena.ArenaPlayerRespawn;
 import io.github.finalparadox.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -10,7 +12,8 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * Writes the current arena's original boss-fight respawn point onto every
- * online Arena Compass once a boss battle starts.
+ * online Arena Compass once a boss battle starts, and applies the same arena
+ * respawn to every participating player through {@link ArenaPlayerRespawn}.
  */
 public final class ArenaCompassDestination {
     public static final String RESPAWN_TAG = "ArenaRespawn";
@@ -26,11 +29,13 @@ public final class ArenaCompassDestination {
     ) {
         ArenaDefinitions.ArenaRespawn respawn = ArenaDefinitions.respawnFor(definition).orElse(null);
         if (respawn == null) return;
+        ArenaFightParticipants.begin(level, definition, anchor);
+        ArenaPlayerRespawn.activateForArena(level, definition, anchor);
         BlockPos destination = anchor.offset(respawn.offset());
         int[] position = {
                 destination.getX(), destination.getY(), destination.getZ()
         };
-        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(level, definition)) {
             for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
                 ItemStack stack = player.getInventory().getItem(slot);
                 if (!stack.is(ModItems.ARENA_COMPASS.get())) continue;

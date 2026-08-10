@@ -1,5 +1,7 @@
 package io.github.finalparadox.item;
 
+import io.github.finalparadox.arena.ArenaBossFightState;
+import io.github.finalparadox.arena.ArenaPlayerRespawn;
 import io.github.finalparadox.registry.ModDimensions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -37,6 +39,11 @@ public final class ArenaCompassItem extends Item {
 
         ServerLevel current = server.serverLevel();
         boolean returning = ModDimensions.ARENA_DIMENSION.equals(current.dimension());
+        if (returning && ArenaBossFightState.isAnyActive(current)) {
+            server.displayClientMessage(
+                    Component.translatable("message.finalparadox.arena_compass.bossfight_active"), true);
+            return InteractionResultHolder.fail(stack);
+        }
         ServerLevel target = returning
                 ? server.getServer().overworld()
                 : server.getServer().getLevel(ModDimensions.ARENA_DIMENSION);
@@ -44,6 +51,9 @@ public final class ArenaCompassItem extends Item {
             server.displayClientMessage(
                     Component.translatable("message.finalparadox.arena_compass.missing"), true);
             return InteractionResultHolder.fail(stack);
+        }
+        if (returning) {
+            ArenaPlayerRespawn.restore(server);
         }
 
         if (!returning && stack.getTag() != null

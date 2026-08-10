@@ -512,6 +512,7 @@
   "dialogue.finalparadox.apiglo.set.8.2": "§4§o§l<Apliglo>§c W-we can negotiate.",
   "dialogue.finalparadox.apiglo.set.8.3": "§4§o§l<Apliglo>§c I can grant you unthinkable power if you let me live!",
   "dialogue.finalparadox.apiglo.set.8.4": "<Koros> End him! Without his blade, he's completely defenseless.",
+  "luisb1202.functions.bossfight.b1.dialogos.dia10.1": "§4§o§l<Apliglo>§c This is what happens when you challenge the emperor!",
   "title.finalparadox.apiglo.countdown.3": "§a§l3",
   "title.finalparadox.apiglo.countdown.2": "§e§l2",
   "title.finalparadox.apiglo.countdown.1": "§c§l1",
@@ -1701,5 +1702,6 @@
   "luisb1202.functions.talentos.minikoros.dialogos.b2.ini.2": "   §e▶ §7How do I face Thar Kroo?",
   "luisb1202.functions.talentos.minikoros.dialogos.b2.ini.3": "   §e▶ §7Why are you so similar to Thar Kroo? ",
   "score.escudo.name.1": "escudo",
-  "message.finalparadox.arena_compass.missing": "The arena dimension is not available."
+  "message.finalparadox.arena_compass.missing": "The arena dimension is not available.",
+  "message.finalparadox.arena_compass.bossfight_active": "A boss fight is in progress. You cannot return to the overworld."
 }

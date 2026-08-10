@@ -3,6 +3,7 @@ package io.github.finalparadox.entity;
 import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.ArenaDefinitions;
 import io.github.finalparadox.arena.ArenaEntranceMemory;
+import io.github.finalparadox.arena.ArenaFightParticipants;
 import io.github.finalparadox.arena.B2ArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
@@ -211,6 +212,18 @@ public final class TharKrooBossEntity extends MagmaCube {
         return phase == WAITING;
     }
 
+    /** True when this waiting boss is still at its persisted encounter anchor. */
+    public boolean isWaitingAt(BlockPos expected) {
+        return isWaiting() && matchesAnchor(expected);
+    }
+
+    /** True when the persisted encounter anchor equals {@code expected}. */
+    public boolean matchesAnchor(BlockPos expected) {
+        return Mth.floor(anchorX) == expected.getX()
+                && Mth.floor(anchorY) == expected.getY()
+                && Mth.floor(anchorZ) == expected.getZ();
+    }
+
     public boolean startPreBattleDialogue() {
         if (phase != WAITING || preBattleDialoguePlayed) return false;
         preBattleDialoguePlayed = true;
@@ -342,6 +355,10 @@ public final class TharKrooBossEntity extends MagmaCube {
             tickDefeat(server);
             return;
         }
+        if (ArenaFightParticipants.allDefeated(server, ArenaDefinitions.B2)) {
+            startDefeat(server);
+            return;
+        }
         setDeltaMovement(Vec3.ZERO);
         bossEvent.setProgress(Mth.clamp(getHealth() / getMaxHealth(), 0.0F, 1.0F));
         if (phase == WAITING || phase == COMPLETE) {
@@ -406,27 +423,22 @@ public final class TharKrooBossEntity extends MagmaCube {
     public void handlePlayerDeath(ServerPlayer player) {
         if (!(level() instanceof ServerLevel server) || defeatActive) return;
         if (phase < COUNTDOWN || phase == PRE_BATTLE || phase == COMPLETE) return;
+        if (!ArenaFightParticipants.markDefeated(
+                server, ArenaDefinitions.B2, player.getUUID())) return;
         if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
             player.gameMode.changeGameModeForPlayer(GameType.SPECTATOR);
         }
         Vec3 above = position().add(0.0D, 10.0D, 0.0D);
         player.teleportTo(server, above.x, above.y, above.z, player.getYRot(), player.getXRot());
-        if (allPlayersSpectator(server)) startDefeat(server);
-    }
-
-    private static boolean allPlayersSpectator(ServerLevel server) {
-        for (ServerPlayer player : server.players()) {
-            if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
-                return false;
-            }
+        if (ArenaFightParticipants.allDefeated(server, ArenaDefinitions.B2)) {
+            startDefeat(server);
         }
-        return true;
     }
 
     private void startDefeat(ServerLevel server) {
         defeatActive = true;
         defeatTicks = 0;
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B2)) {
             player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 50, 10));
             player.connection.send(new ClientboundSetSubtitleTextPacket(
                     Component.translatable("subtitle.finalparadox.thar_kroo.defeat")));
@@ -440,7 +452,7 @@ public final class TharKrooBossEntity extends MagmaCube {
     private void tickDefeat(ServerLevel server) {
         defeatTicks++;
         if (defeatTicks == DEFEAT_DIALOGUE_1_TICK) {
-            for (ServerPlayer player : server.players()) {
+            for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B2)) {
                 player.sendSystemMessage(
                         Component.translatable("dialogue.finalparadox.thar_kroo.defeat.1"));
             }
@@ -452,7 +464,7 @@ public final class TharKrooBossEntity extends MagmaCube {
                             .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFBBDFF))
                                     .withBold(true).withItalic(true)))
                     .append(Component.translatable("dialogue.finalparadox.thar_kroo.defeat.2"));
-            for (ServerPlayer player : server.players()) {
+            for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B2)) {
                 player.sendSystemMessage(line);
             }
             server.playSound(null, blockPosition(), SoundEvents.TRIDENT_RETURN,
@@ -468,7 +480,7 @@ public final class TharKrooBossEntity extends MagmaCube {
         defeatTicks = 0;
         BlockPos destination = new BlockPos(
                 Mth.floor(anchorX), Mth.floor(anchorY), Mth.floor(anchorZ) - 21);
-        for (ServerPlayer player : server.players()) {
+        for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B2)) {
             if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
                 player.teleportTo(server, destination.getX() + 0.5D, destination.getY(),
                         destination.getZ() + 0.5D, 0.0F, 0.0F);
@@ -1428,6 +1440,7 @@ public final class TharKrooBossEntity extends MagmaCube {
         bossEvent.removeAllPlayers();
         bossEvent.setVisible(false);
         stopTharMusic();
+        ArenaFightParticipants.clear(server, ArenaDefinitions.B2);
     }
 
     private List<ServerPlayer> combatPlayers() {

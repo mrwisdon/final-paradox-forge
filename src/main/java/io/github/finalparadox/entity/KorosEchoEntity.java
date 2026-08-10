@@ -97,6 +97,11 @@ public final class KorosEchoEntity extends Entity {
         return arenaAnchor;
     }
 
+    /** Read-only guide mode used to attribute this echo to its arena. */
+    public String guideMode() {
+        return guideMode;
+    }
+
     public Vec3 visualCore() {
         return position().add(0.0D, 1.0D, 0.0D);
     }

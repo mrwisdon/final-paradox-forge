@@ -512,6 +512,7 @@
   "dialogue.finalparadox.apiglo.set.8.2": "§4§o§l<艾披格罗>§c 我……我们可以谈判。",
   "dialogue.finalparadox.apiglo.set.8.3": "§4§o§l<艾披格罗>§c 如果你让我活下去，我可以赋予你不可思议的力量！",
   "dialogue.finalparadox.apiglo.set.8.4": "<科洛斯> 干掉他！没有剑，他完全没有防御能力。",
+  "luisb1202.functions.bossfight.b1.dialogos.dia10.1": "§4§o§l<艾披格罗>§c 这就是你们挑战本王的后果！",
   "title.finalparadox.apiglo.countdown.3": "§a§l3",
   "title.finalparadox.apiglo.countdown.2": "§e§l2",
   "title.finalparadox.apiglo.countdown.1": "§c§l1",
@@ -1701,5 +1702,6 @@
   "luisb1202.functions.talentos.minikoros.dialogos.b2.ini.2": "   §e▶ §7我该如何面对塔尔·克罗？",
   "luisb1202.functions.talentos.minikoros.dialogos.b2.ini.3": "   §e▶ §7为什么你跟塔尔·克罗长得这么像？",
   "score.escudo.name.1": "护盾",
-  "message.finalparadox.arena_compass.missing": "竞技场维度尚未加载。"
+  "message.finalparadox.arena_compass.missing": "竞技场维度尚未加载。",
+  "message.finalparadox.arena_compass.bossfight_active": "Boss 战正在进行，无法返回主世界。"
 }
