@@ -48,7 +48,10 @@ import io.github.finalparadox.item.NightfallItem;
 import io.github.finalparadox.item.AtacromGauntletItem;
 import io.github.finalparadox.item.ReconDroneItem;
 import io.github.finalparadox.item.ArenaCompassItem;
+import io.github.finalparadox.item.ParadoxicalTomeItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -102,6 +105,18 @@ public final class ModItems {
     public static final RegistryObject<Item> THAR_FRAGMENT = REGISTER.register("thar_fragment", TharFragmentItem::new);
     public static final RegistryObject<Item> NIGHTFALL = REGISTER.register("nightfall", NightfallItem::new);
     public static final RegistryObject<Item> ARENA_COMPASS = REGISTER.register("arena_compass", ArenaCompassItem::new);
+    public static final RegistryObject<Item> APIGLO_ARENA_SANDBOX = blockItem(
+            "apiglo_arena_sandbox", ModBlocks.APIGLO_ARENA_SANDBOX);
+    public static final RegistryObject<Item> THAR_KROO_ARENA_SANDBOX = blockItem(
+            "thar_kroo_arena_sandbox", ModBlocks.THAR_KROO_ARENA_SANDBOX);
+    public static final RegistryObject<Item> KOYOMI_GARIHEUZ_ARENA_SANDBOX = blockItem(
+            "koyomi_gariheuz_arena_sandbox", ModBlocks.KOYOMI_GARIHEUZ_ARENA_SANDBOX);
+    public static final RegistryObject<Item> ZOMBIE_SUPERMATRIX_ARENA_SANDBOX = blockItem(
+            "zombie_supermatrix_arena_sandbox", ModBlocks.ZOMBIE_SUPERMATRIX_ARENA_SANDBOX);
+    public static final RegistryObject<Item> MARAWTHAR_ARENA_SANDBOX = blockItem(
+            "marawthar_arena_sandbox", ModBlocks.MARAWTHAR_ARENA_SANDBOX);
+    public static final RegistryObject<Item> PARADOXICAL_TOME =
+            REGISTER.register("paradoxical_tome", ParadoxicalTomeItem::new);
     public static final RegistryObject<Item> ATACROM_GAUNTLET =
             REGISTER.register("atacrom_gauntlet", AtacromGauntletItem::new);
     public static final RegistryObject<Item> RECON_DRONE =
@@ -127,6 +142,10 @@ public final class ModItems {
             new ForgeSpawnEggItem(ModEntities.KOYOMI, 0x509E63, 0x2E5E3A, new Item.Properties()));
     public static final RegistryObject<Item> GARI_SPAWN_EGG = REGISTER.register("gari_spawn_egg", () ->
             new ForgeSpawnEggItem(ModEntities.GARI, 0x39434D, 0x8B9AA6, new Item.Properties()));
+
+    private static RegistryObject<Item> blockItem(String name, RegistryObject<Block> block) {
+        return REGISTER.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
+    }
 
     private ModItems() {
     }

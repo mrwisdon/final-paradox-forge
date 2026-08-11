@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:block",
+  "pools": [{
+    "rolls": 1,
+    "entries": [{ "type": "minecraft:item", "name": "finalparadox:koyomi_gariheuz_arena_sandbox" }],
+    "conditions": [{ "condition": "minecraft:survives_explosion" }]
+  }]
+}

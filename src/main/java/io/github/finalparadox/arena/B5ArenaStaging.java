@@ -158,6 +158,8 @@ public final class B5ArenaStaging {
             BlockPos anchor
     ) {
         if (B5EncounterManager.isActive(level)) return;
+        // No player inside B5 means no find() and no stage-chunk loading.
+        if (!anyPlayerInside(level, anchor)) return;
         if (find(level, data).isEmpty()) return;
         B5EncounterData encounter = B5EncounterData.get(level);
         if (!encounter.preBattleDialoguePlayed() && anyPlayerInside(level, anchor)) {

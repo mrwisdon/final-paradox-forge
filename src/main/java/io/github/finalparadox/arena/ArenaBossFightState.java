@@ -12,9 +12,9 @@ import net.minecraft.server.level.ServerLevel;
  * It decides whether the Arena Compass may return a player to the overworld.
  *
  * <p>This class deliberately never clears or rewrites SavedData and never
- * force-loads arena chunks: a saved boss UUID counts only while it resolves to
- * a currently loaded living boss. Normal fights keep their boss loaded through
- * the participating players and the existing encounter controllers.
+ * force-loads arena chunks. B1 first uses its persistent fight roster so an
+ * unloaded roaming boss still blocks escape; legacy loaded-entity checks remain
+ * as a compatibility fallback.
  */
 public final class ArenaBossFightState {
     private ArenaBossFightState() {
@@ -51,6 +51,7 @@ public final class ArenaBossFightState {
     }
 
     private static boolean activeB1(ServerLevel level) {
+        if (ArenaFightParticipants.hasFight(level, ArenaDefinitions.B1)) return true;
         return ArenaDeploymentData.get(level, ArenaDefinitions.B1)
                 .activeBossUuid()
                 .map(level::getEntity)

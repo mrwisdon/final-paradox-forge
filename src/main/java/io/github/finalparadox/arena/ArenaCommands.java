@@ -94,6 +94,10 @@ public final class ArenaCommands {
             }
         }
         if (definition == ArenaDefinitions.B1) {
+            if (ArenaFightParticipants.hasFight(level, ArenaDefinitions.B1)) {
+                source.sendFailure(Component.literal("The B1 encounter is still active."));
+                return 0;
+            }
             B1ArenaStaging.cleanupWaiting(level, data);
         }
         if (definition == ArenaDefinitions.B2) {
@@ -139,6 +143,10 @@ public final class ArenaCommands {
             }
             B5EncounterManager.reset(level);
         } else if (definition == ArenaDefinitions.B1) {
+            if (ArenaFightParticipants.hasFight(level, ArenaDefinitions.B1)) {
+                source.sendFailure(Component.literal("The B1 encounter is still active."));
+                return 0;
+            }
             B1ArenaStaging.cleanupWaiting(level, data);
         } else if (definition == ArenaDefinitions.B2) {
             B2ArenaStaging.cleanupWaiting(level, data);
@@ -194,6 +202,10 @@ public final class ArenaCommands {
         if (data.state() != ArenaDeploymentData.DeploymentState.READY || !data.arenaId().equals(definition.id())
                 || data.floorAnchor().isEmpty()) {
             source.sendFailure(Component.literal("B1 is not ready. Deploy it first and check arena status."));
+            return 0;
+        }
+        if (ArenaFightParticipants.hasFight(level, ArenaDefinitions.B1)) {
+            source.sendFailure(Component.literal("The Apiglo encounter is already active."));
             return 0;
         }
         if (ArenaDeploymentManager.findActiveBoss(level, data, definition).isPresent()) {

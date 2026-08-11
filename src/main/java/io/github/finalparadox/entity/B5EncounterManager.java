@@ -1,7 +1,9 @@
 package io.github.finalparadox.entity;
 
 import io.github.finalparadox.arena.ArenaDefinitions;
+import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.ArenaFightParticipants;
+import io.github.finalparadox.arena.ArenaWaitingBatch;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -14,9 +16,12 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -111,10 +116,19 @@ public final class B5EncounterManager {
     }
 
     private static void tickRewardParticles(ServerLevel level) {
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, ArenaDefinitions.B5);
+        if (data.state() != ArenaDeploymentData.DeploymentState.READY) return;
+        Optional<BlockPos> anchorResult = data.floorAnchor();
+        if (anchorResult.isEmpty()) return;
+        AABB bounds = ArenaWaitingBatch.arenaBounds(ArenaDefinitions.B5, anchorResult.get());
         boolean groundedParticle = level.random.nextBoolean();
-        for (net.minecraft.world.entity.Entity entity : level.getAllEntities()) {
-            if (!(entity instanceof ItemEntity item) || !item.isAlive()) continue;
-            if (!item.getItem().hasTag() || !item.getItem().getTag().getBoolean("chapa_gariheuz")) continue;
+        List<ItemEntity> rewards = level.getEntitiesOfClass(
+                ItemEntity.class,
+                bounds,
+                item -> item.isAlive()
+                        && item.getItem().hasTag()
+                        && item.getItem().getTag().getBoolean("chapa_gariheuz"));
+        for (ItemEntity item : rewards) {
             if (!item.onGround() || groundedParticle) {
                 level.sendParticles(ParticleTypes.FIREWORK,
                         item.getX(), item.getY() + 0.4D, item.getZ(), 1, 0, 0, 0,

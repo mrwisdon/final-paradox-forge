@@ -35,6 +35,10 @@ public final class B1ArenaStaging {
      *         active or the batch could not be completed
      */
     public static Optional<Stage> reconcile(ServerLevel level, ArenaDeploymentData data) {
+        // The persistent fight roster is authoritative even when the roaming
+        // boss's chunk is currently unloaded. Never scan or recreate a running
+        // encounter merely because ServerLevel#getEntity cannot resolve it.
+        if (ArenaFightParticipants.hasFight(level, ArenaDefinitions.B1)) return Optional.empty();
         if (!ArenaWaitingBatch.shouldReconcile(level, data)) return Optional.empty();
         Optional<BlockPos> anchorResult = data.floorAnchor();
         if (anchorResult.isEmpty()) return Optional.empty();
@@ -55,41 +59,52 @@ public final class B1ArenaStaging {
         List<KorosEchoEntity> korosCandidates = ArenaWaitingBatch.scanKoros(
                 level, bounds, anchor, "b1");
 
-        // A saved waiting boss wins only when it is an arena-filtered
-        // candidate, so corrupt SavedData cannot pair unrelated entities.
         Optional<UUID> savedUuid = data.activeBossUuid();
-        Optional<ApigloBossEntity> savedWaiting = savedUuid.flatMap(uuid ->
-                waitingBosses.stream()
-                        .filter(boss -> boss.getUUID().equals(uuid))
-                        .findFirst());
-        if (savedWaiting.isPresent()) {
-            ApigloBossEntity boss = savedWaiting.get();
-            ArenaWaitingBatch.pruneSurplus(waitingBosses, boss, ApigloBossEntity::discard);
-            return finishStage(level, data, anchor, boss, korosCandidates);
-        }
-        // The saved UUID may still resolve to this arena's live boss even when
-        // it has left the scanning bounds, for example during a running fight:
-        // never disturb it and never recreate the batch.
+        Entity resolvedSaved = savedUuid.map(level::getEntity).orElse(null);
         Optional<ApigloBossEntity> savedLive = savedUuid
-                .map(level::getEntity)
+                .map(uuid -> resolvedSaved)
                 .filter(ApigloBossEntity.class::isInstance)
                 .map(ApigloBossEntity.class::cast)
                 .filter(boss -> boss.isAlive() && boss.matchesAnchor(expectedBoss));
-        if (savedLive.isPresent()) {
-            pruneWaitingBatch(waitingBosses, korosCandidates, data);
+
+        // A resolved running boss is authoritative even after it roams outside
+        // the arena scan bounds. Remove every loaded same-anchor copy.
+        if (savedLive.filter(boss -> !boss.isWaiting()).isPresent()) {
+            ApigloBossEntity retained = savedLive.orElseThrow();
+            pruneBossSurplus(liveBosses, retained);
+            pruneKoros(korosCandidates, data);
             return Optional.empty();
         }
-        // A live fight exists but its saved UUID is stale or missing: persist
-        // one active boss deterministically (nearest expected, UUID tie-break)
-        // before returning empty. Active bosses are never discarded.
+
+        if (savedUuid.isPresent() && resolvedSaved == null) {
+            // Null means unloaded, not dead. Loaded same-anchor candidates are
+            // duplicates of the unresolved owner and must not replace it.
+            liveBosses.forEach(ApigloBossEntity::discard);
+            pruneKoros(korosCandidates, data);
+            return Optional.empty();
+        }
+
+        // Legacy duplicate batches may contain both a waiting copy and a
+        // running boss. Running state wins; all other same-anchor candidates
+        // converge to one deterministic owner.
         if (!activeBosses.isEmpty()) {
-            ArenaWaitingBatch.adopt(activeBosses, Optional.empty(), expectedBoss)
-                    .ifPresent(boss -> data.setActiveBossUuid(boss.getUUID()));
-            pruneWaitingBatch(waitingBosses, korosCandidates, data);
+            ApigloBossEntity retained = selectAuthoritative(liveBosses, savedUuid, expectedBoss).orElseThrow();
+            pruneBossSurplus(liveBosses, retained);
+            data.setActiveBossUuid(retained.getUUID());
+            pruneKoros(korosCandidates, data);
             return Optional.empty();
         }
+
+        // The saved waiting boss wins only after active candidates have been
+        // ruled out, so an old waiting UUID cannot replace a running boss.
+        if (savedLive.filter(ApigloBossEntity::isWaiting).isPresent()) {
+            ApigloBossEntity boss = savedLive.orElseThrow();
+            pruneBossSurplus(liveBosses, boss);
+            return finishStage(level, data, anchor, boss, korosCandidates);
+        }
+
         if (savedUuid.isPresent()) {
-            // Unrelated or corrupt saved UUID: ignore and clear it.
+            // A resolved dead, wrong-type, or wrong-anchor record is genuinely stale.
             data.clearActiveBoss();
         }
         ApigloBossEntity boss = adoptOrCreateBoss(level, data, waitingBosses, anchor, expectedBoss);
@@ -114,13 +129,38 @@ public final class B1ArenaStaging {
         return Optional.of(new Stage(boss, koros));
     }
 
-    /** Removes every residual waiting boss and matching Koros duplicate. */
-    private static void pruneWaitingBatch(
-            List<ApigloBossEntity> waitingBosses,
+    private static Optional<ApigloBossEntity> selectAuthoritative(
+            List<ApigloBossEntity> candidates,
+            Optional<UUID> saved,
+            BlockPos expected
+    ) {
+        List<B1ArenaLifecycle.BossRef> refs = candidates.stream()
+                .map(boss -> new B1ArenaLifecycle.BossRef(
+                        boss.getUUID(), boss.isWaiting(),
+                        boss.distanceToSqr(expected.getX() + 0.5D,
+                                expected.getY() + 0.5D, expected.getZ() + 0.5D)))
+                .toList();
+        Optional<UUID> retained = B1ArenaLifecycle.selectAuthoritative(saved, refs)
+                .map(B1ArenaLifecycle.BossRef::uuid);
+        return retained.flatMap(uuid -> candidates.stream()
+                .filter(boss -> boss.getUUID().equals(uuid))
+                .findFirst());
+    }
+
+    private static void pruneBossSurplus(
+            List<ApigloBossEntity> candidates,
+            ApigloBossEntity retained
+    ) {
+        for (ApigloBossEntity candidate : candidates) {
+            if (!candidate.getUUID().equals(retained.getUUID())) candidate.discard();
+        }
+    }
+
+    /** Removes every matching Koros copy once an active encounter owns B1. */
+    private static void pruneKoros(
             List<KorosEchoEntity> korosCandidates,
             ArenaDeploymentData data
     ) {
-        waitingBosses.forEach(ApigloBossEntity::discard);
         korosCandidates.forEach(KorosEchoEntity::depart);
         data.clearKoros();
     }
@@ -236,12 +276,11 @@ public final class B1ArenaStaging {
                 || data.floorAnchor().isEmpty()) {
             return false;
         }
+        if (ArenaFightParticipants.hasFight(level, ArenaDefinitions.B1)) return false;
         BlockPos anchor = data.floorAnchor().orElseThrow();
-        Optional<Stage> result = find(level, data);
-        if (result.isEmpty()) {
-            if (data.activeBossUuid().isPresent()) return false;
-            result = reconcile(level, data);
-        }
+        // One deliberate scan at interaction time closes legacy duplicate
+        // batches before the waiting boss can transition into combat.
+        Optional<Stage> result = reconcile(level, data);
         if (result.isEmpty() || !allPlayersInside(level, anchor)) return false;
 
         Stage stage = result.get();
@@ -311,17 +350,15 @@ public final class B1ArenaStaging {
         // A live, non-waiting recorded boss must keep its active UUID: the
         // deploy/reset commands rely on the later active-boss check to refuse
         // while the fight is still running. The UUID is cleared only when its
-        // waiting entity was discarded here, or when the recorded entity is
-        // absent, dead, or unrelated to this arena.
-        boolean recordedAlive = data.activeBossUuid()
-                .map(uuid -> {
-                    Entity existing = level.getEntity(uuid);
-                    return existing instanceof ApigloBossEntity boss
-                            && boss.isAlive()
-                            && boss.matchesAnchor(expectedBoss);
-                })
-                .orElse(false);
-        if (discardedRecorded || !recordedAlive) {
+        // waiting entity was discarded here, or when a resolved entity is
+        // dead or unrelated to this arena; an unresolved UUID is preserved.
+        Optional<UUID> recordedUuid = data.activeBossUuid();
+        Entity recorded = recordedUuid.map(level::getEntity).orElse(null);
+        boolean resolved = recordedUuid.isPresent() && recorded != null;
+        boolean valid = recorded instanceof ApigloBossEntity boss
+                && boss.isAlive()
+                && boss.matchesAnchor(expectedBoss);
+        if (B1ArenaLifecycle.shouldClearRecordedBoss(discardedRecorded, resolved, valid)) {
             data.clearActiveBoss();
         }
     }

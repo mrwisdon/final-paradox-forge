@@ -29,6 +29,7 @@ final class MarawTharVictoryVisualRenderer {
 
     private static final int PETRIFICATION_START_TICK = 50 * 20;
     private static final int STATUE_FALL_START_TICK = 59 * 20;
+    private static final double STATUE_NAME_Y = 3.3D;
     private static final float SOURCE_YAW = 90.0F;
     private static final int HUMAN_STAND_COUNT = 4;
     private static final int STATUE_PART_COUNT = 15;
@@ -153,9 +154,18 @@ final class MarawTharVictoryVisualRenderer {
 
         int age = Math.max(0, owner.getVictoryTick() - STATUE_SPAWN_TICK);
         float mouthOffset = Mth.lerp(partialTick, mouthOffset(age), mouthOffset(age + 1));
-        double shakeY = Mth.lerp(partialTick, shakeY(age), shakeY(age + 1));
-        double shakeZ = Mth.lerp(partialTick, shakeZ(age), shakeZ(age + 1));
+        int petrificationTick = Mth.floor(victoryTick) - PETRIFICATION_START_TICK;
+        double shakeY = MarawTharVictoryVisualRules.shakeY(
+                age, petrificationTick, partialTick);
+        double shakeZ = MarawTharVictoryVisualRules.shakeZ(
+                age, petrificationTick, partialTick);
 
+        // One root transform shakes the whole statue group while every part keeps its own
+        // logical coordinates and the name stand stays outside the shaken root. The pose stack
+        // reaches this method already positioned at the entity with no extra yaw rotation, so
+        // the translate axes match the world axes the source tp commands use.
+        pose.pushPose();
+        pose.translate(0.0D, shakeY, shakeZ);
         for (int index = 0; index < STATUE_PART_COUNT; index++) {
             float fallAge = victoryTick - STATUE_FALL_START_TICK - PART_FALL_DELAYS[index];
             if (fallAge >= 6.0F) {
@@ -181,18 +191,17 @@ final class MarawTharVictoryVisualRenderer {
 
             double[] local = PART_LOCAL_OFFSETS[index];
             double x = local[0];
-            double y = local[1] + (index <= 5 ? -mouthOffset : mouthOffset)
-                    + shakeY + fallOffset;
-            double z = local[2] + shakeZ;
+            double y = local[1] + (index <= 5 ? -mouthOffset : mouthOffset) + fallOffset;
+            double z = local[2];
             prepareForRender(part, owner, x, y, z, 0.0F, owner.getVictoryTick());
             renderStand(part, x, y, z, partialTick, pose, buffers, packedLight);
         }
+        pose.popPose();
 
         configureNameStand(owner, false);
-        double nameY = 3.3D + shakeY;
         prepareForRender(
-                nameStand, owner, 0.0D, nameY, shakeZ, 0.0F, owner.getVictoryTick());
-        renderStand(nameStand, 0.0D, nameY, shakeZ,
+                nameStand, owner, 0.0D, STATUE_NAME_Y, 0.0D, 0.0F, owner.getVictoryTick());
+        renderStand(nameStand, 0.0D, STATUE_NAME_Y, 0.0D,
                 partialTick, pose, buffers, packedLight);
     }
 
@@ -287,15 +296,6 @@ final class MarawTharVictoryVisualRenderer {
         if (frame >= 17 && frame <= 18) return 0.04F;
         if (frame >= 19) return 0.03F;
         return 0.0F;
-    }
-
-    private static double shakeY(int age) {
-        int phase = Math.floorMod(age, 3);
-        return phase == 1 || phase == 2 ? 0.1D : 0.0D;
-    }
-
-    private static double shakeZ(int age) {
-        return (age & 1) == 1 ? 0.1D : 0.0D;
     }
 
     private static ItemStack statuePartItem(

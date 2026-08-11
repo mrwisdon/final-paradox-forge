@@ -39,26 +39,26 @@ final class DroneGatlingBallisticsTest {
     }
 
     @Test
-    void spreadGrowsLinearlyFromQuarterToPointEightFiveDegrees() {
-        assertEquals(0.25D, DroneGatlingBallistics.spreadDegrees(0), EPSILON);
-        assertEquals(0.55D, DroneGatlingBallistics.spreadDegrees(60), EPSILON);
-        assertEquals(0.85D, DroneGatlingBallistics.spreadDegrees(120), EPSILON);
+    void spreadGrowsLinearlyFromPointFourToOnePointTwoDegrees() {
+        assertEquals(0.40D, DroneGatlingBallistics.spreadDegrees(0), EPSILON);
+        assertEquals(0.80D, DroneGatlingBallistics.spreadDegrees(60), EPSILON);
+        assertEquals(1.20D, DroneGatlingBallistics.spreadDegrees(120), EPSILON);
     }
 
     @Test
     void diskSamplingUsesSquareRootRadiusAndStaysWithinCone() {
         var forward = new DroneGatlingBallistics.Vector3(0.0D, 0.0D, -1.0D);
         var halfRadius = DroneGatlingBallistics.spreadDirection(
-                forward, 0.85D, 0.25D, 0.0D);
+                forward, 1.20D, 0.25D, 0.0D);
         double halfRadiusDegrees = Math.toDegrees(Math.acos(forward.dot(halfRadius)));
-        assertEquals(0.425D, halfRadiusDegrees, 1.0E-7D);
+        assertEquals(0.60D, halfRadiusDegrees, 1.0E-7D);
 
         for (double radial : new double[]{0.0D, 0.1D, 0.5D, 1.0D}) {
             for (double angular : new double[]{0.0D, 0.25D, 0.5D, 0.75D}) {
                 var sampled = DroneGatlingBallistics.spreadDirection(
-                        forward, 0.85D, radial, angular);
+                        forward, 1.20D, radial, angular);
                 double degrees = Math.toDegrees(Math.acos(forward.dot(sampled)));
-                assertTrue(degrees <= 0.8500001D);
+                assertTrue(degrees <= 1.2000001D);
                 assertEquals(1.0D, sampled.length(), EPSILON);
             }
         }

@@ -721,25 +721,20 @@ public final class TerrastalkerRoverEntity extends Entity implements Terrastalke
     }
 
     private LivingEntity findBulletTarget(ServerLevel server, Vec3 sample) {
-        AABB triggerBounds = new AABB(sample, sample).inflate(BULLET_SAMPLE_RADIUS);
-        boolean triggered = !server.getEntitiesOfClass(LivingEntity.class, triggerBounds,
-                        target -> target.isAlive()
-                                && !target.isInvulnerable()
-                                && target != getFirstPassenger()
-                                && isSourceHostile(target)
-                                && target.getBoundingBox().distanceToSqr(sample)
-                                <= BULLET_SAMPLE_RADIUS * BULLET_SAMPLE_RADIUS).isEmpty();
+        List<LivingEntity> candidates = server.getEntitiesOfClass(LivingEntity.class,
+                new AABB(sample, sample).inflate(2.0D),
+                target -> target.isAlive()
+                        && !target.isInvulnerable()
+                        && target != getFirstPassenger()
+                        && isSourceHostile(target)
+                        && target.getBoundingBox().distanceToSqr(sample) <= 4.0D);
+        if (candidates.isEmpty()) return null;
+        double triggerRadiusSqr = BULLET_SAMPLE_RADIUS * BULLET_SAMPLE_RADIUS;
+        boolean triggered = candidates.stream().anyMatch(target ->
+                target.getBoundingBox().distanceToSqr(sample) <= triggerRadiusSqr);
         if (!triggered) return null;
-        return server.getEntitiesOfClass(LivingEntity.class,
-                        new AABB(sample, sample).inflate(2.0D),
-                        target -> target.isAlive()
-                                && !target.isInvulnerable()
-                                && target != getFirstPassenger()
-                                && isSourceHostile(target)
-                                && target.getBoundingBox().distanceToSqr(sample) <= 4.0D)
-                .stream().min(Comparator.comparingDouble(
-                        target -> target.getBoundingBox().distanceToSqr(sample)))
-                .orElse(null);
+        return candidates.stream().min(Comparator.comparingDouble(
+                target -> target.getBoundingBox().distanceToSqr(sample))).orElse(null);
     }
 
     /**

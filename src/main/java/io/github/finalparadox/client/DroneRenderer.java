@@ -5,7 +5,9 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import io.github.finalparadox.FinalParadox;
 import io.github.finalparadox.entity.DroneEntity;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -55,6 +57,14 @@ public final class DroneRenderer extends EntityRenderer<DroneEntity> {
         VertexConsumer consumer = buffer.getBuffer(model.renderType(TEXTURE));
         model.renderToBuffer(pose, consumer, packedLight, OverlayTexture.NO_OVERLAY,
                 1.0F, 1.0F, 1.0F, 1.0F);
+
+        int heat = entity.getGatlingHeat();
+        if (heat > 0) {
+            VertexConsumer heatConsumer = buffer.getBuffer(
+                    RenderType.entityTranslucentEmissive(TEXTURE));
+            model.renderHeatToBuffer(pose, heatConsumer, LightTexture.FULL_BRIGHT,
+                    OverlayTexture.NO_OVERLAY, heat);
+        }
         pose.popPose();
         super.render(entity, entityYaw, partialTick, pose, buffer, packedLight);
     }

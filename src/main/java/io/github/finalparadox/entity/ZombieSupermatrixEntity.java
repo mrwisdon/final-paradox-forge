@@ -83,9 +83,12 @@ public final class ZombieSupermatrixEntity extends Entity {
     public void tick() {
         super.tick();
         setDeltaMovement(Vec3.ZERO);
-        if (level() instanceof ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.END_ROD, getX(), getY() + 1.5D, getZ(),
-                    1, 0.3D, 0.3D, 0.3D, 0.0D);
+        if (level().isClientSide) {
+            level().addParticle(ParticleTypes.END_ROD,
+                    getX() + (level().random.nextDouble() - 0.5D) * 0.6D,
+                    getY() + 1.5D + (level().random.nextDouble() - 0.5D) * 0.6D,
+                    getZ() + (level().random.nextDouble() - 0.5D) * 0.6D,
+                    0.0D, 0.0D, 0.0D);
         }
     }
 

@@ -4,6 +4,7 @@ import io.github.finalparadox.arena.ArenaDefinitions;
 import io.github.finalparadox.arena.ArenaDeploymentData;
 import io.github.finalparadox.arena.ArenaEntranceMemory;
 import io.github.finalparadox.arena.ArenaFightParticipants;
+import io.github.finalparadox.arena.B1ArenaLifecycle;
 import io.github.finalparadox.arena.B1ArenaStaging;
 import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModItems;
@@ -74,6 +75,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -179,6 +181,48 @@ public final class ApigloBossEntity extends Zombie {
         return Mth.floor(anchorX) == expected.getX()
                 && Mth.floor(anchorY) == expected.getY()
                 && Mth.floor(anchorZ) == expected.getZ();
+    }
+
+    /**
+     * Keeps loaded legacy duplicates from ticking AI or abilities. The saved
+     * UUID remains authoritative while unresolved; a running boss may replace
+     * a loaded waiting owner, but never an unloaded owner.
+     */
+    private boolean enforceArenaAuthority(ServerLevel level) {
+        ArenaDeploymentData data = ArenaDeploymentData.get(level, ArenaDefinitions.B1);
+        if (data.state() != ArenaDeploymentData.DeploymentState.READY
+                || !ArenaDefinitions.B1.id().equals(data.arenaId())
+                || data.floorAnchor().isEmpty()) {
+            return true;
+        }
+        BlockPos expected = ArenaDefinitions.B1.bossSpawnBlock(data.floorAnchor().orElseThrow());
+        if (!matchesAnchor(expected)) return true;
+
+        Optional<UUID> saved = data.activeBossUuid();
+        Entity resolved = saved.map(level::getEntity).orElse(null);
+        boolean savedResolved = saved.isPresent() && resolved != null;
+        boolean savedValid = resolved instanceof ApigloBossEntity boss
+                && boss.isAlive()
+                && boss.matchesAnchor(expected);
+        boolean savedWaiting = savedValid && ((ApigloBossEntity) resolved).isWaiting();
+        B1ArenaLifecycle.AuthorityDecision decision = B1ArenaLifecycle.authorityDecision(
+                getUUID(), isWaiting(), saved, savedResolved, savedValid, savedWaiting);
+        return switch (decision) {
+            case KEEP -> true;
+            case CLAIM -> {
+                data.setActiveBossUuid(getUUID());
+                yield true;
+            }
+            case REPLACE_WAITING -> {
+                ((ApigloBossEntity) resolved).discard();
+                data.setActiveBossUuid(getUUID());
+                yield true;
+            }
+            case DISCARD_SELF -> {
+                discard();
+                yield false;
+            }
+        };
     }
 
     public boolean startPreBattleDialogue() {
@@ -415,6 +459,7 @@ public final class ApigloBossEntity extends Zombie {
         if (isRemoved() || isDeadOrDying()) return;
         // Waiting and intermission phases deliberately disable vanilla AI. Encounter scripting must keep ticking.
         if (!initialized) initializeEncounter();
+        if (!enforceArenaAuthority(level)) return;
         if (needsReloadRecovery) recoverAfterReload(level);
         bossEvent.setName(Component.translatable("entity.finalparadox.apiglo.bossbar"));
         bossEvent.setProgress(Mth.clamp(getHealth() / getMaxHealth(), 0.0F, 1.0F));
@@ -875,8 +920,8 @@ public final class ApigloBossEntity extends Zombie {
         defeatTicks = 0;
         setInvulnerable(true);
         setNoAi(true);
-        Component title = Component.translatable("title.finalparadox.apiglo.defeat");
-        Component subtitle = Component.translatable("subtitle.finalparadox.apiglo.defeat");
+        Component title = Component.translatable("luisb1202.functions.bossfight.b1.derrota.1");
+        Component subtitle = Component.translatable("luisb1202.functions.bossfight.b1.derrota.2");
         for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B1)) {
             player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 40, 10));
             player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
@@ -1054,7 +1099,11 @@ public final class ApigloBossEntity extends Zombie {
 
     @Override
     public void die(DamageSource source) {
-        if (isVictoryConditionMet()) finishVictory();
+        boolean serverSide = level() instanceof ServerLevel;
+        if (B1ArenaLifecycle.shouldFinishVictory(serverSide, isVictoryConditionMet())
+                && level() instanceof ServerLevel server) {
+            finishVictory(server);
+        }
         super.die(source);
     }
 
@@ -1067,15 +1116,14 @@ public final class ApigloBossEntity extends Zombie {
         return phase != WAITING && !victoryHandled;
     }
 
-    private void finishVictory() {
+    private void finishVictory(ServerLevel server) {
         victoryHandled = true;
         showTitle(Component.translatable("title.finalparadox.apiglo.victory"),
                 Component.translatable("subtitle.finalparadox.apiglo.victory"));
         playGlobal(SoundEvents.PLAYER_LEVELUP, 1.0F, 0.8F);
-        if (level() instanceof ServerLevel server) {
-            cleanupEncounter(server);
-            ArenaFightParticipants.clear(server, ArenaDefinitions.B1);
-        }
+        cleanupEncounter(server);
+        ArenaDeploymentData.get(server, ArenaDefinitions.B1).clearActiveBoss();
+        ArenaFightParticipants.clear(server, ArenaDefinitions.B1);
         stopMusic();
         bossEvent.setVisible(false);
     }

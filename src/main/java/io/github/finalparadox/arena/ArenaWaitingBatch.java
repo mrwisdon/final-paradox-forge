@@ -40,23 +40,17 @@ public final class ArenaWaitingBatch {
     }
 
     /**
-     * True when the arena should be reconciled this tick. Arenas whose chunks
-     * are already loaded are always reconciled. A distant arena is reconciled
-     * only when a player is close enough to enter it, or when the deployment
-     * has no recorded entities yet and therefore needs its initial batch.
+     * True when the arena should be reconciled this tick. Reconciliation is
+     * demand-driven: it runs only while a non-spectator player is within the
+     * existing 256-block recall radius. Neither already-loaded chunks nor a
+     * missing entity record authorizes loading far chunks.
      */
     public static boolean shouldReconcile(ServerLevel level, ArenaDeploymentData data) {
         Optional<BlockPos> anchorResult = data.floorAnchor();
         if (anchorResult.isEmpty()) return false;
         BlockPos anchor = anchorResult.get();
-        if (level.hasChunkAt(anchor)) return true;
-        boolean hasRecord = data.activeBossUuid().isPresent()
-                || data.korosUuid().isPresent()
-                || data.stagedKoyoUuid().isPresent()
-                || data.stagedGariUuid().isPresent()
-                || data.eotharUuid().isPresent();
-        if (!hasRecord) return true;
         for (ServerPlayer player : level.players()) {
+            if (player.isSpectator()) continue;
             if (player.distanceToSqr(anchor.getX() + 0.5D, anchor.getY() + 0.5D, anchor.getZ() + 0.5D)
                     <= RECONCILE_PLAYER_RADIUS_SQR) {
                 return true;

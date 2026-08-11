@@ -7,6 +7,7 @@ import io.github.finalparadox.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.AABB;
 
@@ -19,13 +20,16 @@ public final class MarawTharArenaStaging {
 
     /**
      * Reconciles the Maraw'Thar waiting Eothar slot to at most one
-     * arena-owned echo. Loads the expected chunk first so a saved UUID is
-     * never cleared merely because its chunk was unloaded; the saved UUID is
+     * arena-owned echo. The recorded anchor, triggered/active state and
+     * 30-block player proximity are all checked before any chunk is loaded,
+     * so a distant arena never force-loads the Eothar chunk. A saved UUID is
      * authoritative only when it resolves to a live candidate of this arena,
-     * identified by its persisted anchor. Surplus candidates are pruned and a
-     * missing echo is created only when the arena is un-triggered and a
-     * non-spectating player is inside the original 18-block arrival range
-     * while another is inside the 30-block recall range.
+     * identified by its persisted anchor; an unresolved UUID is preserved so
+     * returning players adopt the unloaded entity rather than duplicating it.
+     * Surplus candidates are pruned and a missing echo is created only when
+     * the arena is un-triggered and a non-spectating player is inside the
+     * original 18-block arrival range while another is inside the 30-block
+     * recall range.
      *
      * @return the retained echo and whether this call created it, or empty
      *         when nothing should be kept
@@ -37,6 +41,31 @@ public final class MarawTharArenaStaging {
     ) {
         Optional<BlockPos> recordedAnchor = data.floorAnchor();
         if (recordedAnchor.isEmpty() || !recordedAnchor.get().equals(anchor)) return Optional.empty();
+        // A triggered or active fight never keeps a waiting Eothar and never
+        // recreates one; it must also never force-load the Eothar chunk.
+        if (data.marawTharTriggered() || data.activeBossUuid().isPresent()) {
+            return Optional.empty();
+        }
+        // The echo is a wait-area guide: without any non-spectating player in
+        // recall range the whole staged batch is cleaned up. A recorded
+        // Eothar is cleaned only when its entity is already resolved/loaded;
+        // an unresolved UUID is preserved so returning players adopt the
+        // unloaded entity rather than duplicating it.
+        if (!anyPlayerNear(level, anchor, 30.0D)) {
+            data.eotharUuid().ifPresent(uuid -> {
+                Entity resolved = level.getEntity(uuid);
+                if (resolved instanceof EotharEchoEntity echo
+                        && echo.isAlive()
+                        && anchor.equals(echo.arenaAnchor())) {
+                    echo.depart();
+                    data.clearEothar();
+                } else if (resolved != null) {
+                    data.clearEothar();
+                }
+            });
+            return Optional.empty();
+        }
+
         BlockPos eotharPos = anchor.offset(ArenaDefinitions.MARAWTHAR_EOTHAR_OFFSET);
         level.getChunkAt(eotharPos);
 
@@ -44,21 +73,6 @@ public final class MarawTharArenaStaging {
         List<EotharEchoEntity> candidates = level.getEntities(
                 ModEntities.EOTHAR_ECHO.get(), bounds,
                 echo -> echo.isAlive() && anchor.equals(echo.arenaAnchor()));
-
-        // A running or completed fight never keeps a waiting Eothar and never
-        // recreates one; the boss is owned exclusively by the fight flow.
-        if (data.marawTharTriggered() || data.activeBossUuid().isPresent()) {
-            candidates.forEach(EotharEchoEntity::depart);
-            data.clearEothar();
-            return Optional.empty();
-        }
-        // The echo is a wait-area guide: without any non-spectating player in
-        // recall range the whole staged batch is cleaned up.
-        if (!anyPlayerNear(level, anchor, 30.0D)) {
-            candidates.forEach(EotharEchoEntity::depart);
-            data.clearEothar();
-            return Optional.empty();
-        }
         // A live candidate is kept even before anyone enters the 18-block
         // arrival range; a missing echo is created only once someone does.
         if (candidates.isEmpty() && !anyPlayerNear(level, anchor, 18.0D)) {

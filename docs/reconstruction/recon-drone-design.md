@@ -31,7 +31,7 @@ path and a vulnerable body proxy at the deploy point.
   1.05 blocks below the drone entity origin, just under the belly at the
   machine-gun sight line. The drone body is drawn around/above that view.
 - Remote clients retain tracked-entity interpolation. The recon drone has a
-  client tracking range of 128 blocks and update interval 1.
+  client tracking range of 192 blocks and update interval 1.
 - Flight has no explicit distance limit from the deploy anchor.
 
 ## Vulnerable anchor body
@@ -99,13 +99,13 @@ path and a vulnerable body proxy at the deploy point.
   to `IDLE`. At all other non-overheated times, heat falls by 2 per tick while
   not firing.
 - While firing, both guns fire together every 2 ticks. Each ray deals 4
-  player-attributed damage over at most 64 blocks; a same-target salvo of
+  player-attributed damage over at most 128 blocks; a same-target salvo of
   both rays applies 8 damage total. The two muzzles start 0.30
   blocks left and right of the center, 1.10 blocks below the drone origin, and
   0.56 blocks forward. Their unspread base rays meet on the central sight line
   32 blocks ahead (about 0.537 degrees of inward aim).
 - Each ray receives an independent uniform-area circular spread sample. The
-  cone grows linearly with heat from 0.25 degrees to 0.85 degrees.
+  cone grows linearly with heat from 0.40 degrees to 1.20 degrees.
 - A collider ray truncates the entity ray at the first block. The closest
   bounding-box intersection wins among monsters and entities in
   `finalparadox:glaivorus_targets`; the owner/passenger, dead, and invulnerable
@@ -117,7 +117,7 @@ path and a vulnerable body proxy at the deploy point.
   S2C packet containing both start/end pairs and their miss/block/entity impact
   types. A client-only, entity-free renderer advances a 0.65-block, two-layer
   white-yellow/orange tracer at 12 blocks/tick on a continuous game-time clock.
-  The maximum 64-block trajectory therefore takes about 5.33 ticks (267 ms). The
+  The maximum 128-block trajectory therefore takes about 10.67 ticks (533 ms). The
   clock avoids whole-tick packet-boundary jumps and guarantees one rendered
   frame for short paths before cleanup. Small renderer-owned muzzle flashes
   replace continuous flame particles; low-frequency smoke avoids a muzzle fire
@@ -129,6 +129,14 @@ path and a vulnerable body proxy at the deploy point.
   `drone_gatling_fire`. Both stop immediately when the synchronized state
   changes or the entity leaves tracking. The sound classes are never referenced
   from common code, preserving dedicated-server class loading.
+- The authoritative heat value is synchronized as a 0..120 integer on the
+  drone entity every tick, so firing rise and idle/overheat cooling are both
+  visible remotely. The synchronized heat resets together with the Gatling
+  cycle on cleanup. Clients render a full-bright red/orange emissive overlay
+  on only the forward tip sleeves of the six barrels on each Gatling; heat
+  zero renders nothing, so warmup stays dark and cooling visibly fades the
+  glow. Apart from the confirmed range and spread increases above, damage,
+  cadence, convergence, and overheat behavior are unchanged.
 
 ## Drone model and texture
 

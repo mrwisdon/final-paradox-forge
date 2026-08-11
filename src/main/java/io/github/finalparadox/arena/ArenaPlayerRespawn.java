@@ -40,8 +40,6 @@ public final class ArenaPlayerRespawn {
     private static final String FORCED = "forced";
     private static final ResourceLocation OVERWORLD_ID =
             ResourceLocation.fromNamespaceAndPath("minecraft", "overworld");
-    private static final ResourceLocation ARENA_ID =
-            ResourceLocation.fromNamespaceAndPath(FinalParadox.MOD_ID, "arena_dimension");
 
     private ArenaPlayerRespawn() {
     }
@@ -108,7 +106,7 @@ public final class ArenaPlayerRespawn {
     }
 
     static boolean isArenaLocation(ResourceLocation dimension) {
-        return ARENA_ID.equals(dimension);
+        return ArenaDimensionPolicy.isArenaId(dimension.toString());
     }
 
     /** True when the player moved from the arena dimension to any other dimension. */

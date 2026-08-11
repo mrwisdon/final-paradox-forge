@@ -667,6 +667,7 @@ public final class B8EncounterController {
 
     /** Rover bullets break a module within 1.5 of its sample point. */
     public boolean testModuleHit(ServerLevel server, Vec3 bulletPosition) {
+        if (!data.h2Active()) return false;
         net.minecraft.world.phys.AABB box =
                 new net.minecraft.world.phys.AABB(bulletPosition, bulletPosition).inflate(3.0D);
         B8H2ModuleEntity nearest = null;
@@ -1237,6 +1238,7 @@ public final class B8EncounterController {
     }
 
     private void tickAdds(ServerLevel server, B8EncounterData data) {
+        if (data.addCount() == 0) return;
         sniperFiredThisTick = false;
         BlockPos center = data.anchor();
         if (center == null) return;
@@ -1831,7 +1833,7 @@ public final class B8EncounterController {
                 server, ArenaDefinitions.B8, player.getUUID())) return;
         data.addSpectator(player.getUUID());
         if (player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
-            player.gameMode.changeGameModeForPlayer(GameType.SPECTATOR);
+            player.setGameMode(GameType.SPECTATOR);
         }
         BlockPos center = data.anchor();
         if (center != null) {
@@ -1863,10 +1865,11 @@ public final class B8EncounterController {
         List<ServerPlayer> participants = ArenaFightParticipants.onlinePlayers(
                 server, ArenaDefinitions.B8);
         endEncounter(server, data);
+        ArenaDeploymentData.get(server, ArenaDefinitions.B8).resetB8ForRetry();
         if (anchor == null) return;
         for (ServerPlayer player : participants) {
             if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
-                player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
+                player.setGameMode(GameType.SURVIVAL);
                 player.teleportTo(server,
                         anchor.getX() + 14, anchor.getY() + 1, anchor.getZ(),
                         90.0F, 0.0F);
@@ -2000,7 +2003,7 @@ public final class B8EncounterController {
         if (anchor != null) {
             for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B8)) {
                 if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
-                    player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
+                    player.setGameMode(GameType.SURVIVAL);
                     player.teleportTo(server,
                             anchor.getX() + 14, anchor.getY() + 1, anchor.getZ(),
                             90.0F, 0.0F);
@@ -2071,7 +2074,7 @@ public final class B8EncounterController {
         if (anchor != null) {
             for (ServerPlayer player : ArenaFightParticipants.onlinePlayers(server, ArenaDefinitions.B8)) {
                 if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
-                    player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
+                    player.setGameMode(GameType.SURVIVAL);
                     player.teleportTo(server,
                             anchor.getX() + 14, anchor.getY() + 1, anchor.getZ(),
                             90.0F, 0.0F);

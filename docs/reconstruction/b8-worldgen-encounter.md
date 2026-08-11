@@ -57,8 +57,10 @@ worldgen adoption: adoption only happens when the record is IDLE.
 - `B8EncounterManager.begin` sets `b8Triggered = true` when the encounter
   starts, covering both the Koros menu path and `/finalparadox arena start b8`.
 - `ArenaDeploymentManager.tick` only auto-spawns B8 Koros when
-  `b8Triggered` is false, so after victory/defeat Koros is not recreated and
-  the dialogue cannot repeat.
+  `b8Triggered` is false, so after victory Koros is not recreated and the
+  dialogue cannot repeat. After defeat, `respawn` clears `b8Triggered` via
+  `resetB8ForRetry()` and the next throttled reconcile recreates Koros so
+  the arena can be challenged again.
 - `KorosEchoEntity` persists `b8IntroStarted`, `b8DialogueStart`, and
   `b8DialogueStep`, and refuses to start the intro when `b8Triggered` is true.
   This also protects old saves that still have a Koros alive after a trigger.

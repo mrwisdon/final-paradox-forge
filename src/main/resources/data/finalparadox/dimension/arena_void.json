@@ -1,0 +1,17 @@
+{
+  "type": "finalparadox:arena_void_type",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "finalparadox:arena_plains",
+      "features": false,
+      "lakes": false,
+      "layers": [
+        {
+          "block": "minecraft:air",
+          "height": 1
+        }
+      ]
+    }
+  }
+}

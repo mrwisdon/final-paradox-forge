@@ -2794,7 +2794,7 @@ public final class MarawTharBossEntity extends WitherSkeleton {
             }
             player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
             player.addEffect(new MobEffectInstance(
-                    MobEffects.HARM, 20, 4, false, false));
+                    MobEffects.HARM, 1, 4, false, false));
         }
     }
 
@@ -3771,7 +3771,10 @@ public final class MarawTharBossEntity extends WitherSkeleton {
                     target -> target.isAlive() && !target.isSpectator()
                             && !projectile.hitPlayers.contains(target.getUUID())
                             && projectileHitCooldowns.getOrDefault(
-                                    target.getUUID(), 0) <= tickCount)) {
+                                    target.getUUID(), 0) <= tickCount
+                            && MarawTharProjectileGeometry.withinSphereRadius(
+                                    center.x, center.y, center.z,
+                                    target.getX(), target.getY(), target.getZ(), 1.0D))) {
                 projectileHitCooldowns.put(player.getUUID(), tickCount + 2);
                 boolean damaged;
                 if (projectile.red) {
@@ -3800,7 +3803,7 @@ public final class MarawTharBossEntity extends WitherSkeleton {
             return false;
         }
         player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
-        player.addEffect(new MobEffectInstance(MobEffects.HARM, 20, 3, false, false));
+        player.addEffect(new MobEffectInstance(MobEffects.HARM, 1, 3, false, false));
         return true;
     }
 
@@ -4231,7 +4234,6 @@ public final class MarawTharBossEntity extends WitherSkeleton {
             if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
                 player.teleportTo(server, destination.x, destination.y, destination.z,
                         -37.0F, 5.0F);
-                player.gameMode.changeGameModeForPlayer(GameType.ADVENTURE);
             }
             player.removeEffect(MobEffects.WITHER);
             player.addEffect(new MobEffectInstance(
@@ -4241,9 +4243,12 @@ public final class MarawTharBossEntity extends WitherSkeleton {
         ArenaDeploymentData data = ArenaDeploymentData.get(server, ArenaDefinitions.MARAWTHAR);
         BlockPos anchor = data.floorAnchor().orElse(
                 BlockPos.containing(encounterCenter).offset(0, -1, 0));
-        ArenaFightParticipants.clear(server, ArenaDefinitions.MARAWTHAR);
+        ArenaFightParticipants.finishDefeat(server, ArenaDefinitions.MARAWTHAR);
+        data.resetMarawTharForRetry();
         discard();
-        MarawTharArenaStaging.spawnBoss(server, data, anchor);
+        // A defeat returns to the manual Eothar gate. Spawning another active
+        // boss here traps the revived party in a death/respawn/restart loop.
+        MarawTharArenaStaging.reconcile(server, data, anchor);
     }
 
     private void closeArena(ServerLevel server) {

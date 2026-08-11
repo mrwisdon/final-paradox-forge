@@ -192,7 +192,7 @@ public final class ModEntities {
             "recon_drone", () -> EntityType.Builder.<DroneEntity>of(
                             DroneEntity::new, MobCategory.MISC)
                     .sized(0.6F, 0.6F)
-                    .clientTrackingRange(128)
+                    .clientTrackingRange(192)
                      .updateInterval(1)
                      .build("recon_drone"));
     public static final RegistryObject<EntityType<DroneBodyProxyEntity>> RECON_DRONE_BODY =

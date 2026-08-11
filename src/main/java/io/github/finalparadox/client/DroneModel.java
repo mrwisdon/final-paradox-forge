@@ -35,8 +35,11 @@ public final class DroneModel extends EntityModel<DroneEntity> {
     private final ModelPart rightGun;
     private final ModelPart leftBarrels;
     private final ModelPart rightBarrels;
+    private final ModelPart leftHeatTips;
+    private final ModelPart rightHeatTips;
     private final ModelPart[] rotors;
     private final ModelPart[] bombs;
+    private final float[] heatRgba = new float[4];
 
     public DroneModel(ModelPart root) {
         this.root = root;
@@ -46,6 +49,10 @@ public final class DroneModel extends EntityModel<DroneEntity> {
         rightGun = frame.getChild("right_gun");
         leftBarrels = leftGun.getChild("barrel_cluster");
         rightBarrels = rightGun.getChild("barrel_cluster");
+        leftHeatTips = leftGun.getChild("heat_tips");
+        rightHeatTips = rightGun.getChild("heat_tips");
+        leftHeatTips.visible = false;
+        rightHeatTips.visible = false;
         rotors = new ModelPart[]{
                 frame.getChild("front_left").getChild("rotor"),
                 frame.getChild("front_right").getChild("rotor"),
@@ -239,6 +246,21 @@ public final class DroneModel extends EntityModel<DroneEntity> {
                 .addBox(-0.28F, -0.28F, -8.15F, 0.56F, 0.56F, 6.3F);
         gun.addOrReplaceChild(
                 "barrel_cluster", barrelCluster, PartPose.offset(0.0F, -1.3F, 0.0F));
+
+        // Heat-only forward tip sleeves: six slightly larger boxes at the
+        // barrel muzzles. They are hidden in the base pass and rendered only
+        // by renderHeatToBuffer, inheriting gun pitch/yaw and cluster spin.
+        CubeListBuilder heatTips = CubeListBuilder.create();
+        for (int tube = 0; tube < 6; tube++) {
+            double angle = tube * Math.PI / 3.0D;
+            float x = (float) Math.cos(angle) * 0.62F;
+            float y = (float) Math.sin(angle) * 0.62F;
+            heatTips.texOffs(0, 20).addBox(
+                    x - 0.26F, y - 0.26F, -8.4F,
+                    0.52F, 0.52F, 0.8F);
+        }
+        gun.addOrReplaceChild(
+                "heat_tips", heatTips, PartPose.offset(0.0F, -1.3F, 0.0F));
         gun.addOrReplaceChild(
                 "magazine",
                 CubeListBuilder.create()
@@ -295,6 +317,8 @@ public final class DroneModel extends EntityModel<DroneEntity> {
         };
         leftBarrels.zRot = barrelSpin;
         rightBarrels.zRot = -barrelSpin;
+        leftHeatTips.zRot = barrelSpin;
+        rightHeatTips.zRot = -barrelSpin;
 
         rotors[0].yRot = ageInTicks * ROTOR_SPEED;
         rotors[1].yRot = -ageInTicks * ROTOR_SPEED;
@@ -310,6 +334,38 @@ public final class DroneModel extends EntityModel<DroneEntity> {
     @Override
     public void renderToBuffer(PoseStack pose, VertexConsumer consumer, int packedLight,
                                int packedOverlay, float red, float green, float blue, float alpha) {
+        leftHeatTips.visible = false;
+        rightHeatTips.visible = false;
         root.render(pose, consumer, packedLight, packedOverlay, red, green, blue, alpha);
+    }
+
+    /**
+     * Full-bright red/orange muzzle glow for the synchronized Gatling heat.
+     * Zero heat renders nothing. Reuses {@link #heatRgba} so no per-frame
+     * allocation occurs.
+     */
+    public void renderHeatToBuffer(PoseStack pose, VertexConsumer consumer, int packedLight,
+                                   int packedOverlay, int heat) {
+        DroneModelMath.heatGlowColor(heat, heatRgba);
+        if (heatRgba[3] <= 0.0F) {
+            return;
+        }
+        leftHeatTips.visible = true;
+        rightHeatTips.visible = true;
+        renderHeatTips(pose, consumer, packedLight, packedOverlay, leftGun, leftHeatTips);
+        renderHeatTips(pose, consumer, packedLight, packedOverlay, rightGun, rightHeatTips);
+        leftHeatTips.visible = false;
+        rightHeatTips.visible = false;
+    }
+
+    private void renderHeatTips(PoseStack pose, VertexConsumer consumer, int packedLight,
+                                int packedOverlay, ModelPart gun, ModelPart heatTips) {
+        pose.pushPose();
+        root.translateAndRotate(pose);
+        frame.translateAndRotate(pose);
+        gun.translateAndRotate(pose);
+        heatTips.render(pose, consumer, packedLight, packedOverlay,
+                heatRgba[0], heatRgba[1], heatRgba[2], heatRgba[3]);
+        pose.popPose();
     }
 }

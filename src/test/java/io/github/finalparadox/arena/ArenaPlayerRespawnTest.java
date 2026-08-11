@@ -15,8 +15,10 @@ final class ArenaPlayerRespawnTest {
             ResourceLocation.fromNamespaceAndPath("minecraft", "overworld");
     private static final ResourceLocation NETHER =
             ResourceLocation.fromNamespaceAndPath("minecraft", "the_nether");
-    private static final ResourceLocation ARENA =
+    private static final ResourceLocation LEGACY_ARENA =
             ResourceLocation.fromNamespaceAndPath("finalparadox", "arena_dimension");
+    private static final ResourceLocation ACTIVE_ARENA =
+            ResourceLocation.fromNamespaceAndPath("finalparadox", "arena_void");
 
     @Test
     void snapshotRoundTripsWithPosition() {
@@ -80,7 +82,8 @@ final class ArenaPlayerRespawnTest {
 
     @Test
     void onlyLeavingArenaRequestsRestore() {
-        assertTrue(ArenaPlayerRespawn.isArenaLocation(ARENA));
+        assertTrue(ArenaPlayerRespawn.isArenaLocation(ACTIVE_ARENA));
+        assertTrue(ArenaPlayerRespawn.isArenaLocation(LEGACY_ARENA));
         assertFalse(ArenaPlayerRespawn.isArenaLocation(OVERWORLD));
         assertFalse(ArenaPlayerRespawn.isArenaLocation(NETHER));
     }

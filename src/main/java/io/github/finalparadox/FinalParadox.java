@@ -3,6 +3,7 @@ package io.github.finalparadox;
 import io.github.finalparadox.network.ModNetwork;
 import io.github.finalparadox.registry.ModEntities;
 import io.github.finalparadox.registry.ModCreativeTabs;
+import io.github.finalparadox.registry.ModBlocks;
 import io.github.finalparadox.registry.ModItems;
 import io.github.finalparadox.registry.ModSounds;
 import io.github.finalparadox.worldgen.ModWorldgen;
@@ -16,6 +17,7 @@ public final class FinalParadox {
 
     public FinalParadox(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
+        ModBlocks.REGISTER.register(modEventBus);
         ModItems.REGISTER.register(modEventBus);
         ModCreativeTabs.REGISTER.register(modEventBus);
         ModEntities.REGISTER.register(modEventBus);

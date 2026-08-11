@@ -45,10 +45,11 @@ instead.
 - `/finalparadox arena start marawthar` remains a debug shortcut; it also
   removes any waiting echo and marks the encounter triggered.
 - Player death during the fight switches the victim to spectator. When every
-  online player is a spectator, the encounter plays the original defeat title,
-  sound and two defeat dialogue lines at 2s/4s, then restarts after 5s: players
-  return to the arena entrance in adventure with resistance/heal, the old boss
-  and its visuals are discarded, and a fresh Maraw'Thar is staged.
+  online player is a spectator, the encounter plays the defeat title, sound and
+  two dialogue lines at 2s/4s. After 5s, players return to the arena entrance in
+  adventure with resistance/heal, the old boss and its visuals are discarded,
+  and the arena returns to its Eo'Thar interaction gate. A new Maraw'Thar is not
+  created until a player explicitly confirms another challenge.
 
 ## Verification
 
@@ -67,5 +68,5 @@ Still requires in-game observation:
   open the menu on right-click, and after confirmation show the kneeling
   Conqueror corpse animation (head/arm/pose, sword) before Maraw'Thar appears.
 - Reload during the dialogue/menu should resume without a second echo.
-- All players dying should show the defeat sequence and restart the fight after
-  5s without duplicate bosses or stray arena entities.
+- All players dying should show the defeat sequence, restore one Eo'Thar after
+  5s, and remain out of combat until another challenge is explicitly confirmed.

@@ -6,9 +6,9 @@ public final class DroneGatlingBallistics {
     public static final double MUZZLE_DROP = 1.10D;
     public static final double MUZZLE_FORWARD = 0.56D;
     public static final double CONVERGENCE_DISTANCE = 32.0D;
-    public static final double RANGE = 64.0D;
-    public static final double MIN_SPREAD_DEGREES = 0.25D;
-    public static final double MAX_SPREAD_DEGREES = 0.85D;
+    public static final double RANGE = 128.0D;
+    public static final double MIN_SPREAD_DEGREES = 0.40D;
+    public static final double MAX_SPREAD_DEGREES = 1.20D;
 
     private DroneGatlingBallistics() {
     }

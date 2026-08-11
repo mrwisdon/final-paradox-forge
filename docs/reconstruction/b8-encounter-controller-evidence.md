@@ -298,6 +298,16 @@ Source `b8/{morir,derrota,respawn}` and `danar_montura*`:
   teleported to `anchor + (14,1,0)` yaw 90, wither cleared, resistance 101
   applied, ready to re-challenge (`b8/respawn`; the source's adventure-mode
   restore is replaced by survival because the mod never forces adventure).
+  All four B8 spectator/survival transitions use `ServerPlayer.setGameMode`,
+  not the lower-level `ServerPlayerGameMode.changeGameModeForPlayer`: the
+  wrapper sends the local `CHANGE_GAME_MODE` packet, resets a returning
+  spectator's camera, and restores the survival HUD as well as server state.
+- `respawn` then re-arms the Koros-gated retry: after the generic endEncounter
+  cleanup it calls `ArenaDeploymentData.get(...).resetB8ForRetry()`, clearing
+  `activeBossUuid`, `korosUuid` and `b8Triggered` only. The READY arena stays
+  intact (anchor, arenaId, nextTile, deployed blocks) and the next throttled
+  `B8ArenaStaging.reconcile` (40-tick cadence) spawns exactly one fresh Echo
+  of Koros, so a lost fight can be re-challenged.
 
 ## M7: victory, reward and cleanup
 

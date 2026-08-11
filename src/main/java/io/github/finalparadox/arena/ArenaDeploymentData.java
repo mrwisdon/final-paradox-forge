@@ -187,6 +187,22 @@ public final class ArenaDeploymentData extends SavedData {
         setDirty();
     }
 
+    /** Returns a defeated Maraw'Thar arena to its Eothar-gated retry state. */
+    public void resetMarawTharForRetry() {
+        activeBossUuid = null;
+        eotharUuid = null;
+        marawTharTriggered = false;
+        setDirty();
+    }
+
+    /** Returns a defeated B8 arena to its Koros-gated retry state. */
+    public void resetB8ForRetry() {
+        activeBossUuid = null;
+        korosUuid = null;
+        b8Triggered = false;
+        setDirty();
+    }
+
     public DeploymentState state() {
         return state;
     }

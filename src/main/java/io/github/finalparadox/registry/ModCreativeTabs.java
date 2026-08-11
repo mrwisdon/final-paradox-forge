@@ -62,6 +62,12 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.BAMBOOMERANG.get().getDefaultInstance());
                         output.accept(ModItems.NIGHTFALL.get().getDefaultInstance());
                         output.accept(ModItems.ARENA_COMPASS.get().getDefaultInstance());
+                        output.accept(ModItems.APIGLO_ARENA_SANDBOX.get().getDefaultInstance());
+                        output.accept(ModItems.THAR_KROO_ARENA_SANDBOX.get().getDefaultInstance());
+                        output.accept(ModItems.KOYOMI_GARIHEUZ_ARENA_SANDBOX.get().getDefaultInstance());
+                        output.accept(ModItems.ZOMBIE_SUPERMATRIX_ARENA_SANDBOX.get().getDefaultInstance());
+                        output.accept(ModItems.MARAWTHAR_ARENA_SANDBOX.get().getDefaultInstance());
+                        output.accept(ModItems.PARADOXICAL_TOME.get().getDefaultInstance());
                         output.accept(ModItems.ATACROM_GAUNTLET.get().getDefaultInstance());
                         output.accept(ModItems.RECON_DRONE.get().getDefaultInstance());
                     })

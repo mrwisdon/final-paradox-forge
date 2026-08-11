@@ -217,7 +217,7 @@ public final class EotharEchoEntity extends Entity {
         if (possessionTicks == POSSESSION_SWORD_TICK) {
             ArmorStand main = entranceStand(server);
             if (main != null) {
-                main.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
+                main.setItemSlot(EquipmentSlot.MAINHAND, ModItems.NIGHTFALL.get().getDefaultInstance());
             }
             server.playSound(null, arenaAnchor, SoundEvents.TRIDENT_THUNDER,
                     SoundSource.MASTER, 1.0F, 1.2F);

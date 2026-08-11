@@ -100,15 +100,20 @@ public final class B8H2ModuleEntity extends Entity {
     @Override
     public void tick() {
         super.tick();
-        if (level().isClientSide) return;
+        if (level().isClientSide) {
+            level().addParticle(new DustParticleOptions(
+                            new Vector3f(1.0F, 0.933F, 0.0F), 1.5F),
+                    getX() + (level().random.nextDouble() - 0.5D) * 0.4D,
+                    getY() + GLOW_SAMPLE_Y + (level().random.nextDouble() - 0.5D) * 0.4D,
+                    getZ() + (level().random.nextDouble() - 0.5D) * 0.4D,
+                    0.0D, 0.0D, 0.0D);
+            return;
+        }
         if (!(level() instanceof ServerLevel server)) {
             discard();
             return;
         }
         setPos(getX(), getY() - FALL_SPEED, getZ());
-        server.sendParticles(new DustParticleOptions(new Vector3f(1.0F, 0.933F, 0.0F), 1.5F),
-                getX(), getY() + GLOW_SAMPLE_Y, getZ(),
-                1, 0.2D, 0.2D, 0.2D, 0.0D);
         if (getY() <= anchorY - BOOM_ANCHOR_OFFSET) {
             B8EncounterManager.onModuleLanded(server, this);
         }

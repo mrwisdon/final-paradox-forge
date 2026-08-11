@@ -38,8 +38,10 @@ public final class ArenaFightParticipants extends SavedData {
     private static final String PARTICIPANTS = "Participants";
     private static final String DEFEATED = "Defeated";
     private static final String UUID_KEY = "Uuid";
+    private static final String PENDING_MODE_RESTORES = "PendingModeRestores";
 
     private final Map<String, Roster> fights = new HashMap<>();
+    private final Set<UUID> pendingModeRestores = new HashSet<>();
 
     private ArenaFightParticipants() {
     }
@@ -56,6 +58,8 @@ public final class ArenaFightParticipants extends SavedData {
             if (!fightsTag.contains(arenaId, Tag.TAG_COMPOUND)) continue;
             data.fights.put(arenaId, Roster.read(fightsTag.getCompound(arenaId)));
         }
+        data.pendingModeRestores.addAll(
+                readUuids(root.getList(PENDING_MODE_RESTORES, Tag.TAG_COMPOUND)));
         return data;
     }
 
@@ -64,6 +68,7 @@ public final class ArenaFightParticipants extends SavedData {
         CompoundTag fightsTag = new CompoundTag();
         fights.forEach((arenaId, roster) -> fightsTag.put(arenaId, roster.write()));
         root.put(FIGHTS, fightsTag);
+        root.put(PENDING_MODE_RESTORES, writeUuids(pendingModeRestores));
         return root;
     }
 
@@ -83,6 +88,11 @@ public final class ArenaFightParticipants extends SavedData {
         ArenaFightParticipants data = get(level);
         data.fights.put(definition.id(), new Roster(participants, Set.of()));
         data.setDirty();
+        ArenaSlots.forFixedDeployment(definition, anchor).ifPresent(slot -> {
+            for (ServerPlayer player : level.players()) {
+                if (participants.contains(player.getUUID())) ArenaPlayerState.enter(player, slot);
+            }
+        });
     }
 
     /**
@@ -126,6 +136,11 @@ public final class ArenaFightParticipants extends SavedData {
         return false;
     }
 
+    /** Constant-time persistent encounter check; it remains valid while the boss chunk is unloaded. */
+    public static boolean hasFight(ServerLevel level, ArenaDefinition definition) {
+        return get(level).fights.containsKey(definition.id());
+    }
+
     public static boolean allDefeated(ServerLevel level, ArenaDefinition definition) {
         Roster roster = get(level).fights.get(definition.id());
         return roster != null && roster.allDefeated();
@@ -158,6 +173,56 @@ public final class ArenaFightParticipants extends SavedData {
         if (data.fights.remove(definition.id()) != null) data.setDirty();
     }
 
+    /**
+     * Ends a fight in defeat: restores every online participant's original game
+     * mode immediately, records offline participants as pending mode restores in
+     * this arena's SavedData, then removes the active roster atomically. Drop-in
+     * replacement for {@link #clear} in a defeat reset.
+     */
+    public static void finishDefeat(ServerLevel level, ArenaDefinition definition) {
+        ArenaFightParticipants data = get(level);
+        Roster roster = data.fights.remove(definition.id());
+        if (roster == null) return;
+        for (UUID participant : roster.participants) {
+            ServerPlayer player = level.getServer().getPlayerList().getPlayer(participant);
+            if (player != null) {
+                if (owesDefeatModeRestore(
+                        ArenaPlayerState.hasOriginalGameMode(player.getPersistentData()),
+                        player.isSpectator())) {
+                    ArenaPlayerState.markPendingModeRestore(player.getPersistentData());
+                    ArenaPlayerState.restoreOriginalGameMode(player);
+                }
+            } else {
+                data.pendingModeRestores.add(participant);
+            }
+        }
+        data.setDirty();
+    }
+
+    /**
+     * Pure policy: an online participant owes a defeat restore when an original
+     * snapshot still exists or the player is still a spectator. A participant
+     * who already left the arena was restored on dimension change, so forcing
+     * the SURVIVAL fallback on them would overwrite their current mode.
+     */
+    static boolean owesDefeatModeRestore(boolean hasOriginalSnapshot, boolean isSpectator) {
+        return hasOriginalSnapshot || isSpectator;
+    }
+
+    /** Restores and removes a pending offline defeat restore once the fight is over. */
+    static boolean consumePendingModeRestore(ServerPlayer player) {
+        ServerLevel arena = player.getServer().getLevel(ModDimensions.ARENA_VOID);
+        if (arena == null) return false;
+        ArenaFightParticipants data = get(arena);
+        if (data.pendingModeRestores.remove(player.getUUID())) {
+            data.setDirty();
+            ArenaPlayerState.markPendingModeRestore(player.getPersistentData());
+            ArenaPlayerState.restoreOriginalGameMode(player);
+            return true;
+        }
+        return false;
+    }
+
     private static void markUnavailable(ServerLevel level, UUID playerId) {
         ArenaFightParticipants data = get(level);
         boolean changed = false;
@@ -177,7 +242,7 @@ public final class ArenaFightParticipants extends SavedData {
     }
 
     private static void restoreEliminatedMode(ServerPlayer player) {
-        if (ModDimensions.ARENA_DIMENSION.equals(player.serverLevel().dimension())
+        if (ModDimensions.isActiveArena(player.serverLevel().dimension())
                 && defeatedInAnyFight(player)
                 && !player.isSpectator()) {
             player.setGameMode(GameType.SPECTATOR);
@@ -187,28 +252,49 @@ public final class ArenaFightParticipants extends SavedData {
     @SubscribeEvent
     public static void onLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player
-                && ModDimensions.ARENA_DIMENSION.equals(player.serverLevel().dimension())) {
+                && ModDimensions.isActiveArena(player.serverLevel().dimension())) {
             markUnavailable(player.serverLevel(), player.getUUID());
         }
     }
 
     @SubscribeEvent
     public static void onLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            restoreEliminatedMode(player);
-        }
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (consumePendingModeRestore(player)) return;
+        restoreEliminatedMode(player);
     }
 
     @SubscribeEvent
     public static void onChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if (ModDimensions.ARENA_DIMENSION.equals(event.getFrom())
-                && !ModDimensions.ARENA_DIMENSION.equals(event.getTo())) {
+        if (ModDimensions.isActiveArena(event.getFrom())
+                && !ModDimensions.isActiveArena(event.getTo())) {
             ServerLevel arena = player.getServer().getLevel(event.getFrom());
             if (arena != null) markUnavailable(arena, player.getUUID());
-        } else if (ModDimensions.ARENA_DIMENSION.equals(event.getTo())) {
-            restoreEliminatedMode(player);
+        } else if (ModDimensions.isActiveArena(event.getTo())) {
+            if (!consumePendingModeRestore(player)) {
+                restoreEliminatedMode(player);
+            }
         }
+    }
+
+    private static ListTag writeUuids(Collection<UUID> values) {
+        ListTag list = new ListTag();
+        for (UUID value : values) {
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID(UUID_KEY, value);
+            list.add(entry);
+        }
+        return list;
+    }
+
+    private static Set<UUID> readUuids(ListTag list) {
+        Set<UUID> values = new HashSet<>();
+        for (int index = 0; index < list.size(); index++) {
+            CompoundTag entry = list.getCompound(index);
+            if (entry.hasUUID(UUID_KEY)) values.add(entry.getUUID(UUID_KEY));
+        }
+        return values;
     }
 
     /** Pure roster policy kept package-private for unit tests. */
@@ -255,25 +341,6 @@ public final class ArenaFightParticipants extends SavedData {
             return new Roster(
                     readUuids(tag.getList(PARTICIPANTS, Tag.TAG_COMPOUND)),
                     readUuids(tag.getList(DEFEATED, Tag.TAG_COMPOUND)));
-        }
-
-        private static ListTag writeUuids(Collection<UUID> values) {
-            ListTag list = new ListTag();
-            for (UUID value : values) {
-                CompoundTag entry = new CompoundTag();
-                entry.putUUID(UUID_KEY, value);
-                list.add(entry);
-            }
-            return list;
-        }
-
-        private static Set<UUID> readUuids(ListTag list) {
-            Set<UUID> values = new HashSet<>();
-            for (int index = 0; index < list.size(); index++) {
-                CompoundTag entry = list.getCompound(index);
-                if (entry.hasUUID(UUID_KEY)) values.add(entry.getUUID(UUID_KEY));
-            }
-            return values;
         }
     }
 }

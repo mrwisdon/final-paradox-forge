@@ -31,7 +31,7 @@ public final class ArenaDeathInventory {
     public static void onLivingDeath(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!shouldProtect(
-                ModDimensions.ARENA_DIMENSION.equals(player.serverLevel().dimension()),
+                ModDimensions.isActiveArena(player.serverLevel().dimension()),
                 ArenaFightParticipants.isInAnyFight(player.serverLevel(), player.getUUID()))) {
             return;
         }

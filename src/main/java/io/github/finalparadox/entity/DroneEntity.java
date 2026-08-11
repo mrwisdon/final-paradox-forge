@@ -92,6 +92,10 @@ public final class DroneEntity extends Entity {
             net.minecraft.network.syncher.SynchedEntityData.defineId(
                     DroneEntity.class,
                     net.minecraft.network.syncher.EntityDataSerializers.INT);
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> DATA_GATLING_HEAT =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(
+                    DroneEntity.class,
+                    net.minecraft.network.syncher.EntityDataSerializers.INT);
 
     private UUID ownerId;
     private int clientInputState;
@@ -419,6 +423,11 @@ public final class DroneEntity extends Entity {
         return entityData.get(DATA_GATLING_STATE);
     }
 
+    public int getGatlingHeat() {
+        return Mth.clamp(entityData.get(DATA_GATLING_HEAT),
+                0, DroneGatlingCycle.MAX_HEAT);
+    }
+
     /** Accepts only the owner of the current, active mounted session. */
     public void setGatlingHeld(ServerPlayer player, boolean held) {
         if (!isControlledBy(player) || !player.isAlive()) {
@@ -490,6 +499,7 @@ public final class DroneEntity extends Entity {
         DroneGatlingCycle.Step step = DroneGatlingCycle.advance(gatlingHeld, gatlingCycle);
         gatlingCycle = step.snapshot();
         entityData.set(DATA_GATLING_STATE, gatlingCycle.state());
+        entityData.set(DATA_GATLING_HEAT, gatlingCycle.heat());
         if (step.overheatedStarted()) {
             beginGatlingOverheat(server, owner);
         } else if (gatlingCycle.state() == GATLING_OVERHEATED
@@ -506,6 +516,9 @@ public final class DroneEntity extends Entity {
         gatlingCycle = DroneGatlingCycle.Snapshot.initial();
         if (entityData.get(DATA_GATLING_STATE) != GATLING_IDLE) {
             entityData.set(DATA_GATLING_STATE, GATLING_IDLE);
+        }
+        if (entityData.get(DATA_GATLING_HEAT) != 0) {
+            entityData.set(DATA_GATLING_HEAT, 0);
         }
     }
 
@@ -769,6 +782,7 @@ public final class DroneEntity extends Entity {
     protected void defineSynchedData() {
         entityData.define(DATA_BOMBS, MAX_BOMBS);
         entityData.define(DATA_GATLING_STATE, GATLING_IDLE);
+        entityData.define(DATA_GATLING_HEAT, 0);
     }
 
     @Override

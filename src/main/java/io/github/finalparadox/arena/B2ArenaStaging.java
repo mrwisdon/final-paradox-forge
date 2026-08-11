@@ -35,6 +35,10 @@ public final class B2ArenaStaging {
      *         active or the batch could not be completed
      */
     public static Optional<Stage> reconcile(ServerLevel level, ArenaDeploymentData data) {
+        // The persistent fight roster is authoritative even when the boss's
+        // chunk is currently unloaded. Never scan or recreate a running B2
+        // encounter merely because ServerLevel#getEntity cannot resolve it.
+        if (ArenaFightParticipants.hasFight(level, ArenaDefinitions.B2)) return Optional.empty();
         if (!ArenaWaitingBatch.shouldReconcile(level, data)) return Optional.empty();
         Optional<BlockPos> anchorResult = data.floorAnchor();
         if (anchorResult.isEmpty()) return Optional.empty();

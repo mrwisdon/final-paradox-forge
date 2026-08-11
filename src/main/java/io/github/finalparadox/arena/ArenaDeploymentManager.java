@@ -2,6 +2,7 @@ package io.github.finalparadox.arena;
 
 import io.github.finalparadox.entity.ApigloBossEntity;
 import io.github.finalparadox.entity.B5EncounterData;
+import io.github.finalparadox.entity.B8EncounterManager;
 import io.github.finalparadox.entity.MarawTharBossEntity;
 import io.github.finalparadox.entity.KoyomiBossEntity;
 import io.github.finalparadox.entity.GariBossEntity;
@@ -31,19 +32,24 @@ public final class ArenaDeploymentManager {
 
     public static void tick(ServerLevel level) {
         if (level.getGameTime() % TICKS_PER_TILE != 0) return;
+        boolean anyFightActive = ArenaBossFightState.isAnyActive(level);
         for (ArenaDefinition definition : ArenaDefinitions.ALL) {
             ArenaDeploymentData data = ArenaDeploymentData.get(level, definition);
-            tickArena(level, definition, data);
+            tickArena(level, definition, data, anyFightActive);
         }
     }
 
     private static void tickArena(
             ServerLevel level,
             ArenaDefinition definition,
-            ArenaDeploymentData data
+            ArenaDeploymentData data,
+            boolean anyFightActive
     ) {
         if (data.state() == ArenaDeploymentData.DeploymentState.READY) {
-            tickReadyArena(level, definition, data);
+            if (ArenaReadyMaintenancePolicy.shouldMaintainReady(
+                    level.getGameTime(), anyFightActive)) {
+                tickReadyArena(level, definition, data);
+            }
             return;
         }
         if (data.state() != ArenaDeploymentData.DeploymentState.DEPLOYING) return;
@@ -141,6 +147,8 @@ public final class ArenaDeploymentManager {
         }
         if (definition == ArenaDefinitions.B1
                 && data.floorAnchor().isPresent()) {
+            boolean fightActive = ArenaFightParticipants.hasFight(level, ArenaDefinitions.B1);
+            if (!B1ArenaLifecycle.shouldReconcile(level.getGameTime(), fightActive)) return;
             BlockPos anchor = data.floorAnchor().orElseThrow();
             Optional<B1ArenaStaging.Stage> stage = B1ArenaStaging.reconcile(level, data);
             stage.ifPresent(existing -> {
@@ -166,6 +174,11 @@ public final class ArenaDeploymentManager {
             return;
         }
         if (definition == ArenaDefinitions.B8 && data.floorAnchor().isPresent()) {
+            boolean encounterActive = B8EncounterManager.isActive(level);
+            if (!B8ArenaLifecycle.shouldReconcile(
+                    level.getGameTime(), encounterActive, data.b8Triggered())) {
+                return;
+            }
             B8ArenaStaging.reconcile(level, data, data.floorAnchor().orElseThrow());
             return;
         }

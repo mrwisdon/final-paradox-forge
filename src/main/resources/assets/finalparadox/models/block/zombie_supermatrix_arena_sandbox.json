@@ -1,0 +1,4 @@
+{
+  "parent": "finalparadox:block/arena_sandbox_base",
+  "textures": { "wood": "minecraft:block/warped_planks", "arena": "minecraft:block/light_blue_concrete" }
+}

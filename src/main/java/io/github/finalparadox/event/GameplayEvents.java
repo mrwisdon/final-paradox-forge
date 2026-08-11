@@ -4,6 +4,7 @@ import io.github.finalparadox.FinalParadox;
 import io.github.finalparadox.ability.GlaivorusAbilityState;
 import io.github.finalparadox.ability.EotharTimeStopState;
 import io.github.finalparadox.ability.NightfallAbilityState;
+import io.github.finalparadox.ability.ParadoxicalTomeState;
 import io.github.finalparadox.item.AtacromGauntletItem;
 import io.github.finalparadox.item.GlaivorusItem;
 import io.github.finalparadox.item.StygianPointItem;
@@ -107,6 +108,9 @@ import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = FinalParadox.MOD_ID)
 public final class GameplayEvents {
+    private static final String RETURNING_DISPLACED_STACK =
+            "finalparadox.returning_displaced_paradoxical_tome_stack";
+
     private GameplayEvents() {
     }
 
@@ -118,6 +122,19 @@ public final class GameplayEvents {
 
         ItemEntity thrownItem = event.getEntity();
         ItemStack stack = thrownItem.getItem();
+        if (player.getPersistentData().getBoolean(RETURNING_DISPLACED_STACK)) {
+            // A full-inventory tome swap is synchronously tossing the displaced stack. Leave that
+            // exact stack as a physical drop without routing it through any ability a second time.
+            return;
+        }
+        if (stack.is(ModItems.PARADOXICAL_TOME.get())) {
+            // Transfer ownership of this exact stack back to the player before discarding the entity.
+            thrownItem.setItem(ItemStack.EMPTY);
+            thrownItem.discard();
+            returnParadoxicalTomeToSelectedSlot(player, stack);
+            ParadoxicalTomeState.activate(player);
+            return;
+        }
         if(stack.is(ModItems.STEPS_OF_EOTHAR.get())){thrownItem.discard();if(!player.getItemBySlot(EquipmentSlot.FEET).isEmpty()){player.getInventory().placeItemBackInInventory(stack.copy());player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.finalparadox.eothar.boots_slot"),true);return;}player.setItemSlot(EquipmentSlot.FEET,stack.copy());EotharTimeStopState.activate(player);return;}
         if(stack.is(ModItems.PROFANE_ARCANE_BLADE.get())){thrownItem.discard();returnToSelectedSlot(player,stack.copy());ProfaneStanceState.onToss(player);return;}
         if(stack.is(ModItems.ADAPTIVE_DEFENSE_MATRIX.get())){thrownItem.discard();if(!player.getItemBySlot(EquipmentSlot.LEGS).isEmpty()){player.getInventory().placeItemBackInInventory(stack.copy());player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.finalparadox.defense_matrix.leggings_slot"),true);return;}player.setItemSlot(EquipmentSlot.LEGS,stack.copy());AdaptiveDefenseMatrixItem.activate(player);return;}
@@ -147,6 +164,7 @@ public final class GameplayEvents {
             EotharTimeStopState.tick(player);
             NightfallAbilityState.tick(player);
             AtacromGauntletItem.tick(player);
+            ParadoxicalTomeState.tick(player);
         }
     }
 
@@ -158,6 +176,15 @@ public final class GameplayEvents {
             }
             EotharTimeStopState.cancel(player);
             NightfallAbilityState.cancel(player);
+            ParadoxicalTomeState.cancelTimeline(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        if (event.getOriginal() instanceof ServerPlayer original
+                && event.getEntity() instanceof ServerPlayer replacement) {
+            ParadoxicalTomeState.copyCooldownToClone(original, replacement);
         }
     }
 
@@ -253,6 +280,7 @@ public final class GameplayEvents {
     @SubscribeEvent public static void onLivingDeath(LivingDeathEvent event){
         B8EncounterManager.onLivingDeath(event.getEntity(), event.getSource());
         if(event.getEntity() instanceof ServerPlayer deadPlayer){
+            ParadoxicalTomeState.cancelTimeline(deadPlayer);
             ApigloBossEntity.onPlayerDeath(deadPlayer);
             B5EncounterManager.onPlayerDeath(deadPlayer);
             B8EncounterManager.onPlayerDeath(deadPlayer);
@@ -430,6 +458,40 @@ public final class GameplayEvents {
     private static void tickCooldown(ServerPlayer player,String key,String readyMessage){int ticks=player.getPersistentData().getInt(key);if(ticks<=0)return;if(--ticks>0){player.getPersistentData().putInt(key,ticks);return;}player.getPersistentData().remove(key);if(readyMessage!=null){player.displayClientMessage(net.minecraft.network.chat.Component.translatable(readyMessage),true);player.level().playSound(null,player.blockPosition(),SoundEvents.UI_BUTTON_CLICK.value(),SoundSource.PLAYERS,.8F,1.4F);}}
 
     private static void returnToSelectedSlot(ServerPlayer player,ItemStack stack){int slot=player.getInventory().selected;if(player.getInventory().getItem(slot).isEmpty())player.getInventory().setItem(slot,stack);else player.getInventory().placeItemBackInInventory(stack);}
+
+    private static void returnParadoxicalTomeToSelectedSlot(ServerPlayer player, ItemStack tome) {
+        int slot = player.getInventory().selected;
+        ItemStack selected = player.getInventory().getItem(slot);
+        if (selected.isEmpty()) {
+            player.getInventory().setItem(slot, tome);
+            return;
+        }
+        // Inventory.add never drops the remainder, unlike placeItemBackInInventory.
+        if (player.getInventory().add(tome)) {
+            return;
+        }
+
+        // The inventory is completely full. The ability item owns its original selected slot;
+        // move that exact stack there and normally toss the exact displaced stack instead.
+        player.getInventory().setItem(slot, tome);
+        player.getPersistentData().putBoolean(RETURNING_DISPLACED_STACK, true);
+        try {
+            ItemEntity dropped = player.drop(selected, false);
+            if (dropped == null) {
+                // ServerPlayer normally always creates the entity. Preserve the displaced stack
+                // explicitly if another hook prevented the standard toss.
+                dropped = new ItemEntity(player.serverLevel(), player.getX(), player.getEyeY() - 0.3D,
+                        player.getZ(), selected);
+                dropped.setPickUpDelay(40);
+                dropped.setThrower(player.getUUID());
+                Vec3 look = player.getLookAngle();
+                dropped.setDeltaMovement(look.x * 0.3D, look.y * 0.3D + 0.1D, look.z * 0.3D);
+                player.serverLevel().addFreshEntity(dropped);
+            }
+        } finally {
+            player.getPersistentData().remove(RETURNING_DISPLACED_STACK);
+        }
+    }
 
     private static boolean isFrontalDirectAttack(ServerPlayer player,Entity direct){if(!(direct instanceof LivingEntity)&&!(direct instanceof Projectile))return false;Vec3 look=player.getLookAngle().multiply(1,0,1);Vec3 toward=direct.position().subtract(player.position()).multiply(1,0,1);if(look.lengthSqr()<.01||toward.lengthSqr()<.01){if(direct instanceof Projectile projectile)toward=projectile.getDeltaMovement().reverse().multiply(1,0,1);else return false;}return look.normalize().dot(toward.normalize())>0;}
 
